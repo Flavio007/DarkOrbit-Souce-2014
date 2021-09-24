@@ -1,0 +1,11 @@
+[26.07.2020 23: 30:53] - [Program.cs] Main void exception: Newtonsoft.Json.JsonSerializationException: Unexpected end when deserializing array. Path '[2]', line 1, position 499.
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.ThrowUnexpectedEndException(JsonReader reader, JsonContract contract, Object currentObject, String message)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateList(IList list, JsonReader reader, JsonArrayContract contract, JsonProperty containerProperty, String id)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateList(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, Object existingValue, String id)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   em Newtonsoft.Json.JsonSerializer.DeserializeInternal(JsonReader reader, Type objectType)
+   em Newtonsoft.Json.JsonConvert.DeserializeObject(String value, Type type, JsonSerializerSettings settings)
+   em Newtonsoft.Json.JsonConvert.DeserializeObject[T](String value, JsonSerializerSettings settings)
+   em Ow.Managers.QueryManager.LoadMaps() na C:\Users\Pichau\Desktop\darkorbit\DarkOrbit\Managers\QueryManager.cs:linha 310
+   em Ow.Program.Main(String[] args) na C:\Users\Pichau\Desktop\darkorbit\DarkOrbit\Program.cs:linha 32
