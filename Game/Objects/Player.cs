@@ -52,6 +52,8 @@ namespace Ow.Game.Objects
         public int CurrentShieldConfig2 { get; set; }
         public int CurrentConfig { get; set; }
 
+        public int Score = 0;
+
         public SettingsBase Settings = new SettingsBase();
         public DestructionsBase Destructions { get; set; }
         public EquipmentBase Equipment { get; set; }
@@ -1221,9 +1223,30 @@ namespace Ow.Game.Objects
             }
         }
 
+        public void UpdateScore(int score, Boolean increse)
+        {
+            if (EventManager.Scoremageddon.Active == true)
+            {
+                if (increse == true)
+                {
+                    Score += score;
+                }
+                else
+                {
+                    Score -= score;
+                }
+                if (Score <= 0)
+                {
+                    Score = 0;
+                }
+            }
+
+            else return;
+        }
+
         public void GetLeonovEffect(int map, int faction)
         {
-            if (Spacemap.FactionId == faction)
+            if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
             }

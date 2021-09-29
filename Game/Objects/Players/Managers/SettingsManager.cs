@@ -222,6 +222,7 @@ namespace Ow.Game.Objects.Players.Managers
             { "log", new Window(30, 30, 240, 150, false) },
             { "pet", new Window(50, 50, 260, 130, false) },
             { "spaceball", new Window(10, 10, 170, 70, false) },
+            { "scoreevent", new Window(10, 10, 250, 250, false) },
             { "booster", new Window(10, 10, 110, 150, false) },
             { "traininggrounds", new Window(10, 10, 320, 320, false) },
             { "settings", new Window(50, 50, 400, 470, false) },
@@ -508,6 +509,8 @@ namespace Ow.Game.Objects.Players.Managers
                 leftItems.Add("pet", "title_pet");
             if (EventManager.Spaceball.Active)
                 leftItems.Add("spaceball", "title_spaceball");
+            if (EventManager.Scoremageddon.Active)
+                leftItems.Add("scoreevent", "title_scoreevent");
             if (Player.BoosterManager.Boosters.Count >= 1)
                 leftItems.Add("booster", "title_booster");
             if (Player.RankId == 21)

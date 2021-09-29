@@ -576,6 +576,16 @@ namespace Ow.Chat
                     }
                 }
             }
+            else if (cmd == "/start_Scoremageddon")
+            {
+                if (message.Split(' ').Length >= 2)
+                {
+                    var limit = Convert.ToInt32(message.Split(' ')[1]);
+                    EventManager.Scoremageddon.Limit = limit;
+                }
+
+                EventManager.Scoremageddon.Start();
+            }
             /*
             else if (cmd == "/reward" && Permission == Permissions.ADMINISTRATOR)
             {

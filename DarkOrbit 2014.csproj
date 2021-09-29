@@ -67,6 +67,7 @@
     <Compile Include="Game\Enums.cs" />
     <Compile Include="Game\Events\Duel.cs" />
     <Compile Include="Game\Events\JackpotBattle.cs" />
+    <Compile Include="Game\Events\Scoremageddon.cs" />
     <Compile Include="Game\Events\Spaceball.cs" />
     <Compile Include="Game\Events\UltimateBattleArena.cs" />
     <Compile Include="Game\GalaxyGates\Hades.cs" />
