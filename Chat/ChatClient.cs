@@ -576,7 +576,7 @@ namespace Ow.Chat
                     }
                 }
             }
-            else if (cmd == "/start_Scoremageddon")
+            else if (cmd == "/start_scoreevent")
             {
                 if (message.Split(' ').Length >= 2)
                 {

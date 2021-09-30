@@ -728,13 +728,13 @@ namespace Ow.Game.Objects.Players.Managers
             switch (Player.Settings.InGameSettings.selectedRocket)
             {
                 case AmmunitionManager.R_310:
-                    return 1000;
+                    return Player.Ship.Id == 3 && Player.Spacemap.FactionId == Player.FactionId ? 2000:1000;
                 case AmmunitionManager.PLT_2026:
-                    return 2000;
+                    return Player.Ship.Id == 3 && Player.Spacemap.FactionId == Player.FactionId ? 4000:2000;
                 case AmmunitionManager.PLT_2021:
-                    return 4000;
+                    return Player.Ship.Id == 3 && Player.Spacemap.FactionId == Player.FactionId ? 8000:4000;
                 case AmmunitionManager.PLT_3030:
-                    return 6000;
+                    return Player.Ship.Id == 3 && Player.Spacemap.FactionId == Player.FactionId ? 12000:6000;
                 default:
                     return 0;
             }

@@ -56,9 +56,13 @@ namespace Ow.Game.Objects.Players.Managers
         public int Config2Damage = 0;
         public int Config2Shield = 0;
         public int Config2Speed = 0;
+        public int LeonovConfig1Damage = 0;
+        public int LeonovConfig2Damage = 0;
+        public int LeonovConfig1Shield = 0;
+        public int LeonovConfig2Shield = 0;
 
         public ConfigsBase(int config1Hitpoints, int config1Damage, int config1Shield, int config1Speed,
-            int config2Hitpoints, int config2Damage, int config2Shield, int config2Speed)
+            int config2Hitpoints, int config2Damage, int config2Shield, int config2Speed, int leonovC1Dmg, int leonovC2Dmg, int leonovC1Shield, int leonovC2Shield)
         {
             Config1Hitpoints = config1Hitpoints;
             Config1Damage = config1Damage;
@@ -68,7 +72,11 @@ namespace Ow.Game.Objects.Players.Managers
             Config2Damage = config2Damage;
             Config2Shield = config2Shield;
             Config2Speed = config2Speed;
-        }
+            LeonovConfig1Damage = leonovC1Dmg;
+            LeonovConfig2Damage = leonovC2Dmg;
+            LeonovConfig1Shield = leonovC1Shield;
+            LeonovConfig2Shield = leonovC2Shield;
+    }
     }
 
     public class ItemsBase
@@ -83,7 +91,7 @@ namespace Ow.Game.Objects.Players.Managers
 
     public class EquipmentBase
     {
-        public ConfigsBase Configs = new ConfigsBase(0, 0, 0, 0, 0, 0, 0, 0);
+        public ConfigsBase Configs = new ConfigsBase(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         public ItemsBase Items = new ItemsBase(0);
 
         public EquipmentBase(ConfigsBase configs, ItemsBase items)

@@ -231,7 +231,9 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Hitpoints : Equipment.Configs.Config2Hitpoints;
+                value = (Ship.Id == Ship.LEONOV && 2 == 2) ? value + 96000 : value;
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.MAXHP));
+
 
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
                 {
@@ -315,6 +317,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Shield : Equipment.Configs.Config2Shield;
+                value += Ship.Id == Ship.LEONOV ? Equipment.Configs.LeonovConfig1Shield : Equipment.Configs.LeonovConfig2Shield;
                 value += Maths.GetPercentage(value, 40);
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.SHIELD));
                 value += Maths.GetPercentage(value, GetSkillPercentage("Shield Engineering"));
@@ -404,6 +407,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Damage : Equipment.Configs.Config2Damage;
+                value += Ship.Id == Ship.LEONOV ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
                 value += Maths.GetPercentage(value, 60); //seprom
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
 

@@ -220,6 +220,8 @@ namespace Ow.Managers
                 var speed = new int[] { player.Ship.BaseSpeed, player.Ship.BaseSpeed };
                 var damage = new int[] { 0, 0 };
                 var shield = new int[] { 0, 0 };
+                var leonovlaser = new int[] { 0, 0 };
+                var leonovshield = new int[] { 0, 0 };
 
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
                 {
@@ -237,6 +239,10 @@ namespace Ow.Managers
                                     damage[i - 1] += lf3Damage;
                                 else if (itemId >= 140)
                                     damage[i - 1] += lf4Damage;
+                                if (itemId >= 0 && itemId < 40)
+                                    leonovlaser[i - 1] += lf3Damage;
+                                else if (itemId >= 140)
+                                    leonovlaser[i - 1] += lf4Damage;
                             }
 
                             foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_generators"].ToString()))
@@ -245,6 +251,8 @@ namespace Ow.Managers
                                     shield[i - 1] += bo2Shield;
                                 else if (itemId >= 100 && itemId < 120)
                                     speed[i - 1] += g3nSpeed;
+                                if (itemId >= 40 && itemId < 100)
+                                    leonovshield[i - 1] += bo2Shield;
                             }
 
                             var havocCount = 0;
@@ -289,7 +297,7 @@ namespace Ow.Managers
                         speed[0] += Maths.GetPercentage(speed[0], 20);
                         speed[1] += Maths.GetPercentage(speed[1], 20);
 
-                        var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1]);
+                        var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
                         var itemsBase = new ItemsBase(0);//TODO = new ItemsBase((int)items["bootyKeys"]);
 
                         player.Equipment = new EquipmentBase(configsBase, itemsBase);
