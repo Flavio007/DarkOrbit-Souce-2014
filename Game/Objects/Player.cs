@@ -54,6 +54,8 @@ namespace Ow.Game.Objects
 
         public int Score = 0;
 
+        public Boolean FriendlyMap = false;
+
         public SettingsBase Settings = new SettingsBase();
         public DestructionsBase Destructions { get; set; }
         public EquipmentBase Equipment { get; set; }
@@ -231,7 +233,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Hitpoints : Equipment.Configs.Config2Hitpoints;
-                value = (Ship.Id == Ship.LEONOV && 2 == 2) ? value + 96000 : value;
+                value = (Ship.Id == Ship.LEONOV && FriendlyMap != true) ? value : value + 96000;
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.MAXHP));
 
 
@@ -317,7 +319,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Shield : Equipment.Configs.Config2Shield;
-                if (Ship.Id == Ship.LEONOV)
+                if (Ship.Id == Ship.LEONOV && FriendlyMap == true)
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Shield : Equipment.Configs.LeonovConfig2Shield;
                 value += Maths.GetPercentage(value, 40);
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.SHIELD));
@@ -408,7 +410,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Damage : Equipment.Configs.Config2Damage;
-                if(Ship.Id == Ship.LEONOV)
+                if (Ship.Id == Ship.LEONOV && GetLeonovEffect(Spacemap.Id,FactionId) == true)
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
                 value += Maths.GetPercentage(value, 60); //seprom
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
@@ -1256,11 +1258,13 @@ namespace Ow.Game.Objects
             if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
+                FriendlyMap = true;
                 return true;
             }
             else
             {
                 RemoveVisualModifier(VisualModifierCommand.LEONOV_EFFECT);
+                FriendlyMap = false;
                 return false;
             }
         }
