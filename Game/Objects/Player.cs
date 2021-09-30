@@ -317,7 +317,8 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Shield : Equipment.Configs.Config2Shield;
-                value += Ship.Id == Ship.LEONOV ? Equipment.Configs.LeonovConfig1Shield : Equipment.Configs.LeonovConfig2Shield;
+                if (Ship.Id == Ship.LEONOV)
+                    value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Shield : Equipment.Configs.LeonovConfig2Shield;
                 value += Maths.GetPercentage(value, 40);
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.SHIELD));
                 value += Maths.GetPercentage(value, GetSkillPercentage("Shield Engineering"));
@@ -407,7 +408,8 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Damage : Equipment.Configs.Config2Damage;
-                value += Ship.Id == Ship.LEONOV ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
+                if(Ship.Id == Ship.LEONOV)
+                    value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
                 value += Maths.GetPercentage(value, 60); //seprom
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
 
@@ -497,6 +499,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = AttackManager.GetRocketDamage();
+                value += Maths.GetPercentage(value, 60); //Seprom
                 value += Maths.GetPercentage(value, GetSkillPercentage("Rocket Fusion"));
 
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
@@ -514,7 +517,7 @@ namespace Ow.Game.Objects
                         value += Maths.GetPercentage(value, 30);
                         break;
                     case DroneManager.CHEVRON_FORMATION:
-                        value += Maths.GetPercentage(value, 65);
+                        value += Maths.GetPercentage(value, 50);
                         break;
                 }
                 return value;
@@ -1248,15 +1251,17 @@ namespace Ow.Game.Objects
             else return;
         }
 
-        public void GetLeonovEffect(int map, int faction)
+        public Boolean GetLeonovEffect(int map, int faction)
         {
             if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
+                return true;
             }
             else
             {
                 RemoveVisualModifier(VisualModifierCommand.LEONOV_EFFECT);
+                return false;
             }
         }
 

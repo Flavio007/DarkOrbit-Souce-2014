@@ -225,10 +225,13 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (damage != 0)
             {
-                if (GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM)
+                if (GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM || (GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_CREDITS))
                     Absorbation(Player, enemy, damageType, damage);
+                else if (GetSelectedLauncherId() != 14)
+                    Damage(Player, enemy, damageType, damage, 0);
                 else
                     Damage(Player, enemy, damageType, damage, 0);
+                    Absorbation(Player, enemy, damageType, damage);
             }
 
             UpdateAttacker(enemy, Player);
@@ -744,10 +747,18 @@ namespace Ow.Game.Objects.Players.Managers
         {
             switch (Player.Settings.InGameSettings.selectedRocketLauncher)
             {
+                case AmmunitionManager.ECO_10:
+                    return 2000;
                 case AmmunitionManager.HSTRM_01:
-                case AmmunitionManager.UBR_100:
-                case AmmunitionManager.SAR_02:
                     return 4000;
+                case AmmunitionManager.UBR_100:
+                    return Player.SelectedCharacter.FactionId == 0 ? 7200 : 4000;
+                case AmmunitionManager.SAR_01:
+                    return 1200;
+                case AmmunitionManager.SAR_02:
+                    return 5000;
+                case AmmunitionManager.CBR:
+                    return 3000;
                 default:
                     return 0;
             }
