@@ -16,6 +16,13 @@ namespace Ow.Game.Objects.Players.Managers
         public int dbrz = 0;
     }
 
+    public class LastPositonBase
+    {
+        public int map = 0;
+        public int x = 0;
+        public int y = 0;
+    }
+
     public class DataBase
     {
         public long uridium = 0;

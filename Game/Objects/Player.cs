@@ -54,7 +54,7 @@ namespace Ow.Game.Objects
 
         public int Score = 0;
 
-        public Boolean FriendlyMap = false;
+        public Boolean FriendlyMap = true;
 
         public SettingsBase Settings = new SettingsBase();
         public DestructionsBase Destructions { get; set; }

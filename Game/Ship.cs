@@ -128,7 +128,7 @@ namespace Ow.Game
                     return hitpoints += Maths.GetPercentage(hitpoints, 20);
                 default:
                     return hitpoints;
-            }
+            } 
         }
 
         public int GetShieldPointsBoost(int shield)
