@@ -88,8 +88,11 @@ namespace Ow.Net.netty.handlers
                     if (Player.RankId == 21)
                         Player.Premium = true;
 
-                    Player.Spacemap = GameManager.GetSpacemap(Player.GetBaseMapId());
-                    Player.SetPosition(Player.GetBasePosition());
+                    Player.Spacemap = Player.LastPosition.map == 0 ? GameManager.GetSpacemap(Player.GetBaseMapId()) : GameManager.GetSpacemap(Player.LastPosition.map);
+                    if (Player.LastPosition.map == 0)
+                        Player.SetPosition(Player.GetBasePosition());
+                    else
+                        Player.SetPosition(new Position(Player.LastPosition.x, Player.LastPosition.y));
                 }
 
                 Program.TickManager.AddTick(Player);

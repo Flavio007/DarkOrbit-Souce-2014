@@ -21,6 +21,8 @@ namespace Ow.Game.Objects
     class Player : Character
     {
         public string PetName { get; set; }
+        public int PetXp { get; set; }
+        public int PetLevel { set; get; }
         public int RankId { get; set; }
         public int WarRank { get; set; }
         public bool Premium { get; set; }
@@ -54,6 +56,10 @@ namespace Ow.Game.Objects
 
         public int Score = 0;
 
+        public int EquipExpansion = 3;
+
+        public DateTime UnderEmp = DateTime.Now;
+
         public Boolean FriendlyMap = true;
 
         public SettingsBase Settings = new SettingsBase();
@@ -70,9 +76,10 @@ namespace Ow.Game.Objects
         public TechManager TechManager { get; set; }
         public SkillManager SkillManager { get; set; }
         public BoosterManager BoosterManager { get; set; }
+        public LastPosition LastPosition { get; set; }
 
         public Player(int id, string name, Clan clan, int factionId, int rankId, int warRank, Ship ship)
-                     : base(id, name, factionId, ship, new Position(0, 0), null, clan)
+                     : base(id, name, factionId, ship, new Position(0, 0), null, clan, 3)
         {
             Name = name;
             Clan = clan;
@@ -93,6 +100,16 @@ namespace Ow.Game.Objects
             SettingsManager = new SettingsManager(this);
             CpuManager = new CpuManager(this);
             BoosterManager = new BoosterManager(this);
+        }
+
+        public int GetPetShip(int level)
+        {
+            return level > 1 && level < 4 ? 12 : level > 4 && level < 7 ? 13 : level > 7 && level < 10 ? 14 : level > 10 && level < 13 ? 15 : 22;
+        }
+
+        public int GetPetExpansion(int level)
+        {
+            return level == 2 ? 2 : level == 3 ? 3 : level == 5 ? 2 : level == 6 ? 3 : level == 8 ? 2 : level == 9 ? 3 : level == 11 ? 2 : level == 12 ? 3 : level == 14 ? 2 : level == 15 ? 3 : 1;
         }
 
         public override void Tick()
@@ -573,6 +590,7 @@ namespace Ow.Game.Objects
                 SendPacket("0|S|CFG|" + LootID);
                 SetCurrentConfiguration(Convert.ToInt32(LootID));
                 ConfigCooldown = DateTime.Now;
+                //achievement();
             }
             else
             {
@@ -603,7 +621,7 @@ namespace Ow.Game.Objects
         public byte[] GetBeaconCommand()
         {
             return BeaconCommand.write(1, 1, 1, 1, Storage.IsInDemilitarizedZone, Storage.RepairBotActivated, (SkillTree.engineering == 5),
-                         "equipment_extra_repbot_rep-4", Storage.IsInRadiationZone);
+                         "equipment_extra_repbot_rep-3", Storage.IsInRadiationZone);
         }
 
         public byte[] GetShipCreateCommand(Player otherPlayer, short relationType)
@@ -611,7 +629,7 @@ namespace Ow.Game.Objects
             return ShipCreateCommand.write(
                 Id,
                 Ship.LootId,
-                3,
+                Expansion,
                 !EventManager.JackpotBattle.InEvent(this) ? Clan.Tag : "",
                 !EventManager.JackpotBattle.InEvent(this) ? (otherPlayer.RankId == 21 ? $"{Name} - {Id}" : Name) : EventManager.JackpotBattle.Name,
                 Position.X,
@@ -642,8 +660,8 @@ namespace Ow.Game.Objects
                 MaxShieldPoints,
                 CurrentHitPoints,
                 MaxHitPoints,
-                0,
-                0,
+                3000,
+                3000,
                 CurrentNanoHull,
                 MaxNanoHull,
                 Position.X,
@@ -651,7 +669,7 @@ namespace Ow.Game.Objects
                 Spacemap.Id,
                 FactionId,
                 Clan.Id,
-                3,
+                1,
                 Premium,
                 Data.experience,
                 Data.honor,
@@ -671,6 +689,7 @@ namespace Ow.Game.Objects
         public int GetRingsCount()
         {
             GetLeonovEffect(Spacemap.Id, FactionId);
+            getShieldSkill();
             return WarRank == 1 ? 100 : WarRank == 2 ? 63 : WarRank == 3 ? 31 : WarRank == 4 ? 15 : WarRank == 5 ? 7 : WarRank == 6 ? 3 : WarRank == 7 ? 1 : 0;
         }
 
@@ -779,7 +798,7 @@ namespace Ow.Game.Objects
                             character.MaxHitPoints,
                             character.CurrentNanoHull,
                             character.MaxNanoHull,
-                            character is Player ? true : false));
+                            character.shieldeng ? true : false));
                     }
                 }
                 else if (Storage.InRangeAssets.ContainsKey(entityId))
@@ -951,12 +970,19 @@ namespace Ow.Game.Objects
 
         public int GetBaseMapId()
         {
-            return FactionId == 1 ? 1 : FactionId == 2 ? 5 : 9;
+            int basemap = FactionId == 1 ? 1 : FactionId == 2 ? 5 : 9;
+            if (Spacemap != null && (Spacemap.Id >= 16 && Spacemap.Id <= 29) && Level >= 12)
+                basemap = FactionId == 1 ? 20 : FactionId == 2 ? 24 : 28;
+            return basemap;
         }
 
         public Position GetBasePosition()
         {
-            return FactionId == 1 ? Position.MMOPosition : FactionId == 2 ? Position.EICPosition : Position.VRUPosition;
+            var baseposition = FactionId == 1 ? Position.MMOPosition : FactionId == 2 ? Position.EICPosition : Position.VRUPosition;
+            if ((Spacemap.Id >= 16 && Spacemap.Id <= 29) && Level >= 12)
+                baseposition = FactionId == 1 ? Position.NewMMOPosition : FactionId == 2 ? Position.NewEICPosition : Position.NewVRUPosition;
+
+            return baseposition;
         }
 
         public void ChangeData(DataType dataType, int amount, ChangeType changeType = ChangeType.INCREASE)
@@ -1146,6 +1172,12 @@ namespace Ow.Game.Objects
             SendPacket("0|t");
         }
 
+        public void getShieldSkill()
+        {
+            if (SkillTree.shieldEngineering == 5)
+                shieldeng = true;
+        }
+
         public int GetSkillPercentage(string skillName)
         {
             int value = 0;
@@ -1232,6 +1264,18 @@ namespace Ow.Game.Objects
             }
         }
 
+        public Boolean GetShieldMechanics()
+        {
+            if (SkillTree.shieldMechanics == 5)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public void UpdateScore(int score, Boolean increse)
         {
             if (EventManager.Scoremageddon.Active == true)
@@ -1255,7 +1299,10 @@ namespace Ow.Game.Objects
 
         public Boolean GetLeonovEffect(int map, int faction)
         {
-            if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV)
+            //SendPacket("0|UI|SET|CAM|LTC|0|0");
+            SendPacket("0|B|50|50|50|2000|5000|50|50|50|50|50|50");
+            SendPacket("0|g|a|b,1000,1,10000,C,2,500,U,3,1000,U,5,1000,U|r,100,1,10000,C,2,50000,C,3,500,U,4,700,U");
+            if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV && Spacemap.Id < 12)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
                 FriendlyMap = true;
@@ -1267,6 +1314,11 @@ namespace Ow.Game.Objects
                 FriendlyMap = false;
                 return false;
             }
+        }
+
+        public void achievement()
+        {
+            SendPacket($"0|ach|set|1|true|1");
         }
 
 

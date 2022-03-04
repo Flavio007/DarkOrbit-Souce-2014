@@ -264,6 +264,8 @@ namespace Ow.Game.Objects.Players.Managers
                 Player.Storage.DeactiveSLM_01();
                 Player.Storage.DeactiveDrawFireEffect();
 
+                Player.UnderEmp = DateTime.Now.AddSeconds(2);
+
                 string empPacket = "0|n|EMP|" + Player.Id;
                 Player.SendPacket(empPacket);
                 Player.SendPacketToInRangePlayers(empPacket);
@@ -411,7 +413,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (damageType == DamageType.LASER)
             {
-                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, GetSelectedLaser(), false, Player.GetBountyHunter());
+                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
                 Player.SendCommand(laserRunCommand);
                 Player.SendCommandToInRangePlayers(laserRunCommand);
             }
@@ -503,7 +505,7 @@ namespace Ow.Game.Objects.Players.Managers
                     if ((target as Player).Storage.UnderDiminisherEntity == Player)
                         damageShd += Maths.GetPercentage(damage, 30);
 
-                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, GetSelectedLaser(), false, Player.GetBountyHunter());
+                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
                 Player.SendCommand(laserRunCommand);
                 Player.SendCommandToInRangePlayers(laserRunCommand);
 
@@ -523,6 +525,12 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 if (target is Npc)
                     (target as Npc).ReceiveAttack(Player);
+                if (target is Cubikon)
+                    (target as Cubikon).ReceiveAttack(Player);
+                if (target is Protegit)
+                    (target as Protegit).ReceiveAttack(Player);
+                if (target is SolarLordakium)
+                    (target as SolarLordakium).ReceiveAttack(Player);
 
                 var attackHitCommand =
                         AttackHitCommand.write(new AttackTypeModule((short)damageType), Player.Id,

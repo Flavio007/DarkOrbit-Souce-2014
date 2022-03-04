@@ -43,6 +43,12 @@ namespace Ow.Managers
                     mySqlClient.ExecuteNonQuery($"UPDATE player_equipment SET boosters = '{JsonConvert.SerializeObject(player.BoosterManager.Boosters)}' WHERE userId = {player.Id}");
             }
 
+            public static void Position(Player player)
+            {
+                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                    mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET lastPosition = '{JsonConvert.SerializeObject(player.LastPosition)}' WHERE userId = {player.Id}"); //{{{player.Storage.lastMap},{player.Storage.lastPositionX},{player.Storage.lastPositionY}}}
+            }
+
             public static void Modules(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
@@ -143,8 +149,10 @@ namespace Ow.Managers
                         var rankId = Convert.ToInt32(row["rankID"]);
                         var warRank = Convert.ToInt32(row["warRank"]);
                         var clan = GameManager.GetClan(Convert.ToInt32(row["clanID"]));
+                        var lastposition = JsonConvert.DeserializeObject<LastPosition>(row["lastPosition"].ToString());
 
                         player = new Player(playerId, name, clan, factionId, rankId, warRank, ship);
+                        player.LastPosition = lastposition;
                         player.Premium = Convert.ToBoolean(row["premium"]);
                         player.Title = Convert.ToString(row["title"]);
                         player.Data = JsonConvert.DeserializeObject<DataBase>(row["data"].ToString());
@@ -424,8 +432,10 @@ namespace Ow.Managers
                     bool aggressive = Convert.ToBoolean(row["aggressive"]);
                     bool respawnable = Convert.ToBoolean(row["respawnable"]);
                     var rewards = JsonConvert.DeserializeObject<ShipRewards>(row["reward"].ToString());
+                    var waves = JsonConvert.DeserializeObject<MinionWaves>(row["waves"].ToString());
+                    int type = Convert.ToInt32(row["type"]);
 
-                    var ship = new Ship(name, shipID, hitpoints, shields, speed, lootID, damage, aggressive, respawnable, rewards);
+                    var ship = new Ship(name, shipID, hitpoints, shields, speed, lootID, damage, aggressive, respawnable, rewards, waves, type);
                     GameManager.Ships.TryAdd(ship.Id, ship);
                 }
             }

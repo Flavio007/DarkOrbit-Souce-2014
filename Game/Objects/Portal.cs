@@ -35,8 +35,9 @@ namespace Ow.Game.Objects
         public int GraphicsId { get; set; }
         public bool Visible { get; set; }
         public bool Working { get; set; }
+        public bool Random { set; get; }
 
-        public Portal(Spacemap spacemap, Position position, Position targetPosition, int targetSpacemapId, int graphicsId, int factionId, bool visible, bool working) : base(spacemap, factionId, position, GameManager.GetClan(0))
+        public Portal(Spacemap spacemap, Position position, Position targetPosition, int targetSpacemapId, int graphicsId, int factionId, bool visible, bool working, bool random) : base(spacemap, factionId, position, GameManager.GetClan(0))
         {
             TargetPosition = targetPosition;
             TargetSpaceMapId = targetSpacemapId;
@@ -44,7 +45,9 @@ namespace Ow.Game.Objects
             FactionId = factionId;
             Visible = visible;
             Working = working;
+            Random = random;
         }
+
 
         public override async void Click(GameSession gameSession)
         {
@@ -66,9 +69,9 @@ namespace Ow.Game.Objects
                 player.Deselection();
                 player.Storage.InRangeAssets.Clear();
                 player.InRangeCharacters.Clear();
-                player.SetPosition(TargetPosition);
+                player.SetPosition(Random ? Position.Random(player.Spacemap, 0, 20800, 0, 12800) : TargetPosition);
 
-                player.Spacemap = GameManager.GetSpacemap(TargetSpaceMapId);
+                player.Spacemap = GameManager.GetSpacemap(Random ? Randoms.GetRandomMap(1, 29, true) : TargetSpaceMapId);
 
                 player.Spacemap.AddAndInitPlayer(player);
                 player.Storage.Jumping = false;

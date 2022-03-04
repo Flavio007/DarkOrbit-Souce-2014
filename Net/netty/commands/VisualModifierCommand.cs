@@ -26,6 +26,7 @@ namespace Ow.Net.netty.commands
         public const short DRAW_FIRE_OWNER = 5;
         public const short OWNS_BATTLESTATION = 31;
         public const short SHIP_WARP = 15;
+        public const short SKULL = 18;
         public const short INACTIVE = 8;
         public const short MIRRORED_CONTROLS = 20;
         public const short vara2t = 48;
@@ -65,6 +66,8 @@ namespace Ow.Net.netty.commands
         public const short RED_GLOW = 23;
         public const short WEAKEN_SHIELDS_TARGET = 12;
         public const short varY2t = 41;
+        public const short HIGHLIGHT = 42;
+        public const short UBA_WINNER = 88;
 
         public int attribute = 0;
         public int userId = 0;

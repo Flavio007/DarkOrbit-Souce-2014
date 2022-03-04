@@ -182,6 +182,22 @@ namespace Ow.Game.Objects
         {
             if (this is Spaceball || Destroyed) return;
 
+            if (this is Cubikon cubi)
+            {
+                foreach (Protegit git in cubi.protegits)
+                    git.CubikonAlive = false;
+                cubi.Alive = false;
+                cubi.respawntime = DateTime.Now.AddMinutes(5);
+            }
+            if (this is Protegit protegit)
+                if(protegit.Mother is Cubikon cubikon)
+                {
+                    cubikon.DeleteGits(protegit);
+                }
+
+            if (this is SolarLordakium SunLord)
+                SunLord.respawntime = DateTime.Now.AddHours(2);
+
             if (MainAttacker != null && MainAttacker is Player)
             {
                 destroyer = MainAttacker;
@@ -313,7 +329,22 @@ namespace Ow.Game.Objects
                 {
                     var groupMembers = destroyerPlayer.Group?.Members.Values.Where(x => x.AttackingOrUnderAttack());
 
-                    if (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0))
+                    if (this is SolarLordakium Lord && Lord.challengers != null)
+                    {
+                        credits = credits / Lord.challengers.Count();
+                        experience = experience / Lord.challengers.Count();
+                        honor = honor / Lord.challengers.Count();
+                        uridium = uridium / Lord.challengers.Count();
+
+                        foreach (var PlayerInstance in Lord.challengers)
+                        {
+                            PlayerInstance.ChangeData(DataType.CREDITS, credits);
+                            PlayerInstance.ChangeData(DataType.EXPERIENCE, experience);
+                            PlayerInstance.ChangeData(DataType.HONOR, honor, changeType);
+                            PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
+                        }
+                    }
+                    else if (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0))
                     {
                         destroyerPlayer.ChangeData(DataType.CREDITS, credits);
                         destroyerPlayer.ChangeData(DataType.EXPERIENCE, experience);
@@ -569,6 +600,7 @@ namespace Ow.Game.Objects
             }
         }
 
+
         public void RemoveVisualModifier(int modifier)
         {
             var visualModifier = VisualModifiers.FirstOrDefault(x => x.Value.modifier == modifier).Value;
@@ -585,6 +617,13 @@ namespace Ow.Game.Objects
                 if (this is Player player)
                     player.SendCommand(new VisualModifierCommand(visualModifier.userId, visualModifier.modifier, 0, player.Ship.LootId, 0, false).writeCommand());
             }
+        }
+
+        public Boolean ShieldMechanics()
+        {
+            if (this is Player player)
+                return player.GetShieldMechanics();
+            return false;
         }
     }
 }

@@ -14,6 +14,10 @@ namespace Ow.Game.Objects.AI
 
         public NpcAIOption AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
         private static int ALIEN_DISTANCE_TO_USER = 300;
+        private static int RANDOM_MOVE_RANGE = 250;
+        public int RespawnX = 0;
+        public int RespawnY = 0;
+        private static int MINION_RANGE = 700;
 
         public NpcAI(Npc npc) { Npc = npc; }
 
@@ -21,7 +25,17 @@ namespace Ow.Game.Objects.AI
 
         public void TickAI()
         {
-            if(lastMovement.AddSeconds(1) < DateTime.Now)
+            if (Npc.Ship.Id == 80)
+                AIOption = NpcAIOption.MOTHERSHIP_RANDOM;
+            if (Npc.Ship.Id == 81)
+                AIOption = NpcAIOption.MINION;
+            if (Npc.Selected is Player user)
+                if (user.UnderEmp > DateTime.Now)
+                {
+                    Npc.Selected = null;
+                    Npc.Attacking = false;
+                }
+            if (lastMovement.AddSeconds(1) < DateTime.Now)
             {
                 switch (AIOption)
                 {
@@ -32,27 +46,29 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
+                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
-                                    AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
+                                    if (Npc.Ship.Id != 80)
+                                        AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
                                 }
-                                else
+                                else if(Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
                                 {
-                                    if (Npc.Ship.Aggressive)
+                                    if (Npc.Ship.Aggressive && !player.Storage.IsInSafeZone)
                                         Npc.Attacking = true;
 
                                     Npc.Selected = player;
-                                    AIOption = NpcAIOption.FLY_TO_ENEMY;
+                                    if (Npc.Ship.Id != 80)
+                                        AIOption = NpcAIOption.FLY_TO_ENEMY;
                                 }
                             }
                         }
 
                         if (!Npc.Moving && Npc.Selected == null)
                         {
-                            int nextPosX = Randoms.random.Next(20000);
-                            int nextPosY = Randoms.random.Next(12800);
+                            int nextPosX = Randoms.random.Next(Npc.Spacemap.Id == 29 ? 40000 : 20000);
+                            int nextPosY = Randoms.random.Next(Npc.Spacemap.Id == 29 ? 25600 : 12800);
 
                             Movement.Move(Npc, new Position(nextPosX, nextPosY));
                         }
@@ -64,6 +80,11 @@ namespace Ow.Game.Objects.AI
 
                             Movement.Move(Npc, Position.GetPosOnCircle(player.Position, ALIEN_DISTANCE_TO_USER));
                             AIOption = NpcAIOption.WAIT_PLAYER_MOVE;
+                            if ((player.Storage.IsInSafeZone && player.Selected != Npc))
+                            {
+                                Npc.Attacking = false;
+                                Npc.Selected = null;
+                            }
                         } 
                         else
                         {
@@ -77,7 +98,7 @@ namespace Ow.Game.Objects.AI
                         {
                             var player = Npc.Selected as Player;
 
-                            if (player.Moving)
+                            if (player.Moving && (!player.Storage.IsInSafeZone || (player.Selected == Npc)))
                                 AIOption = NpcAIOption.FLY_TO_ENEMY;
                         }
                         else
@@ -85,6 +106,38 @@ namespace Ow.Game.Objects.AI
                             Npc.Attacking = false;
                             Npc.Selected = null;
                             AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
+                        }
+                        break;
+                    case NpcAIOption.MINION:
+                        foreach (var players in Npc.InRangeCharacters.Values)
+                            if (players is Player)
+                            {
+                                var player = players as Player;
+
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
+                                {
+                                    Npc.Attacking = false;
+                                    Npc.Selected = null;
+                                }
+                                else
+                                {
+                                    Npc.Selected = player;
+                                    if (Npc.Ship.Aggressive)
+                                        Npc.Attacking = true;
+                                }
+                            }
+                        if (!Npc.Moving)
+                        {
+                            Movement.Move(Npc, new Position(RespawnX + Randoms.random.Next(-MINION_RANGE, MINION_RANGE), RespawnY + Randoms.random.Next(-MINION_RANGE, MINION_RANGE)));
+                        }
+                        break;
+                    case NpcAIOption.MOTHERSHIP_PATH:
+                        //TODO
+                        break;
+                    case NpcAIOption.MOTHERSHIP_RANDOM:
+                        if (!Npc.Moving)
+                        {
+                            Movement.Move(Npc, new Position(RespawnX + Randoms.random.Next(-RANDOM_MOVE_RANGE, RANDOM_MOVE_RANGE), RespawnY + Randoms.random.Next(-RANDOM_MOVE_RANGE, RANDOM_MOVE_RANGE)));
                         }
                         break;
                 }

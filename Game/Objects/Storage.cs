@@ -46,6 +46,7 @@ namespace Ow.Game.Objects
         public List<int> KilledPlayerIds = new List<int>();
         public Dictionary<string, Skill> Skills = new Dictionary<string, Skill>();
         public List<ModuleBase> BattleStationModules = new List<ModuleBase>();
+        public int[,] wave = new int[,] { { } };
 
         public bool UbaMatchmakingAccepted = false;
         public Duel Duel { get; set; }
@@ -59,6 +60,7 @@ namespace Ow.Game.Objects
 
         public bool OnBlockedMinePosition = false;
         public bool IsInDemilitarizedZone = false;
+        public bool IsInSafeZone = false;
         public bool IsInRadiationZone = false;
         public bool IsInEquipZone = false;
         public bool AtHangar = false;

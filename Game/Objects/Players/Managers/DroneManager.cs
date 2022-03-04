@@ -14,6 +14,8 @@ namespace Ow.Game.Objects.Players.Managers
 {
     class DroneManager : AbstractManager
     {
+        public List<int> DronesTypes = new List<int> { 1, 2, 1, 2, 1, 1, 1, 2, 0, 0 };
+        public List<int> DronesLevels = new List<int> { 321, 134, 342, 13, 3, 551, 2, 231, 0, 0 };
         public List<int> Config1Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public List<int> Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public bool Apis = false;
@@ -53,6 +55,7 @@ namespace Ow.Game.Objects.Players.Managers
 
         public void SetDroneDesigns()
         {
+            //SetDroneInfo();
             using (var mySqlClient = SqlDatabaseManager.GetClient())
             {
                 var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_equipment WHERE userId = {Player.Id}");
@@ -74,13 +77,37 @@ namespace Ow.Game.Objects.Players.Managers
             }
         }
 
+        public void SetDroneInfo()
+        {
+            using (var mySqlClient = SqlDatabaseManager.GetClient())
+            {
+                var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_equipment WHERE userId = {Player.Id}");
+                dynamic dronestypes = JsonConvert.DeserializeObject(querySet["drones"].ToString());
+                dynamic droneslevels = JsonConvert.DeserializeObject(querySet["drones_xp"].ToString());
+
+                for (var i = 0; i < 10; i++)
+                {
+                    foreach (var type in dronestypes[i]["type"])
+                        if (dronestypes[i] != null)
+                            DronesTypes[i] = (int)type;
+
+                    foreach (var level in droneslevels[i]["xp"])
+                        if (dronestypes[i] != null)
+                            DronesLevels[i] = (int)level;
+                }
+            }
+        }
+
         public void UpdateDrones(bool updateItems = false)
         {
             if (updateItems)
             {
+                DronesTypes = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                DronesLevels = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 Config1Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 SetDroneDesigns();
+                SetDroneInfo();
             }
 
             string drones = GetDronesPacket();
@@ -92,14 +119,23 @@ namespace Ow.Game.Objects.Players.Managers
             Player.SendCommandToInRangePlayers(droneFormationChangeCommand);
         }
 
+        /*            if (Player.CurrentConfig == 1)
+                DronePacket = $"2|6|{GetDesignId(Config1Designs[0])}|2|6|{GetDesignId(Config1Designs[1])}|2|6|{GetDesignId(Config1Designs[2])}|2|6|{GetDesignId(Config1Designs[3])}|2|6|{GetDesignId(Config1Designs[4])}|2|6|{GetDesignId(Config1Designs[5])}|2|6|{GetDesignId(Config1Designs[6])}|2|6|{GetDesignId(Config1Designs[7])}";
+            else
+                DronePacket = $"2|6|{GetDesignId(Config2Designs[0])}|2|6|{GetDesignId(Config2Designs[1])}|2|6|{GetDesignId(Config2Designs[2])}|2|6|{GetDesignId(Config2Designs[3])}|2|6|{GetDesignId(Config2Designs[4])}|2|6|{GetDesignId(Config2Designs[5])}|2|6|{GetDesignId(Config2Designs[6])}|2|6|{GetDesignId(Config2Designs[7])}";
+        */
+
         public string GetDronesPacket()
         {
             var DronePacket = "";
 
-            if (Player.CurrentConfig == 1)
-                DronePacket = $"2|6|{GetDesignId(Config1Designs[0])}|2|6|{GetDesignId(Config1Designs[1])}|2|6|{GetDesignId(Config1Designs[2])}|2|6|{GetDesignId(Config1Designs[3])}|2|6|{GetDesignId(Config1Designs[4])}|2|6|{GetDesignId(Config1Designs[5])}|2|6|{GetDesignId(Config1Designs[6])}|2|6|{GetDesignId(Config1Designs[7])}";
-            else
-                DronePacket = $"2|6|{GetDesignId(Config2Designs[0])}|2|6|{GetDesignId(Config2Designs[1])}|2|6|{GetDesignId(Config2Designs[2])}|2|6|{GetDesignId(Config2Designs[3])}|2|6|{GetDesignId(Config2Designs[4])}|2|6|{GetDesignId(Config2Designs[5])}|2|6|{GetDesignId(Config2Designs[6])}|2|6|{GetDesignId(Config2Designs[7])}";
+            for (int x = 0; x < DronesTypes.Count; x++)
+            {
+                if (Player.CurrentConfig == 1)
+                    DronePacket = $"2|6|{GetDesignId(Config1Designs[0])}|2|6|{GetDesignId(Config1Designs[1])}|2|6|{GetDesignId(Config1Designs[2])}|2|6|{GetDesignId(Config1Designs[3])}|2|6|{GetDesignId(Config1Designs[4])}|2|6|{GetDesignId(Config1Designs[5])}|2|6|{GetDesignId(Config1Designs[6])}|2|6|{GetDesignId(Config1Designs[7])}";
+                else
+                    DronePacket = $"2|6|{GetDesignId(Config2Designs[0])}|2|6|{GetDesignId(Config2Designs[1])}|2|6|{GetDesignId(Config2Designs[2])}|2|6|{GetDesignId(Config2Designs[3])}|2|6|{GetDesignId(Config2Designs[4])}|2|6|{GetDesignId(Config2Designs[5])}|2|6|{GetDesignId(Config2Designs[6])}|2|6|{GetDesignId(Config2Designs[7])}";
+            }
 
             if (Apis)
                 DronePacket += $"|3|6|{GetDesignId(Player.CurrentConfig == 1 ? Config1Designs[8] : Config2Designs[8])}";
@@ -118,6 +154,22 @@ namespace Ow.Game.Objects.Players.Managers
             else if (designItemId >= 130 && designItemId < 140)
                 return 2;
             return 0;
+        }
+
+        public int GetDroneLevel(int xp)
+        {
+            if (xp < 100)
+                return 1;
+            if (xp >= 100 && xp <= 199)
+                return 2;
+            if (xp >= 200 && xp <= 399)
+                return 3;
+            if (xp >= 400 && xp <= 799)
+                return 4;
+            if (xp >= 800 && xp <= 1599)
+                return 5;
+            else
+                return 6;
         }
 
         public DateTime regenerationCooldown = new DateTime();

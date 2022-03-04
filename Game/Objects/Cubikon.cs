@@ -14,16 +14,21 @@ using System.Threading.Tasks;
 
 namespace Ow.Game.Objects
 {
-    class Npc : Character
+    class Cubikon : Npc
     {
-        public NpcAI NpcAI { get; set; }
-        public bool Attacking = false;
-        //public bool Minion = false;
-        public int MotherShipId = 0;
-        public int minioncount = 0;
-        public int AgroRange = 500;
+        public new NpcAI NpcAI { get; set; }
+        public new bool Attacking = false;
+        public new int MotherShipId = 0;
+        public new int minioncount = 0;
+        public List<Protegit> protegits = new List<Protegit>();
+        public int MinionShip = 1;
+        public int WaveSize = 1;
+        public bool Alive = true;
+        private Position respawnpos;
+        public DateTime respawntime;
 
-        public Npc(int id, Ship ship, Spacemap spacemap, Position position, int Owner) : base(id, ship.Name, 0, ship, position, spacemap, GameManager.GetClan(0),0)
+
+        public Cubikon(int id, Ship ship, Spacemap spacemap, Position position, int minionsShip, int minionsCount) : base(id, ship, spacemap, position, 0)
         {
             Spacemap.AddCharacter(this);
 
@@ -38,66 +43,52 @@ namespace Ow.Game.Objects
             NpcAI = new NpcAI(this);
             NpcAI.RespawnX = Position.X;
             NpcAI.RespawnY = Position.Y;
-            MotherShipId = Owner;
+
+            respawnpos = position;
+
+            MinionShip = minionsShip;
+            WaveSize = minionsCount;
 
         Program.TickManager.AddTick(this);
         }
 
         public override void Tick()
         {
-            if (!Destroyed)
+            Movement.ActualPosition(this);
+            NpcAI.TickAI();
+            CheckShieldPointsRepair();
+            Storage.Tick();
+            RefreshAttackers();
+            checkrepsawn();
+
+            if (Attacking && Damage > 0)
+                Attack();
+        }
+
+        void checkrepsawn()
+        {
+            if (!Alive && respawntime <= DateTime.Now)
             {
-                Movement.ActualPosition(this);
-                NpcAI.TickAI();
-                CheckShieldPointsRepair();
-                Storage.Tick();
-                RefreshAttackers();
-                ProtegitCheck();
-
-                if (Attacking && Damage > 0)
-                    Attack();
+                Respawn(respawnpos);
+                Alive = true;
             }
-
         }
 
 
-        public DateTime lastAttackTime = new DateTime();
-        public void Attack()
+        public new DateTime lastAttackTime = new DateTime();
+        public new void Attack()
         {
-            var damage = AttackManager.RandomizeDamage(Damage, (Storage.underPLD8 ? 0.5 : 0.1));
             var target = SelectedCharacter;
 
             if (!TargetDefinition(target, false)) return;
 
             if (target is Player player && player.AttackManager.EmpCooldown.AddMilliseconds(TimeManager.EMP_DURATION) > DateTime.Now)
-            {
-                Selected = null;
                 return;
-            }
 
             if (lastAttackTime.AddSeconds(1) < DateTime.Now)
             {
-                if (target is Player && (target as Player).Storage.Spectrum)
-                    damage -= Maths.GetPercentage(damage, 50);
 
                 int damageShd = 0, damageHp = 0;
-
-                double shieldAbsorb = System.Math.Abs(target.ShieldAbsorption - 0);
-
-                if (shieldAbsorb > 1)
-                    shieldAbsorb = 1;
-
-                if ((target.CurrentShieldPoints - damage) >= 0)
-                {
-                    damageShd = (int)(damage * shieldAbsorb);
-                    damageHp = damage - damageShd;
-                }
-                else
-                {
-                    int newDamage = damage - target.CurrentShieldPoints;
-                    damageShd = target.CurrentShieldPoints;
-                    damageHp = (int)(newDamage + (damageShd * shieldAbsorb));
-                }
 
                 if ((target.CurrentHitPoints - damageHp) < 0)
                 {
@@ -106,31 +97,8 @@ namespace Ow.Game.Objects
 
                 if (target is Player && !(target as Player).Attackable())
                 {
-                    damage = 0;
                     damageShd = 0;
                     damageHp = 0;
-                }
-
-                if (target is Player && (target as Player).Storage.Sentinel)
-                    damageShd -= Maths.GetPercentage(damageShd, 30);
-
-                var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
-                SendCommandToInRangePlayers(laserRunCommand);
-
-                if (damage == 0)
-                {
-                    var attackMissedCommandToInRange = AttackMissedCommand.write(new AttackTypeModule(AttackTypeModule.LASER), target.Id, 1);
-                    SendCommandToInRangePlayers(attackMissedCommandToInRange);
-                }
-                else
-                {
-                    var attackHitCommand =
-                        AttackHitCommand.write(new AttackTypeModule(AttackTypeModule.LASER), Id,
-                             target.Id, target.CurrentHitPoints,
-                             target.CurrentShieldPoints, target.CurrentNanoHull,
-                             damage > damageShd ? damage : damageShd, false);
-
-                    SendCommandToInRangePlayers(attackHitCommand);
                 }
 
                 if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
@@ -147,56 +115,88 @@ namespace Ow.Game.Objects
             }
         }
 
-        public void SpawnWave(int owner,int npcid, int count)
+        public void SpawnWave(int npcid, int count)
         {
+            //GameManager.SendPacketToMap(this.Spacemap.Id, $"0|n|s|start|{this.Id}");
             for (int i = 1; i < count; i++)
-                new Npc(Randoms.CreateRandomID(), GameManager.GetShip(npcid), this.Spacemap, this.Position, owner);
-                minioncount++;
+                if (minioncount < 20)
+                {
+                    protegits.Add(new Protegit(Randoms.CreateRandomID(), GameManager.GetShip(npcid), Spacemap, Position.GetPosOnCircle(Position, 500), this));
+                    minioncount++;
+                }
         }
 
-        public DateTime lastShieldRepairTime = new DateTime();
+        public new DateTime lastShieldRepairTime = new DateTime();
         private void CheckShieldPointsRepair()
         {
             if (LastCombatTime.AddSeconds(10) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;
-
+                //if (this.Ship.Id == 80)
+                    //GameManager.SendPacketToMap(this.Spacemap.Id, $"0|n|s|end|{this.Id}");
                     
 
             int repairShield = MaxShieldPoints / 10;
             CurrentShieldPoints += repairShield;
             UpdateStatus();
+            if(LastCombatTime.AddSeconds(10) >= DateTime.Now)
+                minioncount = 0;
 
             lastShieldRepairTime = DateTime.Now;
         }
 
-        public void Respawn()
+        public void Respawn(Position respawn)
         {
             LastCombatTime = DateTime.Now.AddSeconds(-999);
             CurrentHitPoints = MaxHitPoints;
             CurrentShieldPoints = MaxShieldPoints;
-            SetPosition(Position.Random(Spacemap, 0, Spacemap.Id == 29 ? 41600 : 20800, 0, Spacemap.Id == 29 ? 25600 : 12800));
+            SetPosition(respawn);
             Spacemap.AddCharacter(this);
             Attackers.Clear();
             MainAttacker = null;
             Destroyed = false;
+            protegits.Clear();
+            minioncount = 0;
         }
 
-        public void ProtegitCheck()
+        void CheckWaveSize()
         {
-            if (this is Protegit git)
+            if (Attacking)
             {
-                if (git.CubikonAlive && git.Mother.LastCombatTime.AddSeconds(20) <= DateTime.Now || git.lastAttackTime.AddSeconds(10) <= DateTime.Now && !git.CubikonAlive)
+                if (minioncount == 0)
                 {
-                    git.Mother.DeleteGits(git);
-                    Spacemap.RemoveCharacter(git);
-                    git.Destroyed = true;
+                    SpawnWave(MinionShip, WaveSize);
+                }
+                else if (minioncount < WaveSize / 2)
+                {
+                    SpawnWave(MinionShip, WaveSize / 2);
                 }
             }
         }
 
-        public void ReceiveAttack(Character character)
+        public new void ReceiveAttack(Character character)
         {
             Selected = character;
-            Attacking = true;
+            if (!Attacking)
+            {
+                Attacking = true;
+            }
+            foreach(Protegit git in protegits)
+            {
+                if(!git.underAttack)
+                    git.FocusAttack(character);
+            }
+            CheckWaveSize();
+        }
+
+        public void DeleteGits(Protegit DeleteThis)
+        {
+            foreach(Protegit gits in protegits)
+            {
+                if (gits == DeleteThis)
+                {
+                    //protegits.Remove(gits);
+                    minioncount--;
+                }
+            }
         }
 
         public override int Speed

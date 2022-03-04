@@ -30,7 +30,7 @@ namespace Ow.Game.Objects
 
         public DateTime LastDamagedTime = new DateTime();
 
-        public Spaceball(int id, int typeId) : base(id, GameManager.GetShip(typeId).Name, 0, GameManager.GetShip(typeId), CurrentPosition, GameManager.GetSpacemap(16), GameManager.GetClan(0))
+        public Spaceball(int id, int typeId) : base(id, GameManager.GetShip(typeId).Name, 0, GameManager.GetShip(typeId), CurrentPosition, GameManager.GetSpacemap(16), GameManager.GetClan(0),0)
         {
             Speed = 100;
         }

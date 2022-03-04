@@ -192,6 +192,16 @@ namespace Ow.Net.netty
 
         public const String ACHIEVEMENT_GAIN = "ACG";
 
+        public const String ACHIEVEMENTS = "ach";
+
+        public const String ACHIEVEMENT_SET = "set";
+
+        public const String ACHIEVEMENT_REMOVE = "rm";
+
+        public const String ACHIEVEMENT_END = "end";
+
+        public const String ACHIEVEMENT_BUY = "buy";
+
         public const String VELOCITY_UPDATE = "v";
 
         public const String CARGO_CHANGE = "c";
@@ -1063,5 +1073,13 @@ namespace Ow.Net.netty
         public const String CAPTCHA_FAIL = "F";
 
         public const String CAPTCHA_REFRESH = "R";
+
+        public const String CAMERA = "CAM";
+
+        public const String CAMERA_LOCK_TO_HERO = "LTH";
+
+        public const String CAMERA_LOCK_TO_SHIP = "LTS";
+
+        public const String CAMERA_LOCK_TO_COORDINATES = "LTC";
     }
 }

@@ -16,7 +16,23 @@ namespace Ow.Game
         public int Credits { get; set; }
         public int Uridium { get; set; }
     }
+    class MinionWaves
+    {
+        public int NpcId { get; set; }
+        public int Count { get; set; }
+    }
 
+    class Type
+    {
+        public int NpcType { get; set; }
+    }
+
+    class LastPosition
+    {
+        public int map { get; set; }
+        public int x { get; set; }
+        public int y { get; set; }
+    }
     class Ship
     {
         public static int PHOENIX = 1;
@@ -44,6 +60,10 @@ namespace Ow.Game
         public const int GOLIATH_SATURN = 109;
         public const int GOLIATH_CENTAUR = 110;
         public const int GOLIATH_RAZER = 153;
+
+        public const int GOLIATH_PLUS = 163;
+        public const int CITADEL_PLUS = 164;
+        public const int LIBERATOR_PLUS = 165;
 
         public const int VENGEANCE_ADEPT = 16;
         public const int VENGEANCE_CORSAIR = 17;
@@ -103,8 +123,10 @@ namespace Ow.Game
         public bool Aggressive { get; set; }
         public bool Respawnable { get; set; }
         public ShipRewards Rewards { get; set; }
+        public MinionWaves Waves { get; set; }
+        public int Type { get; set; }
 
-        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards)
+        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves,int type)
         {
             Name = name;
             Id = id;
@@ -116,6 +138,8 @@ namespace Ow.Game
             Aggressive = aggressive;
             Respawnable = respawnable;
             Rewards = rewards;
+            Waves = waves;
+            Type = type;
         }
 
         public int GetHitPointsBoost(int hitpoints)

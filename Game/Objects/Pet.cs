@@ -27,18 +27,32 @@ namespace Ow.Game.Objects
 
         public bool Activated = false;
         public bool GuardModeActive = false;
+        public int level = 15;
+        public int xp = 0;
+        private double SHDboost = 0;
+        private double DMGboost = 0;
+        private int kamikazedmg;
+        public bool KamikazeModeActive = false;
+        public bool KamikazeSelected = false;
+        public bool InKamikize = false;
+        public bool KamikazeAi = true;
+        public bool ComboRepairModeActive = false;
+        public bool RepairModeActive = false;
+        public bool AutoLootModeActive = false;
         public short GearId = PetGearTypeModule.PASSIVE;
 
-        public Pet(Player player) : base(Randoms.CreateRandomID(), "P.E.T 15", player.FactionId, GameManager.GetShip(22), player.Position, player.Spacemap, player.Clan)
+        public Pet(Player player) : base(Randoms.CreateRandomID(), "P.E.T 15", player.FactionId, GameManager.GetShip(player.PetLevel), player.Position, player.Spacemap, player.Clan, player.GetPetExpansion(player.PetLevel))
         {
             Name = player.PetName;
             Owner = player;
+            player.PetLevel = level;
+            CheckBoosters();
 
             ShieldAbsorption = 0.8;
-            Damage = 5000;
+            Damage = (int)(5000 * DMGboost);
             CurrentHitPoints = 2500;
-            MaxHitPoints = 50000;
-            MaxShieldPoints = 50000;
+            MaxHitPoints = level * 10000 + 50000;
+            MaxShieldPoints = (int)(50000 * SHDboost);
             CurrentShieldPoints = MaxShieldPoints;
         }
 
@@ -49,15 +63,193 @@ namespace Ow.Game.Objects
                 CheckShieldPointsRepair();
                 CheckGuardMode();
                 CheckAutoLoot();
+                CheckBoosters();
                 Follow(Owner);
+                CheckKamikazeMode();
                 Movement.ActualPosition(this);
             }
+        }
+
+        public void CheckBoosters()
+        {
+            SHDboost = level >= 1 && level < 3 ? 1.02 : level >= 3 && level < 6 ? 1.04 : level >= 6 && level < 9 ? 1.06 : level >= 9 && level < 11 ? 1.08 : level >= 11 && level < 13 ? 1.10 : level >= 13 && level < 15 ? 1.12 : level == 15 ? 1.15 : 0;
+            DMGboost = level >= 1 && level < 3 ? 1.02 : level >= 3 && level < 6 ? 1.04 : level >= 6 && level < 9 ? 1.06 : level >= 9 && level < 11 ? 1.08 : level >= 11 && level < 13 ? 1.10 : level >= 13 ? 1.12 : 0;
         }
 
         public void CheckAutoLoot()
         {
             //TODO
         }
+
+        public DateTime Kamikazecdr = new DateTime();
+        public void InKami()
+        {
+            if (!KamikazeModeActive)
+                if (level < 4)
+                    if (Kamikazecdr.AddSeconds(TimeManager.G_KK1_COOLDOWN) >= DateTime.Now)
+                    {
+                        Owner.SendPacket("0|A|STD|Kamikaze is now available again!");
+                        KamikazeModeActive = true;
+                    }
+                if (level < 7)
+                    if (Kamikazecdr.AddSeconds(TimeManager.G_KK2_COOLDOWN) >= DateTime.Now)
+                    {
+                        Owner.SendPacket("0|A|STD|Kamikaze is now available again!");
+                        KamikazeModeActive = true;
+                    }
+                else
+                    if (Kamikazecdr.AddSeconds(TimeManager.G_KK3_COOLDOWN) >= DateTime.Now)
+                    {
+                        Owner.SendPacket("0|A|STD|Kamikaze is now available again!");
+                        KamikazeModeActive = true;
+                    }
+        }
+        public void CheckKamikazeMode()
+        {
+            if (KamikazeModeActive)
+            {
+                if (Owner.AttackingOrUnderAttack(5) && Owner.MainAttacker != null)
+                {
+                    Kamikaze(Owner.MainAttacker);
+                }
+                else
+                {
+                    foreach (var target in Owner.InRangeCharacters.Values)
+                    {
+                        if (target.Selected == Owner && Owner.AttackingOrUnderAttack(3))
+                        {
+                            Kamikaze(target);
+                        }
+                    }
+                }
+            }
+        }
+        private void Kamikaze(Character target)
+        {
+
+            if (Kamikazecdr == DateTime.Now)
+            {
+                FollowEnemyAsync(target);
+            }
+            else if (Kamikazecdr.AddSeconds(30) <= DateTime.Now)
+            {
+                FollowEnemyAsync(target);
+            }
+            else
+            {
+                GearId = PetGearTypeModule.GUARD;
+                Owner.SendCommand(PetGearSelectCommand.write(new PetGearTypeModule(PetGearTypeModule.GUARD), new List<int>()));
+            }
+
+
+        }
+
+        private async Task FollowEnemyAsync(Character target)
+        {
+            if (KamikazeAi && !InKamikize)
+            {
+
+
+                var startkami = DateTime.Now;
+                InKamikize = true;
+
+                Owner.Selected = target;
+
+                DateTime start = DateTime.Now;
+                GameManager.SendPacketToAll($"0|n|fx|start|RAGE|{Id}");
+                int timer = 0;
+                bool wait = true;
+                for (int i = 0; i < 5; i++)
+                {
+                    if (i == 0)
+                    {
+                        timer = 1300;
+                    }
+                    else if (i > 0)
+                    {
+                        timer = 1200;
+                    }
+
+                    if (Owner.Speed > 450)
+                    {
+                        timer += 250;
+                    }
+                    Movement.Move(this, target.Position);
+                    if (i >= 2 && Position.DistanceTo(target.Position) < 150)
+                    {
+                        Explode(target);
+                        wait = false;
+                        break;
+
+                    }
+                    if (wait)
+                        await Task.Delay(1000);
+
+
+                }
+                if (wait)
+                    Explode(target);
+            }
+
+        }
+
+        public void Explode(Character target)
+        {
+            kamikazedmg = level < 4 ? 25000 : level < 8 ? 45000 : 75000;
+
+            foreach (var character in this.InRangeCharacters.Where(n => Position.DistanceTo(n.Value.Position) < 1000))
+            {
+                if (character.Value != Owner)
+                {
+
+                    if (character.Value is Player && !(character.Value as Player).Attackable())
+                    {
+                        kamikazedmg = 0;
+                        Damage = 0;
+
+                    }
+                    var distance = Position.DistanceTo(character.Value.Position);
+                    if (distance > 400)
+                    {
+                        if (distance < 850)
+                        {
+                            kamikazedmg = Maths.GetPercentage(kamikazedmg, 85);
+                            kamikazedmg = AttackManager.RandomizeDamage(kamikazedmg, 0);
+                        }
+                        else
+                        {
+                            kamikazedmg = Maths.GetPercentage(kamikazedmg, 65);
+                            kamikazedmg = AttackManager.RandomizeDamage(kamikazedmg, 0);
+                        }
+                    }
+
+                    character.Value.CurrentHitPoints -= Maths.GetPercentage(kamikazedmg, 95);
+                    character.Value.CurrentShieldPoints -= Maths.GetPercentage(kamikazedmg, 5);
+                    if (character.Value.CurrentHitPoints - Maths.GetPercentage(kamikazedmg, 95) <= 0 || character.Value.CurrentHitPoints <= 0)
+                    {
+                        character.Value.Destroy(Owner, DestructionType.PLAYER);
+                    }
+                    character.Value.UpdateStatus();
+                    var attackHitCommand =
+                            AttackHitCommand.write(new AttackTypeModule(AttackTypeModule.KAMIKAZE), Id,
+                                                    character.Value.Id, character.Value.CurrentHitPoints,
+                                                        character.Value.CurrentShieldPoints, character.Value.CurrentNanoHull,
+                                                    Damage > kamikazedmg ? Damage : kamikazedmg, false);
+
+                    SendCommandToInRangePlayers(attackHitCommand);
+
+                }
+            }
+
+            Destroy(this, DestructionType.PET);
+            InKamikize = false;
+            KamikazeAi = false;
+            target = null;
+            Kamikazecdr = DateTime.Now;
+
+
+        }
+
 
         public DateTime lastShieldRepairTime = new DateTime();
         private void CheckShieldPointsRepair()
@@ -84,12 +276,38 @@ namespace Ow.Game.Objects
                         if ((Owner.AttackingOrUnderAttack(5) || Owner.LastAttackTime(5)) || ((enemy is Player && (enemy as Player).LastAttackTime(5)) && enemy.SelectedCharacter == Owner))
                             Attack(Owner.SelectedCharacter);
                     }
-                    else
+                    else if (enemy is Player)
                     {
-                        if (((enemy is Player && (enemy as Player).LastAttackTime(5)) && enemy.SelectedCharacter == Owner))
+                        if ((enemy as Player).LastAttackTime(5) && enemy.SelectedCharacter == Owner)
+                            Attack(enemy);
+                    }
+                    else if (enemy is Npc)
+                    {
+                        if ((enemy as Npc).Attacking && enemy.InRange(Owner,500) && enemy.SelectedCharacter == Owner)
                             Attack(enemy);
                     }
                 }
+            }
+        }
+
+        private int GetLaserDamage()
+        {
+            switch(Owner.AttackManager.GetSelectedLaser())
+            {
+                case 0:
+                    return 1;
+                case 1:
+                    return 2;
+                case 2:
+                    return 3;
+                case 3:
+                    return 4;
+                case 4:
+                    return 2;
+                case 6:
+                    return 6;
+                default:
+                    return 1;
             }
         }
 
@@ -99,11 +317,12 @@ namespace Ow.Game.Objects
             if ((Owner.Settings.InGameSettings.selectedLaser == AmmunitionManager.RSB_75 ? lastRSBAttackTime : lastAttackTime).AddSeconds(Owner.Settings.InGameSettings.selectedLaser == AmmunitionManager.RSB_75 ? 3 : 1) < DateTime.Now)
             {
                 int damageShd = 0, damageHp = 0;
+                int tempdmg = Damage * GetLaserDamage();
 
                 if (target is Spaceball)
                 {
                     var spaceball = target as Spaceball;
-                    spaceball.AddDamage(this, Damage);
+                    spaceball.AddDamage(this, tempdmg);
                 }
 
                 double shieldAbsorb = System.Math.Abs(target.ShieldAbsorption - 1);
@@ -111,14 +330,14 @@ namespace Ow.Game.Objects
                 if (shieldAbsorb > 1)
                     shieldAbsorb = 1;
 
-                if ((target.CurrentShieldPoints - Damage) >= 0)
+                if ((target.CurrentShieldPoints - tempdmg) >= 0)
                 {
-                    damageShd = (int)(Damage * shieldAbsorb);
-                    damageHp = Damage - damageShd;
+                    damageShd = (int)(tempdmg * shieldAbsorb);
+                    damageHp = tempdmg - damageShd;
                 }
                 else
                 {
-                    int newDamage = Damage - target.CurrentShieldPoints;
+                    int newDamage = tempdmg - target.CurrentShieldPoints;
                     damageShd = target.CurrentShieldPoints;
                     damageHp = (int)(newDamage + (damageShd * shieldAbsorb));
                 }
@@ -130,7 +349,7 @@ namespace Ow.Game.Objects
 
                 if (target is Player && !(target as Player).Attackable())
                 {
-                    Damage = 0;
+                    tempdmg = 0;
                     damageShd = 0;
                     damageHp = 0;
                 }
@@ -150,9 +369,9 @@ namespace Ow.Game.Objects
 
                 var attackHitCommand =
                         AttackHitCommand.write(new AttackTypeModule(AttackTypeModule.LASER), Id,
-                                             target.Id, target.CurrentHitPoints,
-                                             target.CurrentShieldPoints, target.CurrentNanoHull,
-                                             Damage > damageShd ? Damage : damageShd, false);
+                                                target.Id, target.CurrentHitPoints,
+                                                target.CurrentShieldPoints, target.CurrentNanoHull,
+                                                tempdmg > damageShd ? tempdmg : damageShd, false);
 
                 SendCommandToInRangePlayers(attackHitCommand);
 
@@ -253,9 +472,10 @@ namespace Ow.Game.Objects
 
         private void Initialization(short gearId = PetGearTypeModule.PASSIVE)
         {
-            Owner.SendCommand(PetStatusCommand.write(Id, 15, 27000000, 27000000, CurrentHitPoints, MaxHitPoints, CurrentShieldPoints, MaxShieldPoints, 50000, 50000, Speed, Name));
+            Owner.SendCommand(PetStatusCommand.write(Id, level, xp, 27000000, CurrentHitPoints, MaxHitPoints, CurrentShieldPoints, MaxShieldPoints, 50000, 50000, Speed, Name));
             Owner.SendCommand(PetGearAddCommand.write(new PetGearTypeModule(PetGearTypeModule.PASSIVE), 0, 0, true));
             Owner.SendCommand(PetGearAddCommand.write(new PetGearTypeModule(PetGearTypeModule.GUARD), 0, 0, true));
+            Owner.SendCommand(PetGearAddCommand.write(new PetGearTypeModule(PetGearTypeModule.KAMIKAZE), 0, 0, true));
             SwitchGear(gearId);
         }
 
@@ -284,6 +504,10 @@ namespace Ow.Game.Objects
                     break;
                 case PetGearTypeModule.GUARD:
                     GuardModeActive = true;
+                    break;
+                case PetGearTypeModule.KAMIKAZE:
+                    KamikazeModeActive = true;
+                    GuardModeActive = false;
                     break;
             }
             GearId = gearId;

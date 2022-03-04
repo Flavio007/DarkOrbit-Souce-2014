@@ -14,16 +14,17 @@ using System.Threading.Tasks;
 
 namespace Ow.Game.Objects
 {
-    class Npc : Character
+    class SolarLordakium : Npc
     {
-        public NpcAI NpcAI { get; set; }
-        public bool Attacking = false;
-        //public bool Minion = false;
-        public int MotherShipId = 0;
-        public int minioncount = 0;
-        public int AgroRange = 500;
+        public new NpcAI NpcAI { get; set; }
+        public new bool Attacking = false;
+        public bool Alive = true;
 
-        public Npc(int id, Ship ship, Spacemap spacemap, Position position, int Owner) : base(id, ship.Name, 0, ship, position, spacemap, GameManager.GetClan(0),0)
+        public DateTime respawntime;
+
+        public List<Player> challengers = new List<Player>();
+
+        public SolarLordakium(int id, Ship ship, Spacemap spacemap, Position position, int Owner) : base(id, ship, spacemap, position, 0)
         {
             Spacemap.AddCharacter(this);
 
@@ -40,7 +41,9 @@ namespace Ow.Game.Objects
             NpcAI.RespawnY = Position.Y;
             MotherShipId = Owner;
 
-        Program.TickManager.AddTick(this);
+            AddVisualModifier(VisualModifierCommand.GREEN_GLOW, 0, "", 0, true);
+
+            Program.TickManager.AddTick(this);
         }
 
         public override void Tick()
@@ -61,8 +64,8 @@ namespace Ow.Game.Objects
         }
 
 
-        public DateTime lastAttackTime = new DateTime();
-        public void Attack()
+        public new DateTime lastAttackTime = new DateTime();
+        public new void Attack()
         {
             var damage = AttackManager.RandomizeDamage(Damage, (Storage.underPLD8 ? 0.5 : 0.1));
             var target = SelectedCharacter;
@@ -147,56 +150,18 @@ namespace Ow.Game.Objects
             }
         }
 
-        public void SpawnWave(int owner,int npcid, int count)
-        {
-            for (int i = 1; i < count; i++)
-                new Npc(Randoms.CreateRandomID(), GameManager.GetShip(npcid), this.Spacemap, this.Position, owner);
-                minioncount++;
-        }
-
-        public DateTime lastShieldRepairTime = new DateTime();
+        public new DateTime lastShieldRepairTime = new DateTime();
         private void CheckShieldPointsRepair()
         {
-            if (LastCombatTime.AddSeconds(10) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;
+            if (LastCombatTime.AddSeconds(100) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;
 
                     
 
-            int repairShield = MaxShieldPoints / 10;
+            int repairShield = MaxShieldPoints / 1;
             CurrentShieldPoints += repairShield;
             UpdateStatus();
 
             lastShieldRepairTime = DateTime.Now;
-        }
-
-        public void Respawn()
-        {
-            LastCombatTime = DateTime.Now.AddSeconds(-999);
-            CurrentHitPoints = MaxHitPoints;
-            CurrentShieldPoints = MaxShieldPoints;
-            SetPosition(Position.Random(Spacemap, 0, Spacemap.Id == 29 ? 41600 : 20800, 0, Spacemap.Id == 29 ? 25600 : 12800));
-            Spacemap.AddCharacter(this);
-            Attackers.Clear();
-            MainAttacker = null;
-            Destroyed = false;
-        }
-
-        public void ProtegitCheck()
-        {
-            if (this is Protegit git)
-            {
-                if (git.CubikonAlive && git.Mother.LastCombatTime.AddSeconds(20) <= DateTime.Now || git.lastAttackTime.AddSeconds(10) <= DateTime.Now && !git.CubikonAlive)
-                {
-                    git.Mother.DeleteGits(git);
-                    Spacemap.RemoveCharacter(git);
-                    git.Destroyed = true;
-                }
-            }
-        }
-
-        public void ReceiveAttack(Character character)
-        {
-            Selected = character;
-            Attacking = true;
         }
 
         public override int Speed
@@ -209,6 +174,22 @@ namespace Ow.Game.Objects
                     value -= value;
 
                 return value;
+            }
+        }
+
+        public new void ReceiveAttack(Character character)
+        {
+            Selected = character;
+            if (!Attacking)
+            {
+                Attacking = true;
+            }
+            if (character is Player player)
+            {
+                if (!challengers.Contains(player))
+                {
+                    challengers.Add(player);
+                }
             }
         }
 

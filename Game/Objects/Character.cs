@@ -25,6 +25,7 @@ namespace Ow.Game.Objects
         public override Position Position { get; set; }
         public override Spacemap Spacemap { get; set; }
         public Ship Ship { get; set; }
+        public int Expansion { get; set; }
         public override Clan Clan { get; set; }
         public bool Collecting = false;
 
@@ -47,16 +48,21 @@ namespace Ow.Game.Objects
         public Position Direction { get; set; }
         public DateTime MovementStartTime { get; set; }
         public int MovementTime { get; set; }
+        public bool Minion { get; set; }
+        public bool Mothership { get; set; }
+
+        public bool shieldeng = false;
 
         public Storage Storage { get; set; }
 
         public Character SelectedCharacter => Selected as Character;
 
-        protected Character(int id, string name, int factionId, Ship ship, Position position, Spacemap spacemap, Clan clan) : base(id)
+        protected Character(int id, string name, int factionId, Ship ship, Position position, Spacemap spacemap, Clan clan, int expansion) : base(id)
         {
             Name = name;
             FactionId = factionId;
             Ship = ship;
+            Expansion = expansion;
             Position = position;
             Spacemap = spacemap;
             Clan = clan;
@@ -148,8 +154,8 @@ namespace Ow.Game.Objects
                         else if (character is Pet)
                         {
                             var pet = character as Pet;
-                            if (pet == player.Pet) player.SendCommand(PetHeroActivationCommand.write(pet.Owner.Id, pet.Id, 22, 3, pet.Name, (short)pet.Owner.FactionId, pet.Owner.Clan.Id, 15, pet.Owner.Clan.Tag, pet.Position.X, pet.Position.Y, pet.Speed, new class_11d(class_11d.DEFAULT)));
-                            else player.SendCommand(PetActivationCommand.write(pet.Owner.Id, pet.Id, 22, 3, pet.Name, (short)pet.Owner.FactionId, pet.Owner.Clan.Id, 15, pet.Owner.Clan.Tag, new ClanRelationModule(relationType), pet.Position.X, pet.Position.Y, pet.Speed, false, true, new class_11d(class_11d.DEFAULT)));
+                            if (pet == player.Pet) player.SendCommand(PetHeroActivationCommand.write(pet.Owner.Id, pet.Id, (short)player.GetPetShip(player.PetLevel), (short)player.GetPetExpansion(player.PetLevel), pet.Name, (short)pet.Owner.FactionId, pet.Owner.Clan.Id, 15, pet.Owner.Clan.Tag, pet.Position.X, pet.Position.Y, pet.Speed, new class_11d(class_11d.DEFAULT)));
+                            else player.SendCommand(PetActivationCommand.write(pet.Owner.Id, pet.Id, (short)player.GetPetShip(player.PetLevel), (short)player.GetPetExpansion(player.PetLevel), pet.Name, (short)pet.Owner.FactionId, pet.Owner.Clan.Id, 15, pet.Owner.Clan.Tag, new ClanRelationModule(relationType), pet.Position.X, pet.Position.Y, pet.Speed, false, true, new class_11d(class_11d.DEFAULT)));
                         }
                         else player.SendCommand(character.GetShipCreateCommand());
 

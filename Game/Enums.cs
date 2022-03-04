@@ -28,7 +28,10 @@ namespace Ow.Game
         ATTACK_ENEMY,
         FLEE_FROM_ENEMY,
         EMP,
-        RANDOM_POSITION_MOVE
+        RANDOM_POSITION_MOVE,
+        MINION,
+        MOTHERSHIP_PATH,
+        MOTHERSHIP_RANDOM
     }
 
     public enum DataType

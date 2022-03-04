@@ -109,10 +109,26 @@ namespace Ow.Game
             {
                 foreach (var npc in NpcsBase)
                 {
-                    for (int i = 1; i <= npc.Amount; i++)
-                        new Npc(Randoms.CreateRandomID(), GameManager.GetShip(npc.ShipId), this, Position.Random(this, 0, 20800, 0, 12800));
+                    if (Id == 29)
+                        for (int i = 1; i <= npc.Amount; i++)
+                            new Npc(Randoms.CreateRandomID(), GameManager.GetShip(npc.ShipId), this, Position.Random(this, 0, 41600, 0, 25600), 0);
+
+                    else
+                        for (int i = 1; i <= npc.Amount; i++)
+                            new Npc(Randoms.CreateRandomID(), GameManager.GetShip(npc.ShipId), this, Position.Random(this, 0, 20800, 0, 12800),0);
                 }
             }
+
+            if (Id == 18 || Id == 22 || Id == 26)
+            {
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(80), this, Position.Cube1, 81, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(80), this, Position.Cube2, 81, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(80), this, Position.Cube3, 81, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(80), this, Position.Cube4, 81, 20);
+            }
+
+            if (Id == 58)
+                new SolarLordakium(Randoms.CreateRandomID(), GameManager.GetShip(107), this, Position.Random(this, 0,20800,0,12800), 0);
 
             if (PortalBase != null && PortalBase.Count >= 1)
             {
@@ -120,11 +136,14 @@ namespace Ow.Game
                 {
                     var portalPosition = new Position(portal.Position[0], portal.Position[1]);
                     var targetPosition = new Position(portal.TargetPosition[0], portal.TargetPosition[1]);
-                    new Portal(this, portalPosition, targetPosition, portal.TargetSpaceMapId, portal.GraphicId, portal.FactionId, portal.Visible, portal.Working);
+                    new Portal(this, portalPosition, targetPosition, portal.TargetSpaceMapId, portal.GraphicId, portal.FactionId, portal.Visible, portal.Working, false);
                 }
             }
-            
-            
+
+            if (Id == 29)
+                new Portal(this, Position.SecretPortal, Position.SecretPortal, 1, -1, 0, false, true, true);
+
+
             if (new int[] { 13, 14, 15 }.Contains(Id))
             {
                 for (int i = 1; i <= 125; i++)
@@ -243,6 +262,7 @@ namespace Ow.Game
             bool isInSecureZone = false;
             bool inEquipZone = false;
             bool onBlockedMinePosition = false;
+            bool isInSafeZone = false;
 
             foreach (var entity in Activatables.Values)
             {
@@ -274,6 +294,8 @@ namespace Ow.Game
                                 isInSecureZone = true;
                             }
                         }
+                        if(Id != 29)
+                            isInSafeZone = true;
                     }
                     else if (entity is RepairStation)
                     {
@@ -332,6 +354,11 @@ namespace Ow.Game
                 Player.Storage.IsInDemilitarizedZone = isInSecureZone;
                 return true;
             }
+
+            if (Player.Storage.IsInSafeZone != isInSafeZone){
+                Player.Storage.IsInSafeZone = isInSafeZone;
+                return true;
+            }
             return false;
         }
 
@@ -342,7 +369,9 @@ namespace Ow.Game
 
             bool inRadiationZone = false;
 
-            if (Id == 16 || Id == 42)
+            if (Id == 255)
+                inRadiationZone = positionX < 0 || positionX > 10450 || positionY < 0 || positionY > 6500;
+            else if (Id == 16 || Id == 29 || Id == 42)
                 inRadiationZone = positionX < 0 || positionX > 41800 || positionY < 0 || positionY > 26000;
             else
                 inRadiationZone = positionX < 0 || positionX > 20900 || positionY < 0 || positionY > 13000;

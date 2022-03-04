@@ -78,6 +78,9 @@
     <Compile Include="Game\Objects\Character.cs" />
     <Compile Include="Game\Objects\Collectables\CargoBox.cs" />
     <Compile Include="Game\Objects\AI\NpcAI.cs" />
+    <Compile Include="Game\Objects\Cubikon.cs" />
+    <Compile Include="Game\Objects\SolarLordakium.cs" />
+    <Compile Include="Game\Objects\Protegit.cs" />
     <Compile Include="Game\Objects\Players\Group.cs" />
     <Compile Include="Game\Objects\Players\Managers\AbstractManager.cs" />
     <Compile Include="Game\Objects\Players\Skills\DrawFire.cs" />

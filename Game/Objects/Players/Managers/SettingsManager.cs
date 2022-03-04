@@ -242,7 +242,9 @@ namespace Ow.Game.Objects.Players.Managers
             { "traininggrounds", new Window(10, 10, 320, 320, false) },
             { "settings", new Window(50, 50, 400, 470, false) },
             { "help", new Window(10, 10, 219, 121, false) },
-            { "logout", new Window(50, 50, 200, 200, false) }
+            { "logout", new Window(50, 50, 200, 200, false) },
+            { "refinement", new Window(50, 50, 455, 525, false) },
+            { "achievement", new Window(50, 50, 460, 180, false) }
         };
     }
 
@@ -443,11 +445,11 @@ namespace Ow.Game.Objects.Players.Managers
 
         public static string[] BuyCategory =
         {
-            /*
+            
                 "ammunition_laser_lcb-10", "ammunition_laser_mcb-25", "ammunition_laser_mcb-50",
                 "ammunition_laser_sab-50", "ammunition_rocket_r-310", "ammunition_rocket_plt-2026",
                 "ammunition_rocket_plt-2021", "ammunition_rocket_plt-3030"
-                */
+                
         };
 
         public static string[] AbilitiesCategory =
@@ -520,6 +522,8 @@ namespace Ow.Game.Objects.Players.Managers
             leftItems.Add("minimap", "title_map");
             leftItems.Add("spacemap", "title_spacemap");
             leftItems.Add("log", "title_log");
+            leftItems.Add("refinement", "title_refinement");
+            leftItems.Add("achievement", "title_achievement");
             if (Player.Pet != null)
                 leftItems.Add("pet", "title_pet");
             if (EventManager.Spaceball.Active)

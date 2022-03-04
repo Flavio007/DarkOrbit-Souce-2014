@@ -76,5 +76,15 @@ namespace Ow.Game.Objects.Players.Managers
 
         public const int PRECISION_TARGETER_DURATION = 900000;
         public const int PRECISION_TARGETER_COOLDOWN = 300000;
+
+        
+        public const int G_KK1_DURATION = 5;
+        public const int G_KK1_COOLDOWN = 120;
+
+        public const int G_KK2_DURATION = 5;
+        public const int G_KK2_COOLDOWN = 60;
+
+        public const int G_KK3_DURATION = 5;
+        public const int G_KK3_COOLDOWN = 30;
     }
 }

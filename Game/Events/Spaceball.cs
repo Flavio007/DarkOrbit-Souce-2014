@@ -24,9 +24,9 @@ namespace Ow.Game.Events
             GameManager.SendPacketToAll("0|A|STD|Spaceball event started!");
             Character = new Objects.Spaceball(Randoms.CreateRandomID(), Type);
 
-            Portals.Add(new Portal(Character.Spacemap, Character.MMOPosition, null, 0, 62, 0, true, false));
-            Portals.Add(new Portal(Character.Spacemap, Character.EICPosition, null, 0, 61, 0, true, false));
-            Portals.Add(new Portal(Character.Spacemap, Character.VRUPosition, null, 0, 61, 0, true, false));
+            Portals.Add(new Portal(Character.Spacemap, Character.MMOPosition, null, 0, 62, 0, true, false, false));
+            Portals.Add(new Portal(Character.Spacemap, Character.EICPosition, null, 0, 61, 0, true, false, false));
+            Portals.Add(new Portal(Character.Spacemap, Character.VRUPosition, null, 0, 61, 0, true, false, false));
 
             Active = true;
 

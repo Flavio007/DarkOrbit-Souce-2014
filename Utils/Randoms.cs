@@ -43,5 +43,19 @@ namespace Ow.Utils
                 return GenerateHash(length);
             }
         }
+
+        public static int GetRandomMap(int minid, int maxid, bool enablesecretmap) //manulaiko
+        {
+            if (enablesecretmap && random.Next(1, 1000) <= 2)
+            {
+                return 42;
+            }
+            else if (enablesecretmap && random.Next(1,10) <= 3)
+            {
+                return 58;
+            }
+
+            return random.Next(minid, maxid);
+        }
     }
 }

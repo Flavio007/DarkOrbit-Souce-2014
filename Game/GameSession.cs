@@ -53,6 +53,9 @@ namespace Ow.Game
             try
             {
                 Player.LastCombatTime = DateTime.Now.AddSeconds(-999);
+                Player.LastPosition.map = Player.Spacemap.Id;
+                Player.LastPosition.x = Player.Position.X;
+                Player.LastPosition.y = Player.Position.Y;
                 Player.Group?.Leave(Player);
                 Player.DisableAttack(Player.Settings.InGameSettings.selectedLaser);
                 Duel.RemovePlayer(Player);
@@ -76,6 +79,7 @@ namespace Ow.Game
                 Player.SaveSettings();
                 QueryManager.SavePlayer.Information(Player);
                 QueryManager.SavePlayer.Boosters(Player);
+                QueryManager.SavePlayer.Position(Player);
 
                 Player.Storage.InRangeAssets.Clear();
                 Player.Storage.InRangeObjects.Clear();
