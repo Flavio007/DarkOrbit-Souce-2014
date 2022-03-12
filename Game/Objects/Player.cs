@@ -77,6 +77,56 @@ namespace Ow.Game.Objects
         public SkillManager SkillManager { get; set; }
         public BoosterManager BoosterManager { get; set; }
         public LastPosition LastPosition { get; set; }
+        public ShipStatus ShipStatus { get; set; }
+
+        public int Prometium = 0;
+        public int Endurium = 0;
+        public int Terbium = 0;
+        public int Prometid = 0;
+        public int Duranium = 0;
+        public int Promerium = 0;
+        public int Xenomit = 0;
+        public int Seprom = 0;
+        public int Palladium = 0;
+
+        public int ucb100 { get; set; }
+        public int rsb { get; set; }
+        public int sab { get; set; }
+        public int pib { get; set; }
+        public int ish { get; set; }
+        public int emp { get; set; }
+        public int smb { get; set; }
+        public int plt3030 { get; set; }
+        public int ice { get; set; }
+        public int dcr { get; set; }
+        public int wiz { get; set; }
+        public int pld { get; set; }
+        public int slm { get; set; }
+        public int ddm { get; set; }
+        public int empm { get; set; }
+        public int sabm { get; set; }
+        public int cloacks { get; set; }
+        public int mcb50 { get; set; }
+        public int mcb25 { get; set; }
+        public int cbo100 { get; set; }
+        public int job100 { get; set; }
+        public int rb214 { get; set; }
+        public int mcb100 { get; set; }
+        public int mcb250 { get; set; }
+        public int mcb500 { get; set; }
+        public int lcb10 { get; set; }
+        public int r310 { get; set; }
+        public int plt26 { get; set; }
+        public int plt21 { get; set; }
+        public int eco10 { get; set; }
+        public int hstrm01 { get; set; }
+        public int ubr100 { get; set; }
+        public int sar01 { get; set; }
+        public int sar02 { get; set; }
+
+
+
+
 
         public Player(int id, string name, Clan clan, int factionId, int rankId, int warRank, Ship ship)
                      : base(id, name, factionId, ship, new Position(0, 0), null, clan, 3)
@@ -86,6 +136,7 @@ namespace Ow.Game.Objects
             FactionId = factionId;
             RankId = rankId;
             WarRank = warRank;
+            LoadAmmo();
             InitiateManagers();
 
             MaxNanoHull = ship.BaseHitpoints;
@@ -1026,6 +1077,52 @@ namespace Ow.Game.Objects
             QueryManager.SavePlayer.Information(this);
         }
 
+        public void ChangeCargo(Ores oreType, int amount)
+        {
+            if (amount == 0) return;
+            amount = Convert.ToInt32(amount);
+
+            switch (oreType)
+            {
+                case Ores.Prometium:
+                    Prometium += amount;
+                    SendPacket($"0|e|ore_0|1");
+                    break;
+                case Ores.Endurium:
+                    Endurium += amount;
+                    SendPacket($"0|LM|STD|{amount} Endurium");
+                    break;
+                case Ores.Terbium:
+                    Terbium += amount;
+                    SendPacket($"0|LM|STD|{amount} Terbium");
+                    break;
+                case Ores.Prometid:
+                    Prometid += amount;
+                    SendPacket($"0|LM|STD|{amount} Prometid");
+                    break;
+                case Ores.Duranium:
+                    Duranium += amount;
+                    SendPacket($"0|LM|STD|{amount} Duranium");
+                    break;
+                case Ores.Promerium:
+                    Promerium += amount;
+                    SendPacket($"0|LM|STD|{amount} Promerium");
+                    break;
+                case Ores.Xenomit:
+                    Xenomit += amount;
+                    SendPacket($"0|LM|STD|{amount} Xenomit");
+                    break;
+                case Ores.Seprom:
+                    Seprom += amount;
+                    SendPacket($"0|LM|STD|{amount} Seprom");
+                    break;
+                case Ores.Palladium :
+                    Palladium += amount;
+                    SendPacket($"0|LM|STD|{amount} Palladium");
+                    break;
+            }
+        }
+
         public void CheckNextLevel(long experience)
         {
             short lvl = 1;
@@ -1046,6 +1143,14 @@ namespace Ow.Game.Objects
                 Level = lvl;
                 QueryManager.SavePlayer.Information(this);
             }
+        }
+
+        public void UpdateShipStatus()
+        {
+            ShipStatus.hp = CurrentHitPoints;
+            ShipStatus.shd1 = CurrentShieldConfig1;
+            ShipStatus.shd2 = CurrentShieldConfig2;
+            ShipStatus.invis = Invisible == true ? 1 : 0;
         }
 
         public bool AttackingOrUnderAttack(int combatSecond = 10)
@@ -1301,7 +1406,7 @@ namespace Ow.Game.Objects
         {
             //SendPacket("0|UI|SET|CAM|LTC|0|0");
             SendPacket("0|B|50|50|50|2000|5000|50|50|50|50|50|50");
-            SendPacket("0|g|a|b,1000,1,10000,C,2,500,U,3,1000,U,5,1000,U|r,100,1,10000,C,2,50000,C,3,500,U,4,700,U");
+            SendPacket("0|UI|CAM|LTC|0|0|5000");
             if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV && Spacemap.Id < 12)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
@@ -1328,6 +1433,310 @@ namespace Ow.Game.Objects
             {
                 return GameManager.GetGameSession(Id);
             }
+        }
+
+        public void LoadAmmo()
+        {
+
+            using (var mySqlClient = SqlDatabaseManager.GetClient())
+            {
+                var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_accounts WHERE userId = {Id}");
+                dynamic ammo = JsonConvert.DeserializeObject(querySet["ammo"].ToString());
+
+                ucb100 = ammo["ucb100"];
+                cbo100 = ammo["cbo100"];
+                job100 = ammo["job100"];
+                rb214 = ammo["rb214"];
+                rsb = ammo["rsb"];
+                sab = ammo["sab"];
+                pib = ammo["pib"];
+                ish = ammo["ish"];
+                emp = ammo["emp"];
+                smb = ammo["smb"];
+                plt3030 = ammo["plt3030"];
+                ice = ammo["ice"];
+                dcr = ammo["dcr"];
+                wiz = ammo["wiz"];
+                pld = ammo["pld"];
+                slm = ammo["slm"];
+                ddm = ammo["ddm"];
+                empm = ammo["empm"];
+                sabm = ammo["sabm"];
+                cloacks = ammo["cloacks"];
+                hstrm01 = ammo["hstrm01"];
+                ubr100 = ammo["ubr100"];
+                eco10 = ammo["eco10"];
+                sar01 = ammo["sar01"];
+                sar02 = ammo["sar02"];
+                mcb50 = ammo["mcb50"];
+                mcb25 = ammo["mcb25"];
+                lcb10 = (ammo["lcb10"] != null) ? ammo["lcb10"] : 10000;
+                r310 = (ammo["r310"] != null) ? ammo["r310"] : 500;
+                plt26 = ammo["plt26"];
+                plt21 = ammo["plt21"];
+            }
+        }
+        public int GetAmmoCount(string ammoId)
+        {
+            switch (ammoId)
+            {
+                case AmmunitionManager.R_310:
+                    return r310;
+                case AmmunitionManager.PLT_2026:
+                    return plt26;
+                case AmmunitionManager.PLT_2021:
+                    return plt21;
+                case AmmunitionManager.MCB_50:
+                    return mcb50;
+                case AmmunitionManager.MCB_25:
+                    return mcb25;
+                case AmmunitionManager.LCB_10:
+                    return lcb10;
+                case AmmunitionManager.UCB_100:
+                    return ucb100;
+                case AmmunitionManager.SAB_50:
+                    return sab;
+                case AmmunitionManager.RSB_75:
+                    return rsb;
+                case AmmunitionManager.ISH_01:
+                    return ish;
+                case AmmunitionManager.EMP_01:
+                    return emp;
+                case AmmunitionManager.PLT_3030:
+                    return plt3030;
+                case AmmunitionManager.SMB_01:
+                    return smb;
+                case AmmunitionManager.R_IC3:
+                    return ice;
+                case AmmunitionManager.DCR_250:
+                    return dcr;
+                case AmmunitionManager.WIZ_X:
+                    return wiz;
+                case AmmunitionManager.PLD_8:
+                    return pld;
+                case AmmunitionManager.CBO_100:
+                    return cbo100;
+                case AmmunitionManager.JOB_100:
+                    return job100;
+                case AmmunitionManager.RB_214:
+                    return rb214;
+                case AmmunitionManager.CLK_XL:
+                    return cloacks;
+                case AmmunitionManager.HSTRM_01:
+                    return hstrm01;
+                case AmmunitionManager.SAR_02:
+                    return sar02;
+                case AmmunitionManager.UBR_100:
+                    return ubr100;
+                case AmmunitionManager.SAR_01:
+                    return sar01;
+                case AmmunitionManager.ECO_10:
+                    return eco10;
+                default:
+                    return 0;
+
+            }
+        }
+
+        public void SubAmmo(string ammoId, int amount)
+        {
+            switch (ammoId)
+            {
+                case AmmunitionManager.R_310:
+                    r310 -= amount;
+                    break;
+                case AmmunitionManager.PLT_2021:
+                    plt21 -= amount;
+                    break;
+                case AmmunitionManager.PLT_2026:
+                    plt26 -= amount;
+                    break;
+                case AmmunitionManager.MCB_50:
+                    mcb50 -= amount;
+                    break;
+                case AmmunitionManager.MCB_25:
+                    mcb25 -= amount;
+                    break;
+                case AmmunitionManager.LCB_10:
+                    lcb10 -= amount;
+                    break;
+                case AmmunitionManager.UCB_100:
+                    ucb100 -= amount;
+                    break;
+                case AmmunitionManager.SAB_50:
+                    sab -= amount;
+                    break;
+                case AmmunitionManager.RSB_75:
+                    rsb -= amount;
+                    break;
+                case AmmunitionManager.ISH_01:
+                    ish -= amount;
+                    break;
+                case AmmunitionManager.EMP_01:
+                    emp -= amount;
+                    break;
+                case AmmunitionManager.PLT_3030:
+                    plt3030 -= amount;
+                    break;
+                case AmmunitionManager.SMB_01:
+                    smb -= amount;
+                    break;
+                case AmmunitionManager.R_IC3:
+                    ice -= amount;
+                    break;
+                case AmmunitionManager.DCR_250:
+                    dcr -= amount;
+                    break;
+                case AmmunitionManager.WIZ_X:
+                    wiz -= amount;
+                    break;
+                case AmmunitionManager.PLD_8:
+                    pld -= amount;
+                    break;
+                case AmmunitionManager.CBO_100:
+                    cbo100 -= amount;
+                    break;
+                case AmmunitionManager.JOB_100:
+                    job100 -= amount;
+                    break;
+                case AmmunitionManager.RB_214:
+                    rb214 -= amount;
+                    break;
+                case AmmunitionManager.CLK_XL:
+                    cloacks -= amount;
+                    break;
+                case AmmunitionManager.HSTRM_01:
+                    hstrm01 -= amount;
+                    break;
+                case AmmunitionManager.SAR_02:
+                    sar02 -= amount;
+                    break;
+                case AmmunitionManager.UBR_100:
+                    ubr100 -= amount;
+                    break;
+                case AmmunitionManager.SAR_01:
+                    sar01 -= amount;
+                    break;
+                case AmmunitionManager.ECO_10:
+                    eco10 -= amount;
+                    break;
+
+            }
+            SettingsManager.SendNewItemStatus(ammoId);
+        }
+
+        public void AddAmmo(string ammoId, int amount)
+        {
+            string name = "";
+            switch (ammoId)
+            {
+                case AmmunitionManager.R_310:
+                    r310 += amount;
+                    name = "R_310";
+                    break;
+                case AmmunitionManager.PLT_2021:
+                    plt21 += amount;
+                    name = "PLT-2021";
+                    break;
+                case AmmunitionManager.PLT_2026:
+                    plt26 += amount;
+                    name = "PLT-2026";
+                    break;
+                case AmmunitionManager.MCB_50:
+                    mcb50 += amount;
+                    name = "MCB-50";
+                    break;
+                case AmmunitionManager.MCB_25:
+                    mcb25 += amount;
+                    name = "MCB-25";
+                    break;
+                case AmmunitionManager.LCB_10:
+                    lcb10 += amount;
+                    name = "LCB-10";
+                    break;
+                case AmmunitionManager.UCB_100:
+                    ucb100 += amount;
+                    name = "UCB-100";
+                    break;
+                case AmmunitionManager.SAB_50:
+                    sab += amount;
+                    name = "SAB-50";
+                    break;
+                case AmmunitionManager.RSB_75:
+                    rsb += amount;
+                    name = "RSB-75";
+                    break;
+                case AmmunitionManager.ISH_01:
+                    ish += amount;
+                    name = "ISH-01";
+                    break;
+                case AmmunitionManager.EMP_01:
+                    emp += amount;
+                    name = "EMP-01";
+                    break;
+                case AmmunitionManager.PLT_3030:
+                    plt3030 += amount;
+                    name = "PLT-3030";
+                    break;
+                case AmmunitionManager.SMB_01:
+                    smb += amount;
+                    name = "SMB-01";
+                    break;
+                case AmmunitionManager.R_IC3:
+                    ice += amount;
+                    name = "R-IC3";
+                    break;
+                case AmmunitionManager.DCR_250:
+                    dcr += amount;
+                    name = "DCR-250";
+                    break;
+                case AmmunitionManager.WIZ_X:
+                    wiz += amount;
+                    name = "WIZ-X";
+                    break;
+                case AmmunitionManager.PLD_8:
+                    pld += amount;
+                    name = "PLD-8";
+                    break;
+                case AmmunitionManager.CBO_100:
+                    cbo100 += amount;
+                    name = "CBO-100";
+                    break;
+                case AmmunitionManager.JOB_100:
+                    job100 += amount;
+                    name = "JOB-100";
+                    break;
+                case AmmunitionManager.RB_214:
+                    rb214 += amount;
+                    name = "RB-214";
+                    break;
+                case AmmunitionManager.CLK_XL:
+                    cloacks += amount;
+                    name = "CLKL";
+                    break;
+                case AmmunitionManager.HSTRM_01:
+                    hstrm01 += amount;
+                    name = "HSTRM-01";
+                    break;
+                case AmmunitionManager.SAR_02:
+                    sar02 += amount;
+                    name = "SAR-02";
+                    break;
+                case AmmunitionManager.SAR_01:
+                    sar01 += amount;
+                    name = "SAR-02";
+                    break;
+                case AmmunitionManager.UBR_100:
+                    ubr100 += amount;
+                    name = "SAR-02";
+                    break;
+                case AmmunitionManager.ECO_10:
+                    eco10 += amount;
+                    name = "SAR-02";
+                    break;
+            }
+            SettingsManager.SendNewItemStatus(ammoId);
+            SendPacket($"0|A|STD| You received {amount} {name}");
         }
 
         public override byte[] GetShipCreateCommand() { return null; }

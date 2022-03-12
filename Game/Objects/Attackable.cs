@@ -375,8 +375,6 @@ namespace Ow.Game.Objects
                         using (var mySqlClient = SqlDatabaseManager.GetClient())
                             mySqlClient.ExecuteNonQuery($"INSERT INTO log_player_kills (killer_id, target_id) VALUES ({destroyerPlayer.Id}, {Id})");
                     }
-
-                    new CargoBox(Position, Spacemap, false, false, destroyerPlayer);
                 }
             } 
             else if (destructionType == DestructionType.RADIATION && this is Player && !Duel.InDuel(this as Player))
@@ -396,6 +394,7 @@ namespace Ow.Game.Objects
 
             if (this is Npc npc)
             {
+                new CargoBox(Position, Spacemap, false, false);
                 if (npc.Ship.Respawnable)
                     npc.Respawn();
             }

@@ -81,9 +81,10 @@ namespace Ow.Net.netty.handlers
 
                 if (Player.Spacemap == null || Player.Position == null || GameManager.GetSpacemap(Player.Spacemap.Id) == null)
                 {
-                    Player.CurrentHitPoints = Player.MaxHitPoints;
-                    Player.CurrentShieldConfig1 = Player.MaxShieldPoints;
-                    Player.CurrentShieldConfig2 = Player.MaxShieldPoints;
+                    Player.CurrentHitPoints = Player.ShipStatus.hp;
+                    Player.CurrentShieldConfig1 = Player.ShipStatus.shd1;
+                    Player.CurrentShieldConfig2 = Player.ShipStatus.shd2;
+                    Player.Invisible = Player.ShipStatus.invis == 1 ? true : false;
 
                     if (Player.RankId == 21)
                         Player.Premium = true;
@@ -121,7 +122,7 @@ namespace Ow.Net.netty.handlers
                 player.SendPacket("0|S|CFG|" + player.CurrentConfig);
           
                 player.SendPacket($"0|A|BK|{player.Equipment.Items.BootyKeys}");
-                //player.SendPacket("0|A|JV|0"); //atlama kuponu miktarı
+                player.SendPacket("0|A|JV|5"); //atlama kuponu miktarı
 
                 if (player.Group != null)
                     player.Group.InitializeGroup(player);

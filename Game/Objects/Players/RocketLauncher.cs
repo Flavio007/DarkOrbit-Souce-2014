@@ -27,9 +27,12 @@ namespace Ow.Game.Objects.Players
                 Reload();
         }
 
+        public DateTime CooldownTime = new DateTime();
+
         public DateTime LastReloadTime = new DateTime();
         public void Reload()
         {
+            if (CooldownTime > DateTime.Now) return;
             if (LastReloadTime.AddSeconds(Player.RocketLauncherSpeed) > DateTime.Now) return;
             if (CurrentLoad == MaxLoad)
             {

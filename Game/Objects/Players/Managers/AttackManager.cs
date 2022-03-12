@@ -42,7 +42,15 @@ namespace Ow.Game.Objects.Players.Managers
                         return;
                     }
 
+                    if (Player.GetAmmoCount(Player.Settings.InGameSettings.selectedLaser) < 35)
+                    {
+                        Player.DisableAttack(Player.Settings.InGameSettings.selectedLaser);
+                        return;
+                    }
+
                     var damage = RandomizeDamage((GetDamageMultiplier() * Player.Damage), (Player.Storage.underPLD8 ? 0.5 : 0.1));
+
+                    Player.SubAmmo(Player.Settings.InGameSettings.selectedLaser, 35);
 
                     if (Player.Storage.Spectrum)
                         damage -= Maths.GetPercentage(damage, 50);
@@ -58,11 +66,14 @@ namespace Ow.Game.Objects.Players.Managers
                     if (Player.Storage.AutoRocket)
                         RocketAttack();
 
-                    if (Player.Storage.AutoRocketLauncher)
+                    if (Player.Storage.AutoRocketLauncher && RocketLauncher.CooldownTime < DateTime.Now)
                         if (RocketLauncher.CurrentLoad != RocketLauncher.MaxLoad)
                             RocketLauncher.Reload();
-                        else
+                        else 
+                        {
                             LaunchRocketLauncher();
+                            RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
+                        }
                     RocketLauncher.Reload();
 
                     UpdateAttacker(target, Player);
@@ -204,6 +215,8 @@ namespace Ow.Game.Objects.Players.Managers
 
             Player.SendPacket("0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + RocketLauncher.CurrentLoad + "|" + GetSelectedLauncherId());
             Player.SendPacketToInRangePlayers("0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + RocketLauncher.CurrentLoad + "|" + GetSelectedLauncherId());
+
+            Player.SendCooldown(AmmunitionManager.ROCKET_LAUNCHER, TimeManager.HELLSTROM);
 
             Player.SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
             RocketLauncher.LastReloadTime = DateTime.Now;

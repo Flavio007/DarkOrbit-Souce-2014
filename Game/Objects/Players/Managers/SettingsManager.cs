@@ -244,7 +244,8 @@ namespace Ow.Game.Objects.Players.Managers
             { "help", new Window(10, 10, 219, 121, false) },
             { "logout", new Window(50, 50, 200, 200, false) },
             { "refinement", new Window(50, 50, 455, 525, false) },
-            { "achievement", new Window(50, 50, 460, 180, false) }
+            { "achievement", new Window(50, 50, 460, 180, false) },
+            { "quests", new Window(50, 50, 200, 200, false) }
         };
     }
 
@@ -386,7 +387,7 @@ namespace Ow.Game.Objects.Players.Managers
         public static string[] LaserCategory =
         {
                 AmmunitionManager.LCB_10, AmmunitionManager.MCB_25, AmmunitionManager.MCB_50,
-                AmmunitionManager.UCB_100, AmmunitionManager.SAB_50, AmmunitionManager.CBO_100,
+                AmmunitionManager.UCB_100, AmmunitionManager.SAB_50, //AmmunitionManager.CBO_100,
                 AmmunitionManager.RSB_75 //"ammunition_laser_job-100"
         };
 
@@ -402,8 +403,8 @@ namespace Ow.Game.Objects.Players.Managers
         {
                 CpuManager.ROCKET_LAUNCHER, AmmunitionManager.HSTRM_01,
                 "ammunition_rocketlauncher_ubr-100",
-                "ammunition_rocketlauncher_eco-10", "ammunition_rocketlauncher_sar-01",
-                "AmmunitionManager.SAR_02"
+                "ammunition_rocketlauncher_eco-10" //"ammunition_rocketlauncher_sar-01",
+                //"AmmunitionManager.SAR_02"
             };
 
         public static string[] SpecialItemsCategory =
@@ -446,10 +447,10 @@ namespace Ow.Game.Objects.Players.Managers
         public static string[] BuyCategory =
         {
             
-                "ammunition_laser_lcb-10", "ammunition_laser_mcb-25", "ammunition_laser_mcb-50",
+                /*"ammunition_laser_lcb-10", "ammunition_laser_mcb-25", "ammunition_laser_mcb-50",
                 "ammunition_laser_sab-50", "ammunition_rocket_r-310", "ammunition_rocket_plt-2026",
                 "ammunition_rocket_plt-2021", "ammunition_rocket_plt-3030"
-                
+                */
         };
 
         public static string[] AbilitiesCategory =
@@ -523,7 +524,8 @@ namespace Ow.Game.Objects.Players.Managers
             leftItems.Add("spacemap", "title_spacemap");
             leftItems.Add("log", "title_log");
             leftItems.Add("refinement", "title_refinement");
-            leftItems.Add("achievement", "title_achievement");
+            leftItems.Add("quests", "title_quests");
+            //leftItems.Add("achievement", "title_achievement");
             if (Player.Pet != null)
                 leftItems.Add("pet", "title_pet");
             if (EventManager.Spaceball.Active)
@@ -709,28 +711,31 @@ namespace Ow.Game.Objects.Players.Managers
         public ClientUISlotBarCategoryModule GetLasersCategory()
         {
             var lasersItems = new List<ClientUISlotBarCategoryItemModule>();
+            int count;
             foreach (string itemLootId in LaserCategory)
             {
                 var visible = true;
 
-                if (Player.RankId != 21)
+                if (Player.RankId != 22)
                 {
                     switch (itemLootId)
                     {
                         case AmmunitionManager.CBO_100:
-                            visible = false;
+                            visible = true;
                             break;
                     }
                 }
+
+
 
                 ClientUISlotBarCategoryItemTimerModule categoryTimerModule =
                         new ClientUISlotBarCategoryItemTimerModule(GetCooldownTime(itemLootId),
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), (Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.RSB_75 ? 3000 : 1000), itemLootId,
                                                                    false);
 
-                lasersItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_laser", true, true, false, visible),
+                lasersItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_laser", Player.GetAmmoCount(itemLootId), true, true, false, visible),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
-                                                                      ClientUISlotBarCategoryItemModule.NONE,
+                                                                      ClientUISlotBarCategoryItemModule.BAR,
                                                                       GetCooldownType(itemLootId),
                                                                       categoryTimerModule));
             }
@@ -740,6 +745,7 @@ namespace Ow.Game.Objects.Players.Managers
         public ClientUISlotBarCategoryModule GetRocketsCategory()
         {
             var rocketItems = new List<ClientUISlotBarCategoryItemModule>();
+            int count;
             foreach (string itemLootId in RocketsCategory)
             {
                 var maxTime = 0;
@@ -751,29 +757,37 @@ namespace Ow.Game.Objects.Players.Managers
                     case AmmunitionManager.PLT_2021:
                     case AmmunitionManager.PLT_3030:
                         maxTime = 1000;
+                        count = 99999;
                         break;
                     case AmmunitionManager.DCR_250:
                         maxTime = TimeManager.DCR_250_COOLDOWN;
+                        count = 999;
                         break;
                     case AmmunitionManager.R_IC3:
                         maxTime = TimeManager.R_IC3_COOLDOWN;
+                        count = 999;
                         break;
                     case AmmunitionManager.WIZ_X:
                         maxTime = TimeManager.WIZARD_COOLDOWN;
+                        count = 999;
                         break;
                     case AmmunitionManager.PLD_8:
                         maxTime = TimeManager.PLD8_COOLDOWN;
+                        count = 999;
+                        break;
+                    default:
+                        count = 99999;
                         break;
                 }
 
                 ClientUISlotBarCategoryItemTimerModule categoryTimerModule =
-                        new ClientUISlotBarCategoryItemTimerModule(GetCooldownTime(itemLootId),
+    new ClientUISlotBarCategoryItemTimerModule(GetCooldownTime(itemLootId),
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), maxTime, itemLootId,
                                                                    false);
 
-                rocketItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_rocket", true, true),
+                rocketItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_rocket", Player.GetAmmoCount(itemLootId), true, true),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
-                                                                      ClientUISlotBarCategoryItemModule.NONE,
+                                                                      ClientUISlotBarCategoryItemModule.BAR,
                                                                       GetCooldownType(itemLootId),
                                                                       categoryTimerModule));
             }
@@ -792,9 +806,9 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), 90000000, itemLootId,
                                                                    false);
 
-                rocketLauncherItems.Add(new ClientUISlotBarCategoryItemModule(1, itemLootId == CpuManager.ROCKET_LAUNCHER ? GetRocketLauncherItemStatus(CpuManager.ROCKET_LAUNCHER, "ttip_rocketlauncher", Player.AttackManager.RocketLauncher.CurrentLoad, false) : GetItemStatus(itemLootId, "ttip_rocket"),
+                rocketLauncherItems.Add(new ClientUISlotBarCategoryItemModule(1, itemLootId == CpuManager.ROCKET_LAUNCHER ? GetRocketLauncherItemStatus(CpuManager.ROCKET_LAUNCHER, "ttip_rocketlauncher", Player.AttackManager.RocketLauncher.CurrentLoad, false, true) : GetItemStatus(itemLootId, "ttip_rocket", Player.GetAmmoCount(itemLootId)),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
-                                                                      itemLootId == CpuManager.ROCKET_LAUNCHER ? ClientUISlotBarCategoryItemModule.DOT : ClientUISlotBarCategoryItemModule.NONE,
+                                                                      itemLootId == CpuManager.ROCKET_LAUNCHER ? ClientUISlotBarCategoryItemModule.DOT : ClientUISlotBarCategoryItemModule.NUMBER,
                                                                       GetCooldownType(itemLootId),
                                                                       categoryTimerModule));
             }
@@ -804,6 +818,7 @@ namespace Ow.Game.Objects.Players.Managers
         public ClientUISlotBarCategoryModule GetSpecialAmmoCategory()
         {
             var specialAmmoItems = new List<ClientUISlotBarCategoryItemModule>();
+            int count;
             foreach (string itemLootId in SpecialItemsCategory)
             {
                 var maxTime = 0;
@@ -811,11 +826,18 @@ namespace Ow.Game.Objects.Players.Managers
                 switch (itemLootId)
                 {
                     case AmmunitionManager.SMB_01:
+                        count = 9999;
+                        break;
                     case AmmunitionManager.ISH_01:
                         maxTime = TimeManager.ISH_COOLDOWN;
+                        count = 9999;
                         break;
                     case AmmunitionManager.EMP_01:
                         maxTime = TimeManager.EMP_COOLDOWN;
+                        count = 9999;
+                        break;
+                    default:
+                        count = 9999;
                         break;
                 }
 
@@ -824,9 +846,9 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), maxTime, itemLootId,
                                                                    false);
 
-                specialAmmoItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_explosive"),
+                specialAmmoItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_explosive", Player.GetAmmoCount(itemLootId)),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
-                                                                      ClientUISlotBarCategoryItemModule.NONE,
+                                                                      ClientUISlotBarCategoryItemModule.BAR,
                                                                       GetCooldownType(itemLootId),
                                                                       categoryTimerModule));
             }
@@ -844,7 +866,7 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), TimeManager.MINE_COOLDOWN, itemLootId,
                                                                    false);
 
-                mineItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_explosive"),
+                mineItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, "ttip_explosive", Player.GetAmmoCount(itemLootId)),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
                                                                       ClientUISlotBarCategoryItemModule.NONE,
                                                                       GetCooldownType(itemLootId),
@@ -872,7 +894,7 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), maxTime, itemLootId,
                                                                    false);
 
-                cpuItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetCpuTtip(itemLootId), false),
+                cpuItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetCpuTtip(itemLootId), Player.GetAmmoCount(itemLootId), false),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
                                                                       ClientUISlotBarCategoryItemModule.NONE,
                                                                       GetCooldownType(itemLootId),
@@ -933,7 +955,7 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(timerState), maxTime, itemLootId,
                                                                    false);
 
-                techItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetTechTtip(itemLootId), false, false, false, true, blocked),
+                techItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetTechTtip(itemLootId), Player.GetAmmoCount(itemLootId), false, false, false, true, blocked),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
                                                                       ClientUISlotBarCategoryItemModule.NONE,
                                                                       GetCooldownType(itemLootId),
@@ -1103,7 +1125,7 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), TimeManager.FORMATION_COOLDOWN, itemLootId,
                                                                    false);
 
-                formationItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetFormationTtip(itemLootId), false, false, false, true),
+                formationItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetFormationTtip(itemLootId), 999999,false, false, false, true),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
                                                                       ClientUISlotBarCategoryItemModule.NONE,
                                                                       GetCooldownType(itemLootId),
@@ -1167,6 +1189,8 @@ namespace Ow.Game.Objects.Players.Managers
                     return new CooldownTypeModule(CooldownTypeModule.short_1124);
                 case AmmunitionManager.RSB_75:
                     return new CooldownTypeModule(CooldownTypeModule.short_1220);
+                case AmmunitionManager.ROCKET_LAUNCHER:
+                    return new CooldownTypeModule(CooldownTypeModule.ROCKET_LAUNCHER);
 
                 case CpuManager.CLK_XL:
                     return new CooldownTypeModule(CooldownTypeModule.short_138);
@@ -1370,22 +1394,27 @@ namespace Ow.Game.Objects.Players.Managers
             }
         }
 
-        public ClientUISlotBarCategoryItemStatusModule GetItemStatus(string pItemId, string pTooltipId, bool descriptionEnabled = true, bool doubleClickToFire = false, bool buyEnable = false, bool visible = true, bool blocked = false)
+        public ClientUISlotBarCategoryItemStatusModule GetItemStatus(string pItemId, string pTooltipId, int count, bool descriptionEnabled = true, bool doubleClickToFire = false, bool buyEnable = false, bool visible = true, bool blocked = false)
         {
 
             ClientUITooltipsCommand itemBarStatusTootip = new ClientUITooltipsCommand(GetItemBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled, doubleClickToFire));
             ClientUITooltipsCommand slotBarStatusTooltip = new ClientUITooltipsCommand(GetSlotBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled));
 
+            if (count > 999999)
+            {
+                count = 999999;
+            }
+
             return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, pItemId, visible,
                                                                ClientUISlotBarCategoryItemStatusModule.BLUE, pItemId,
-                                                               0, blocked, true,
+                                                               count, blocked, true,
                                                                slotBarStatusTooltip, buyEnable ? true : false, LaserCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedLaser.Equals(pItemId) :
                                                                                                                RocketsCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocket.Equals(pItemId) :
                                                                                                                RocketLauncherCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocketLauncher.Equals(pItemId) :
                                                                                                                FormationsCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedFormation.Equals(pItemId) :
-                                                                                                               CpusCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedCpus.Contains(pItemId) :
+                                                                                                               CpusCategory.Contains(pItemId) ? true :
                                                                                                                false,
-                                                               0);
+                                                               99999);
         }
 
         public ClientUISlotBarCategoryItemStatusModule GetBuyItemStatus(string pItemId)
@@ -1838,23 +1867,41 @@ namespace Ow.Game.Objects.Players.Managers
         {
             if (LaserCategory.Contains(itemId))
             {
-                Player.SendCommand(GetNewItemStatus(itemId, "ttip_laser", true, true, false));
+                Player.SendCommand(GetNewItemStatus(itemId, "ttip_laser", Player.GetAmmoCount(itemId), true, true, false));
             }
             else if (RocketsCategory.Contains(itemId))
             {
-                Player.SendCommand(GetNewItemStatus(itemId, "ttip_rocket", true, true, false));
+                Player.SendCommand(GetNewItemStatus(itemId, "ttip_rocket", Player.GetAmmoCount(itemId), true, true, false));
             }
             else if (CpusCategory.Contains(itemId))
             {
-                Player.SendCommand(GetNewItemStatus(itemId, GetCpuTtip(itemId), false, false, false));
+                Player.SendCommand(GetNewItemStatus(itemId, GetCpuTtip(itemId), Player.GetAmmoCount(itemId), false, false, false));
             }
             else if (FormationsCategory.Contains(itemId))
             {
-                Player.SendCommand(GetNewItemStatus(itemId, GetFormationTtip(itemId), false, false, false));
+                Player.SendCommand(GetNewItemStatus(itemId, GetFormationTtip(itemId), Player.GetAmmoCount(itemId), false, false, false));
             }
             else if (RocketLauncherCategory.Contains(itemId))
             {
                 Player.SendCommand(GetNewRocketLauncherItemStatus(itemId, "ttip_rocketlauncher", Player.AttackManager.RocketLauncher.CurrentLoad, false, false, false));
+            }
+            else
+            {
+                switch (itemId)
+                {
+                    case AmmunitionManager.EMP_01:
+                        Player.SendCommand(GetNewItemStatus(itemId, "ttip_explosive", Player.GetAmmoCount(itemId), true, true, false));
+                        break;
+                    case AmmunitionManager.SMB_01:
+                        Player.SendCommand(GetNewItemStatus(itemId, "ttip_explosive", Player.GetAmmoCount(itemId), true, true, false));
+                        break;
+                    case AmmunitionManager.ISH_01:
+                        Player.SendCommand(GetNewItemStatus(itemId, "ttip_explosive", Player.GetAmmoCount(itemId), true, true, false));
+                        break;
+                    case CpuManager.CLK_XL:
+                        Player.SendCommand(GetNewItemStatus(itemId, "ttip_cloak_cpu", Player.GetAmmoCount(itemId), true, true, false));
+                        break;
+                }
             }
         }
 
@@ -1870,12 +1917,14 @@ namespace Ow.Game.Objects.Players.Managers
             }
             else if (RocketLauncherCategory.Contains(pItemId))
             {
-                if (pItemId == CpuManager.ROCKET_LAUNCHER)
+                if (pItemId == CpuManager.ROCKET_LAUNCHER && Player.AttackManager.RocketLauncher.CooldownTime < DateTime.Now)
                 {
-                    if (Player.AttackManager.RocketLauncher.CurrentLoad >= 1)
+                    if (Player.AttackManager.RocketLauncher.CurrentLoad >= 1) {
                         Player.AttackManager.LaunchRocketLauncher();
-                    else
-                        Player.AttackManager.RocketLauncher.ReloadingActive = Player.Storage.AutoRocketLauncher || Player.AttackManager.RocketLauncher.CurrentLoad == 0 ? true : false;
+                        Player.AttackManager.RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
+                    }
+                else
+                    Player.AttackManager.RocketLauncher.ReloadingActive = Player.Storage.AutoRocketLauncher || Player.AttackManager.RocketLauncher.CurrentLoad == 0 ? true : false;
                 }
                 else
                 {
@@ -2035,21 +2084,24 @@ namespace Ow.Game.Objects.Players.Managers
             }
         }
 
-        public byte[] GetNewItemStatus(string pItemId, string pTooltipId, bool descriptionEnabled = true, bool doubleClickToFire = false, bool buyEnable = false)
+        public byte[] GetNewItemStatus(string pItemId, string pTooltipId, int count, bool descriptionEnabled = true, bool doubleClickToFire = false, bool buyEnable = false)
         {
 
             ClientUITooltipsCommand itemBarStatusTootip = new ClientUITooltipsCommand(GetItemBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled, doubleClickToFire));
             ClientUITooltipsCommand slotBarStatusTooltip = new ClientUITooltipsCommand(GetSlotBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled));
 
+            if (count > 999999)
+                count = 999999;
+
             return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, pItemId, true,
                                                                ClientUISlotBarCategoryItemStatusModule.BLUE, pItemId,
-                                                               0, false, true,
+                                                               count, false, true,
                                                                slotBarStatusTooltip, buyEnable ? true : false, LaserCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedLaser.Equals(pItemId) :
                                                                                                                RocketsCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocket.Equals(pItemId) :
                                                                                                                CpusCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedCpus.Contains(pItemId) :
                                                                                                                FormationsCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedFormation.Equals(pItemId) :
                                                                                                                false,
-                                                               0).writeCommand();
+                                                               99999).writeCommand();
         }
 
         public byte[] GetNewRocketLauncherItemStatus(string pItemId, string pTooltipId, int count = 0, bool descriptionEnabled = true, bool doubleClickToFire = false, bool buyEnable = false)

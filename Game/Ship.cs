@@ -33,6 +33,34 @@ namespace Ow.Game
         public int x { get; set; }
         public int y { get; set; }
     }
+
+    class ShipStatus
+    {
+        public int hp { get; set; }
+        public int shd1 { get; set; }
+        public int shd2 { get; set; }
+        public int invis { get; set; }
+    }
+
+    /* class QuestState
+    {
+        public List
+    } */
+
+    class Cargo
+    {
+        public int Prometium { set; get; }
+        public int Endurium { set; get; }
+        public int Terbium { set; get; }
+        public int Prometid { set; get; }
+        public int Duranium { set; get; }
+        public int Promerium { set; get; }
+        public int Xenomit { set; get; }
+        public int Seprom { set; get; }
+        public int Palladium { set; get; }
+
+    }
+
     class Ship
     {
         public static int PHOENIX = 1;
@@ -124,9 +152,10 @@ namespace Ow.Game
         public bool Respawnable { get; set; }
         public ShipRewards Rewards { get; set; }
         public MinionWaves Waves { get; set; }
+        public Cargo Drops { get; set; }
         public int Type { get; set; }
 
-        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves,int type)
+        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves,int type, Cargo drops)
         {
             Name = name;
             Id = id;
@@ -140,6 +169,7 @@ namespace Ow.Game
             Rewards = rewards;
             Waves = waves;
             Type = type;
+            Drops = drops;
         }
 
         public int GetHitPointsBoost(int hitpoints)

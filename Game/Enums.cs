@@ -40,7 +40,22 @@ namespace Ow.Game
         CREDITS,
         HONOR,
         EXPERIENCE,
-        JACKPOT
+        JACKPOT,
+        CARGO
+    }
+
+    public enum Ores
+    {
+            DUMMY,
+            Prometium,
+            Endurium,
+            Terbium,
+            Prometid,
+            Duranium,
+            Promerium,
+            Xenomit,
+            Seprom,
+            Palladium
     }
 
     public enum ChangeType

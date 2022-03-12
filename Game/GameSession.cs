@@ -77,9 +77,11 @@ namespace Ow.Game
                 Player.Group?.UpdateTarget(Player, new List<command_i3O> { new GroupPlayerDisconnectedModule(true) });
                 Player.UpdateCurrentCooldowns();
                 Player.SaveSettings();
+                Player.UpdateShipStatus();
                 QueryManager.SavePlayer.Information(Player);
                 QueryManager.SavePlayer.Boosters(Player);
                 QueryManager.SavePlayer.Position(Player);
+                QueryManager.SavePlayer.Status(Player);
 
                 Player.Storage.InRangeAssets.Clear();
                 Player.Storage.InRangeObjects.Clear();

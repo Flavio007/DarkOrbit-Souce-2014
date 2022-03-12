@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Ow.Managers.MySQLManager;
 
 namespace Ow.Game.Objects.Players.Managers
 {
@@ -50,5 +52,6 @@ namespace Ow.Game.Objects.Players.Managers
         public const string ISH_01 = "equipment_extra_cpu_ish-01";
         public const string ROCKET_LAUNCHER = "equipment_weapon_rocketlauncher_hst-2";
         public const string FIREWORK_IGNITE = "ammunition_firework_ignite";
+        public const string CLK_XL = "equipment_extra_cpu_cl04k-xl";
     }
 }

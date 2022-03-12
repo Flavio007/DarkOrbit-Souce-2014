@@ -23,6 +23,8 @@ namespace Ow.Game.Objects.Players.Managers
         public const int EMP_COOLDOWN = 40000;
         public const int EMP_DURATION = 3000;
 
+        public const int HELLSTROM = 3000;
+
         public const int R_IC3_DURATION = 2000;
         public const int R_IC3_COOLDOWN = 60000;
 
