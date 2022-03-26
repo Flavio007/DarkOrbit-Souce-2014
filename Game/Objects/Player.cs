@@ -89,6 +89,8 @@ namespace Ow.Game.Objects
         public int Seprom = 0;
         public int Palladium = 0;
 
+        public int mcb50 { get; set; }
+        public int mcb25 { get; set; }
         public int ucb100 { get; set; }
         public int rsb { get; set; }
         public int sab { get; set; }
@@ -106,14 +108,9 @@ namespace Ow.Game.Objects
         public int empm { get; set; }
         public int sabm { get; set; }
         public int cloacks { get; set; }
-        public int mcb50 { get; set; }
-        public int mcb25 { get; set; }
         public int cbo100 { get; set; }
         public int job100 { get; set; }
         public int rb214 { get; set; }
-        public int mcb100 { get; set; }
-        public int mcb250 { get; set; }
-        public int mcb500 { get; set; }
         public int lcb10 { get; set; }
         public int r310 { get; set; }
         public int plt26 { get; set; }
@@ -720,7 +717,7 @@ namespace Ow.Game.Objects
                 Spacemap.Id,
                 FactionId,
                 Clan.Id,
-                1,
+                3,
                 Premium,
                 Data.experience,
                 Data.honor,
@@ -1443,17 +1440,15 @@ namespace Ow.Game.Objects
                 var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_accounts WHERE userId = {Id}");
                 dynamic ammo = JsonConvert.DeserializeObject(querySet["ammo"].ToString());
 
-                ucb100 = ammo["ucb100"];
                 cbo100 = ammo["cbo100"];
                 job100 = ammo["job100"];
                 rb214 = ammo["rb214"];
-                rsb = ammo["rsb"];
-                sab = ammo["sab"];
+                rsb = ammo["rsb75"];
+                sab = ammo["sab50"];
                 pib = ammo["pib"];
                 ish = ammo["ish"];
                 emp = ammo["emp"];
                 smb = ammo["smb"];
-                plt3030 = ammo["plt3030"];
                 ice = ammo["ice"];
                 dcr = ammo["dcr"];
                 wiz = ammo["wiz"];
@@ -1468,12 +1463,14 @@ namespace Ow.Game.Objects
                 eco10 = ammo["eco10"];
                 sar01 = ammo["sar01"];
                 sar02 = ammo["sar02"];
-                mcb50 = ammo["mcb50"];
-                mcb25 = ammo["mcb25"];
                 lcb10 = (ammo["lcb10"] != null) ? ammo["lcb10"] : 10000;
+                mcb25 = ammo["mcb25"];
+                mcb50 = ammo["mcb50"];
+                ucb100 = ammo["ucb100"];
                 r310 = (ammo["r310"] != null) ? ammo["r310"] : 500;
                 plt26 = ammo["plt26"];
                 plt21 = ammo["plt21"];
+                plt3030 = ammo["plt3030"];
             }
         }
         public int GetAmmoCount(string ammoId)

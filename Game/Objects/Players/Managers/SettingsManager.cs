@@ -1881,9 +1881,13 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 Player.SendCommand(GetNewItemStatus(itemId, GetFormationTtip(itemId), Player.GetAmmoCount(itemId), false, false, false));
             }
-            else if (RocketLauncherCategory.Contains(itemId))
+            else if (RocketLauncherCategory.Contains(itemId) && itemId == AmmunitionManager.ROCKET_LAUNCHER)
             {
                 Player.SendCommand(GetNewRocketLauncherItemStatus(itemId, "ttip_rocketlauncher", Player.AttackManager.RocketLauncher.CurrentLoad, false, false, false));
+            }
+            else if (RocketLauncherCategory.Contains(itemId) && itemId != AmmunitionManager.ROCKET_LAUNCHER)
+            {
+                Player.SendCommand(GetNewItemStatus(itemId, "ttip_rocketlauncher", Player.GetAmmoCount(itemId), false, false, false));
             }
             else
             {

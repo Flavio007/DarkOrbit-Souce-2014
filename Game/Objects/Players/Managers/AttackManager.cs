@@ -109,6 +109,7 @@ namespace Ow.Game.Objects.Players.Managers
                     {
                         Player.SendCooldown(AmmunitionManager.PLD_8, TimeManager.PLD8_COOLDOWN);
                         pld8Cooldown = DateTime.Now;
+                        Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
                     } else return;
                     break;
                 case 6:
@@ -116,6 +117,7 @@ namespace Ow.Game.Objects.Players.Managers
                     {
                         Player.SendCooldown(AmmunitionManager.WIZ_X, TimeManager.WIZARD_COOLDOWN);
                         wiz_xCooldown = DateTime.Now;
+                        Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
                     } else return;
                     break;
                 case 10:
@@ -123,6 +125,7 @@ namespace Ow.Game.Objects.Players.Managers
                     {
                         Player.SendCooldown(AmmunitionManager.DCR_250, TimeManager.DCR_250_COOLDOWN);
                         dcr_250Cooldown = DateTime.Now;
+                        Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
                     } else return;
                     break;
                 case 18:
@@ -130,6 +133,7 @@ namespace Ow.Game.Objects.Players.Managers
                     {
                         Player.SendCooldown(AmmunitionManager.R_IC3, TimeManager.R_IC3_COOLDOWN);
                         r_ic3Cooldown = DateTime.Now;
+                        Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
                     } else return;
                     break;
                 default:
@@ -137,6 +141,7 @@ namespace Ow.Game.Objects.Players.Managers
                     {
                         Player.SendCooldown(AmmunitionManager.R_310, Player.Premium ? 1000 : 3000);
                         lastRocketAttack = DateTime.Now;
+                        Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
                     } else return;
                     break;
             }
@@ -217,6 +222,7 @@ namespace Ow.Game.Objects.Players.Managers
             Player.SendPacketToInRangePlayers("0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + RocketLauncher.CurrentLoad + "|" + GetSelectedLauncherId());
 
             Player.SendCooldown(AmmunitionManager.ROCKET_LAUNCHER, TimeManager.HELLSTROM);
+            Player.SubAmmo(Player.Settings.InGameSettings.selectedRocketLauncher, RocketLauncher.CurrentLoad);
 
             Player.SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
             RocketLauncher.LastReloadTime = DateTime.Now;
