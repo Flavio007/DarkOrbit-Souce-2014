@@ -89,6 +89,8 @@ namespace Ow.Game.Objects
         public int Seprom = 0;
         public int Palladium = 0;
 
+        public int mcb50 { get; set; }
+        public int mcb25 { get; set; }
         public int ucb100 { get; set; }
         public int rsb { get; set; }
         public int sab { get; set; }
@@ -106,14 +108,9 @@ namespace Ow.Game.Objects
         public int empm { get; set; }
         public int sabm { get; set; }
         public int cloacks { get; set; }
-        public int mcb50 { get; set; }
-        public int mcb25 { get; set; }
         public int cbo100 { get; set; }
         public int job100 { get; set; }
         public int rb214 { get; set; }
-        public int mcb100 { get; set; }
-        public int mcb250 { get; set; }
-        public int mcb500 { get; set; }
         public int lcb10 { get; set; }
         public int r310 { get; set; }
         public int plt26 { get; set; }
