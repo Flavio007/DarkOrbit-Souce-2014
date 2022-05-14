@@ -42,15 +42,16 @@ namespace Ow.Game.Objects.Players.Managers
                         return;
                     }
 
-                    if (Player.GetAmmoCount(Player.Settings.InGameSettings.selectedLaser) < 35)
+                    if (Player.GetAmmoCount(Player.Settings.InGameSettings.selectedLaser) < Player.equipedlasercount)
                     {
                         Player.DisableAttack(Player.Settings.InGameSettings.selectedLaser);
+                        Player.SendPacket("0|A|STM|outofammo");
                         return;
                     }
 
                     var damage = RandomizeDamage((GetDamageMultiplier() * Player.Damage), (Player.Storage.underPLD8 ? 0.5 : 0.1));
 
-                    Player.SubAmmo(Player.Settings.InGameSettings.selectedLaser, 35);
+                    Player.SubAmmo(Player.Settings.InGameSettings.selectedLaser, Player.equipedlasercount);
 
                     if (Player.Storage.Spectrum)
                         damage -= Maths.GetPercentage(damage, 50);

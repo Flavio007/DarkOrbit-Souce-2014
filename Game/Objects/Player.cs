@@ -120,8 +120,8 @@ namespace Ow.Game.Objects
         public int ubr100 { get; set; }
         public int sar01 { get; set; }
         public int sar02 { get; set; }
-
-
+        public bool fulllf3 = true;
+        public int equipedlasercount = 0;
 
 
 
@@ -1457,7 +1457,6 @@ namespace Ow.Game.Objects
                 ddm = ammo["ddm"];
                 empm = ammo["empm"];
                 sabm = ammo["sabm"];
-                cloacks = ammo["cloacks"];
                 hstrm01 = ammo["hstrm01"];
                 ubr100 = ammo["ubr100"];
                 eco10 = ammo["eco10"];
@@ -1477,18 +1476,12 @@ namespace Ow.Game.Objects
         {
             switch (ammoId)
             {
-                case AmmunitionManager.R_310:
-                    return r310;
-                case AmmunitionManager.PLT_2026:
-                    return plt26;
-                case AmmunitionManager.PLT_2021:
-                    return plt21;
-                case AmmunitionManager.MCB_50:
-                    return mcb50;
-                case AmmunitionManager.MCB_25:
-                    return mcb25;
                 case AmmunitionManager.LCB_10:
                     return lcb10;
+                case AmmunitionManager.MCB_25:
+                    return mcb25;
+                case AmmunitionManager.MCB_50:
+                    return mcb50;
                 case AmmunitionManager.UCB_100:
                     return ucb100;
                 case AmmunitionManager.SAB_50:
@@ -1499,8 +1492,6 @@ namespace Ow.Game.Objects
                     return ish;
                 case AmmunitionManager.EMP_01:
                     return emp;
-                case AmmunitionManager.PLT_3030:
-                    return plt3030;
                 case AmmunitionManager.SMB_01:
                     return smb;
                 case AmmunitionManager.R_IC3:
@@ -1519,6 +1510,14 @@ namespace Ow.Game.Objects
                     return rb214;
                 case AmmunitionManager.CLK_XL:
                     return cloacks;
+                case AmmunitionManager.R_310:
+                    return r310;
+                case AmmunitionManager.PLT_2026:
+                    return plt26;
+                case AmmunitionManager.PLT_2021:
+                    return plt21;
+                case AmmunitionManager.PLT_3030:
+                    return plt3030;
                 case AmmunitionManager.HSTRM_01:
                     return hstrm01;
                 case AmmunitionManager.SAR_02:
@@ -1539,23 +1538,14 @@ namespace Ow.Game.Objects
         {
             switch (ammoId)
             {
-                case AmmunitionManager.R_310:
-                    r310 -= amount;
-                    break;
-                case AmmunitionManager.PLT_2021:
-                    plt21 -= amount;
-                    break;
-                case AmmunitionManager.PLT_2026:
-                    plt26 -= amount;
-                    break;
-                case AmmunitionManager.MCB_50:
-                    mcb50 -= amount;
+                case AmmunitionManager.LCB_10:
+                    lcb10 -= amount;
                     break;
                 case AmmunitionManager.MCB_25:
                     mcb25 -= amount;
                     break;
-                case AmmunitionManager.LCB_10:
-                    lcb10 -= amount;
+                case AmmunitionManager.MCB_50:
+                    mcb50 -= amount;
                     break;
                 case AmmunitionManager.UCB_100:
                     ucb100 -= amount;
@@ -1571,9 +1561,6 @@ namespace Ow.Game.Objects
                     break;
                 case AmmunitionManager.EMP_01:
                     emp -= amount;
-                    break;
-                case AmmunitionManager.PLT_3030:
-                    plt3030 -= amount;
                     break;
                 case AmmunitionManager.SMB_01:
                     smb -= amount;
@@ -1602,6 +1589,24 @@ namespace Ow.Game.Objects
                 case AmmunitionManager.CLK_XL:
                     cloacks -= amount;
                     break;
+                case AmmunitionManager.R_310:
+                    r310 -= amount;
+                    break;
+                case AmmunitionManager.PLT_2021:
+                    plt21 -= amount;
+                    break;
+                case AmmunitionManager.PLT_2026:
+                    plt26 -= amount;
+                    break;
+                case AmmunitionManager.PLT_3030:
+                    plt3030 -= amount;
+                    break;
+                case AmmunitionManager.ECO_10:
+                    eco10 -= amount;
+                    break;
+                case AmmunitionManager.SAR_01:
+                    sar01 -= amount;
+                    break;
                 case AmmunitionManager.HSTRM_01:
                     hstrm01 -= amount;
                     break;
@@ -1611,13 +1616,6 @@ namespace Ow.Game.Objects
                 case AmmunitionManager.UBR_100:
                     ubr100 -= amount;
                     break;
-                case AmmunitionManager.SAR_01:
-                    sar01 -= amount;
-                    break;
-                case AmmunitionManager.ECO_10:
-                    eco10 -= amount;
-                    break;
-
             }
             SettingsManager.SendNewItemStatus(ammoId);
         }
@@ -1627,29 +1625,17 @@ namespace Ow.Game.Objects
             string name = "";
             switch (ammoId)
             {
-                case AmmunitionManager.R_310:
-                    r310 += amount;
-                    name = "R_310";
-                    break;
-                case AmmunitionManager.PLT_2021:
-                    plt21 += amount;
-                    name = "PLT-2021";
-                    break;
-                case AmmunitionManager.PLT_2026:
-                    plt26 += amount;
-                    name = "PLT-2026";
-                    break;
-                case AmmunitionManager.MCB_50:
-                    mcb50 += amount;
-                    name = "MCB-50";
+                case AmmunitionManager.LCB_10:
+                    lcb10 += amount;
+                    name = "LCB-10";
                     break;
                 case AmmunitionManager.MCB_25:
                     mcb25 += amount;
                     name = "MCB-25";
                     break;
-                case AmmunitionManager.LCB_10:
-                    lcb10 += amount;
-                    name = "LCB-10";
+                case AmmunitionManager.MCB_50:
+                    mcb50 += amount;
+                    name = "MCB-50";
                     break;
                 case AmmunitionManager.UCB_100:
                     ucb100 += amount;
@@ -1670,10 +1656,6 @@ namespace Ow.Game.Objects
                 case AmmunitionManager.EMP_01:
                     emp += amount;
                     name = "EMP-01";
-                    break;
-                case AmmunitionManager.PLT_3030:
-                    plt3030 += amount;
-                    name = "PLT-3030";
                     break;
                 case AmmunitionManager.SMB_01:
                     smb += amount;
@@ -1711,6 +1693,30 @@ namespace Ow.Game.Objects
                     cloacks += amount;
                     name = "CLKL";
                     break;
+                case AmmunitionManager.R_310:
+                    r310 += amount;
+                    name = "R_310";
+                    break;
+                case AmmunitionManager.PLT_2021:
+                    plt21 += amount;
+                    name = "PLT-2021";
+                    break;
+                case AmmunitionManager.PLT_2026:
+                    plt26 += amount;
+                    name = "PLT-2026";
+                    break;
+                case AmmunitionManager.PLT_3030:
+                    plt3030 += amount;
+                    name = "PLT-3030";
+                    break;
+                case AmmunitionManager.ECO_10:
+                    eco10 += amount;
+                    name = "SAR-02";
+                    break;
+                case AmmunitionManager.SAR_01:
+                    sar01 += amount;
+                    name = "SAR-02";
+                    break;
                 case AmmunitionManager.HSTRM_01:
                     hstrm01 += amount;
                     name = "HSTRM-01";
@@ -1719,16 +1725,8 @@ namespace Ow.Game.Objects
                     sar02 += amount;
                     name = "SAR-02";
                     break;
-                case AmmunitionManager.SAR_01:
-                    sar01 += amount;
-                    name = "SAR-02";
-                    break;
                 case AmmunitionManager.UBR_100:
                     ubr100 += amount;
-                    name = "SAR-02";
-                    break;
-                case AmmunitionManager.ECO_10:
-                    eco10 += amount;
                     name = "SAR-02";
                     break;
             }

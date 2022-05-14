@@ -227,6 +227,9 @@ namespace Ow.Managers
         {
             try
             {
+                var lf1Damage = 40;
+                var mp1Damage = 60;
+                var lf2Damage = 100;
                 var lf3Damage = 150;
                 var lf4Damage = 212;
                 var bo2Shield = 11500;
@@ -252,12 +255,43 @@ namespace Ow.Managers
                             foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_lasers"].ToString()))
                             {
                                 if (itemId >= 0 && itemId < 40)
+                                {
                                     damage[i - 1] += lf3Damage;
-                                else if (itemId >= 140)
+                                    player.equipedlasercount++;
+                                }
+                                else if (itemId >= 140 && itemId < 150)
+                                {
                                     damage[i - 1] += lf4Damage;
+                                    player.fulllf3 = false;
+                                    player.equipedlasercount++;
+                                }
+                                else if (itemId >= 150 && itemId < 190)
+                                {
+                                    damage[i - 1] += lf1Damage;
+                                    player.fulllf3 = false;
+                                    player.equipedlasercount++;
+                                }
+                                else if (itemId >= 190 && itemId < 230)
+                                {
+                                    damage[i - 1] += mp1Damage;
+                                    player.fulllf3 = false;
+                                    player.equipedlasercount++;
+                                }
+                                else if (itemId >= 230)
+                                {
+                                    damage[i - 1] += lf2Damage;
+                                    player.fulllf3 = false;
+                                    player.equipedlasercount++;
+                                }
                                 if (itemId >= 0 && itemId < 40)
                                     leonovlaser[i - 1] += lf3Damage;
-                                else if (itemId >= 140)
+                                else if (itemId >= 140 && itemId < 150)
+                                    leonovlaser[i - 1] += lf4Damage;
+                                else if (itemId >= 150 && itemId < 190)
+                                    leonovlaser[i - 1] += lf3Damage;
+                                else if (itemId >= 190 && itemId < 230)
+                                    leonovlaser[i - 1] += lf4Damage;
+                                else if (itemId >= 230)
                                     leonovlaser[i - 1] += lf4Damage;
                             }
 
@@ -296,9 +330,30 @@ namespace Ow.Managers
                                 foreach (int item in drone["items"])
                                 {
                                     if (item >= 0 && item < 40)
-                                        damage[i - 1] += lf3Damage + 15;
-                                    else if (item >= 140)
-                                        damage[i - 1] += lf4Damage + 20;
+                                    {
+                                        damage[i - 1] += lf3Damage;
+                                        player.equipedlasercount++;
+                                    }
+                                    else if (item >= 140 && item < 150)
+                                    {
+                                        damage[i - 1] += lf4Damage;
+                                        player.equipedlasercount++;
+                                    }
+                                    else if (item >= 150 && item < 190)
+                                    {
+                                        damage[i - 1] += lf1Damage;
+                                        player.equipedlasercount++;
+                                    }
+                                    else if (item >= 190 && item < 230)
+                                    {
+                                        damage[i - 1] += mp1Damage;
+                                        player.equipedlasercount++;
+                                    }
+                                    else if (item >= 230)
+                                    {
+                                        damage[i - 1] += lf2Damage;
+                                        player.equipedlasercount++;
+                                    }
                                     else if (item >= 40 && item < 100)
                                         shield[i - 1] += droneShield + (herculesEquipped ? +Maths.GetPercentage(droneShield, 15) : 0);
                                 }
