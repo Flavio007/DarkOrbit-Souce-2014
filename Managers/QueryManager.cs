@@ -251,13 +251,13 @@ namespace Ow.Managers
 
                         int lf3Count = items["lf3Count"];
                         int bo2Count = items["bo2Count"] + lf3Count;
-                        int g3n7900Count = items["g3n7900Count"] + lf3Count + bo2Count;
-                        int havocItemCount = items["havocCount"] + lf3Count + bo2Count + g3n7900Count;
-                        int herculesItemCount = items["herculesCount"] + lf3Count + bo2Count + g3n7900Count + havocItemCount;
-                        int lf4Count = items["lf4Count"] + lf3Count + bo2Count + g3n7900Count + havocItemCount + herculesItemCount;
-                        int lf1Count = items["lf1Count"] + lf3Count + bo2Count + g3n7900Count + havocItemCount + herculesItemCount + lf4Count;
-                        int mp1Count = items["mp1Count"] + lf3Count + bo2Count + g3n7900Count + havocItemCount + herculesItemCount + lf4Count + lf1Count;
-                        int lf2Count = items["lf2Count"] + lf3Count + bo2Count + g3n7900Count + havocItemCount + herculesItemCount + lf4Count + lf1Count + mp1Count;
+                        int g3n7900Count = items["g3n7900Count"] + bo2Count;
+                        int havocItemCount = items["havocCount"] + g3n7900Count;
+                        int herculesItemCount = items["herculesCount"] + havocItemCount;
+                        int lf4Count = items["lf4Count"] + herculesItemCount;
+                        int lf1Count = items["lf1Count"] + lf4Count;
+                        int mp1Count = items["mp1Count"] + lf1Count;
+                        int lf2Count = items["lf2Count"] + mp1Count;
 
                         for (var i = 1; i <= 2; i++)
                         {
@@ -381,6 +381,7 @@ namespace Ow.Managers
                         var itemsBase = new ItemsBase(0);//TODO = new ItemsBase((int)items["bootyKeys"]);
 
                         player.Equipment = new EquipmentBase(configsBase, itemsBase);
+                        player.Name = ($"{player.Name} - {configsBase.Config1Damage} - {configsBase.Config2Damage} - {player.equipedlasercount} - {g3n7900Count} - {lf3Count}");
                     }
                 }
             }
