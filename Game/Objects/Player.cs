@@ -120,7 +120,9 @@ namespace Ow.Game.Objects
         public int ubr100 { get; set; }
         public int sar01 { get; set; }
         public int sar02 { get; set; }
+
         public bool fulllf3 = true;
+
         public int equipedlasercount = 0;
 
 
