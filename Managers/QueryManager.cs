@@ -381,7 +381,6 @@ namespace Ow.Managers
                         var itemsBase = new ItemsBase(0);//TODO = new ItemsBase((int)items["bootyKeys"]);
 
                         player.Equipment = new EquipmentBase(configsBase, itemsBase);
-                        player.Name = ($"{player.Name} - {configsBase.Config1Damage} - {configsBase.Config2Damage} - {player.equipedlasercount} - {g3n7900Count} - {lf3Count}");
                     }
                 }
             }
