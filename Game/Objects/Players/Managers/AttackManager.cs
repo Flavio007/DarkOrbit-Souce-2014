@@ -433,7 +433,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (damageType == DamageType.LASER)
             {
-                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
+                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, (!Player.fulllf3 && GetSelectedLaser() <= 2) ? 0 : GetSelectedLaser() == 0 ? 1 : GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
                 Player.SendCommand(laserRunCommand);
                 Player.SendCommandToInRangePlayers(laserRunCommand);
             }
@@ -525,7 +525,7 @@ namespace Ow.Game.Objects.Players.Managers
                     if ((target as Player).Storage.UnderDiminisherEntity == Player)
                         damageShd += Maths.GetPercentage(damage, 30);
 
-                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
+                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, (!Player.fulllf3 && GetSelectedLaser() <= 2) ? 0 : GetSelectedLaser() == 0 ? 1 : GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
                 Player.SendCommand(laserRunCommand);
                 Player.SendCommandToInRangePlayers(laserRunCommand);
 

@@ -1,0 +1,4 @@
+[28.05.2022 20: 53:54] - [Program.cs] Main void exception: System.ArgumentException: A coluna 'ores' não pertence à tabela Table.
+   em System.Data.DataRow.GetDataColumn(String columnName)
+   em Ow.Managers.QueryManager.LoadShips() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Managers\QueryManager.cs:linha 495
+   em Ow.Program.Main(String[] args) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Program.cs:linha 32
