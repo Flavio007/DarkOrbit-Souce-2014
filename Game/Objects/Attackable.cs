@@ -228,6 +228,20 @@ namespace Ow.Game.Objects
                 player.CurrentInRangePortalId = -1;
                 player.Storage.InRangeAssets.Clear();
                 player.KillScreen(destroyer, destructionType);
+                /*
+                if (EventManager.Scoremageddon.Active && destroyer is Player) 
+                {
+                    player.SendPacket($"0|n|SCEL|{player.Id}|{player.Storage.ScoreEventLives}|{Scoremageddon.MAX_LIVES}|{player.Storage.ScoreEventCombo}|{Scoremageddon.MAX_COMBO}");
+                    player.Storage.ScoreEventCombo = 1;
+                    player.Storage.ScoreEventLives -= 1;
+                }
+                if (EventManager.Scoremageddon.Active && destroyer is Player)
+                {
+                    (destroyer as Player).SendPacket($"0|n|SCEL|{(destroyer as Player).Id}|{(destroyer as Player).Storage.ScoreEventLives}|{Scoremageddon.MAX_LIVES}|{(destroyer as Player).Storage.ScoreEventCombo}|{Scoremageddon.MAX_COMBO}");
+                    (destroyer as Player).Storage.ScoreEventCombo += (destroyer as Player).Storage.ScoreEventCombo >= 5 ? 0 : 0.4;
+                    (destroyer as Player).Storage.ScoreEventLives -= 1;
+                    (destroyer as Player).Storage.ScoreEventPoints += 100 * Convert.ToInt32((destroyer as Player).Storage.ScoreEventCombo);
+                }*/
             }
             else if (this is BattleStation battleStation)
             {

@@ -100,6 +100,12 @@ namespace Ow.Game.Objects.Players.Managers
             var enemy = Player.SelectedCharacter;
             if (enemy == null) return;
 
+            if (Player.GetAmmoCount(Player.Settings.InGameSettings.selectedRocket) < 1)
+            {
+                Player.SendPacket("0|A|STD|No rockets on board");
+                return;
+            }
+
             if (Player.Settings.InGameSettings.selectedRocket != AmmunitionManager.WIZ_X)
                 if (!Player.TargetDefinition(enemy, true, true)) return;
 

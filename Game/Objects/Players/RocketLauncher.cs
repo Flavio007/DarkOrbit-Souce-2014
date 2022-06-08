@@ -13,7 +13,7 @@ namespace Ow.Game.Objects.Players
 
         public int CurrentLoad = 0;
 
-        public int MaxLoad = 5;
+        public int MaxLoad { get; set; }
 
         public string LoadLootId { get; set; }
 

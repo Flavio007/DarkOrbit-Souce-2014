@@ -81,6 +81,10 @@ namespace Ow.Game.Objects
         public bool Spectrum = false;
 
         public bool Diminisher = false;
+
+        public int ScoreEventLives = 0;
+        public double ScoreEventCombo = 1;
+        public int ScoreEventPoints = 0;
         public Attackable UnderDiminisherEntity { get; set; }
 
         public bool Venom = false;

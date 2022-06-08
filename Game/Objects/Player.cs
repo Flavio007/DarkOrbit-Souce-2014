@@ -28,6 +28,10 @@ namespace Ow.Game.Objects
         public bool Premium { get; set; }
         public string Title { get; set; }
 
+        public bool AutoRocketCPU = false;
+        public bool AutoRocketLauncherCPU = false;
+        public bool CloakCPU = false;
+
         public int Level
         {
             get
@@ -52,6 +56,8 @@ namespace Ow.Game.Objects
         public int CurrentInRangePortalId = -1;
         public int CurrentShieldConfig1 { get; set; }
         public int CurrentShieldConfig2 { get; set; }
+        public double CurrentShieldAbsConfig1 { get; set; }
+        public double CurrentShieldAbsConfig2 { get; set; }
         public int CurrentConfig { get; set; }
 
         public int Score = 0;
@@ -422,7 +428,7 @@ namespace Ow.Game.Objects
         {
             get
             {
-                var value = 0.8;
+                var value = CurrentConfig == 1 ? CurrentShieldAbsConfig1/100 : CurrentShieldAbsConfig2/100;
                 switch (SkillTree.shieldMechanics)
                 {
                     case 1:
@@ -469,6 +475,7 @@ namespace Ow.Game.Objects
                     default:
                         return 0;
                 }
+
             }
         }
 
@@ -1085,39 +1092,39 @@ namespace Ow.Game.Objects
             {
                 case Ores.Prometium:
                     Prometium += amount;
-                    SendPacket($"0|e|ore_0|1");
+                    SendPacket($"0|LM|STM|{amount} Prometium");
                     break;
                 case Ores.Endurium:
                     Endurium += amount;
-                    SendPacket($"0|LM|STD|{amount} Endurium");
+                    SendPacket($"0|LM|STM|{amount} Endurium");
                     break;
                 case Ores.Terbium:
                     Terbium += amount;
-                    SendPacket($"0|LM|STD|{amount} Terbium");
+                    SendPacket($"0|LM|STM|{amount} Terbium");
                     break;
                 case Ores.Prometid:
                     Prometid += amount;
-                    SendPacket($"0|LM|STD|{amount} Prometid");
+                    SendPacket($"0|LM|STM|{amount} Prometid");
                     break;
                 case Ores.Duranium:
                     Duranium += amount;
-                    SendPacket($"0|LM|STD|{amount} Duranium");
+                    SendPacket($"0|LM|STM|{amount} Duranium");
                     break;
                 case Ores.Promerium:
                     Promerium += amount;
-                    SendPacket($"0|LM|STD|{amount} Promerium");
+                    SendPacket($"0|LM|STM|{amount} Promerium");
                     break;
                 case Ores.Xenomit:
                     Xenomit += amount;
-                    SendPacket($"0|LM|STD|{amount} Xenomit");
+                    SendPacket($"0|LM|STM|{amount} Xenomit");
                     break;
                 case Ores.Seprom:
                     Seprom += amount;
-                    SendPacket($"0|LM|STD|{amount} Seprom");
+                    SendPacket($"0|LM|STM|{amount} Seprom");
                     break;
                 case Ores.Palladium :
                     Palladium += amount;
-                    SendPacket($"0|LM|STD|{amount} Palladium");
+                    SendPacket($"0|LM|STM|{amount} Palladium");
                     break;
             }
         }

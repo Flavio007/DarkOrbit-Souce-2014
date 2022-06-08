@@ -12,6 +12,7 @@ namespace Ow.Game.Movements
         public static Position MMOPosition = new Position(1600, 1600);
         public static Position EICPosition = new Position(19500, 1500);
         public static Position VRUPosition = new Position(19500, 11600);
+        public static Position InvasionGatePosition = new Position(9750, 5800);
 
         public static Position NewMMOPosition = new Position(1600, 6600);
         public static Position NewEICPosition = new Position(10550, 1600);

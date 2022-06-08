@@ -232,13 +232,30 @@ namespace Ow.Managers
                 var lf2Damage = 100;
                 var lf3Damage = 150;
                 var lf4Damage = 200;
-                var bo2Shield = 11500;
-                var g3nSpeed = 10;
+                var bo2Shield = 10000;
+                var bo2Shieldabs = 80;
+                var bo1Shield = 4000;
+                var bo1Shieldabs = 70;
+                var ao1Shield = 1000;
+                var ao1Shieldabs = 40;
+                var ao2Shield = 2000;
+                var ao2Shieldabs = 50;
+                var ao3Shield = 5000;
+                var ao3Shieldabs = 60;
+                var g3n7900Speed = 10;
+                var g3n6900Speed = 7;
+                var g3n3310Speed = 5;
+                var g3n3210Speed = 4;
+                var g3n2010Speed = 3;
+                var g3n1010Speed = 2;
+
 
                 var hitpoints = new int[] { player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull"), player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull") };
                 var speed = new int[] { player.Ship.BaseSpeed, player.Ship.BaseSpeed };
                 var damage = new int[] { 0, 0 };
                 var shield = new int[] { 0, 0 };
+                var equipedshieldcount = new int[] { 0, 0 };
+                var shieldabsorption = new int[] { 0, 0 };
                 var leonovlaser = new int[] { 0, 0 };
                 var leonovshield = new int[] { 0, 0 };
 
@@ -249,6 +266,10 @@ namespace Ow.Managers
                     {
                         dynamic items = JsonConvert.DeserializeObject(row["items"].ToString());
 
+                        /*This is the order of items in the inventory, both sides Emulator and CMS 
+                         * have to have the items in the same order otherwise this code doesn't work.
+                         * TODO: Redo the entire inventory system, this works very confusingly for many items.*/
+
                         int lf3Count = items["lf3Count"];
                         int bo2Count = items["bo2Count"] + lf3Count;
                         int g3n7900Count = items["g3n7900Count"] + bo2Count;
@@ -258,6 +279,20 @@ namespace Ow.Managers
                         int lf1Count = items["lf1Count"] + lf4Count;
                         int mp1Count = items["mp1Count"] + lf1Count;
                         int lf2Count = items["lf2Count"] + mp1Count;
+                        int g3n6900Count = items["g3n6900Count"] + lf2Count;
+                        int g3n3310Count = items["g3n3310Count"] + g3n6900Count;
+                        int g3n3210Count = items["g3n3210Count"] + g3n3310Count;
+                        int g3n2010Count = items["g3n2010Count"] + g3n3210Count;
+                        int g3n1010Count = items["g3n1010Count"] + g3n2010Count;
+                        int ao1Count = items["ao1Count"] + g3n1010Count;
+                        int ao2Count = items["ao2Count"] + ao1Count;
+                        int ao3Count = items["ao3Count"] + ao2Count;
+                        int bo1Count = items["bo1Count"] + ao3Count;
+                        int hs1Count = items["hs1Count"] + bo1Count;
+                        int hs2Count = items["hs2Count"] + hs1Count;
+                        int arcpuCount = items["arcpuCount"] + hs2Count;
+                        int arlcpuCount = items["arlcpuCount"] + arcpuCount;
+                        int clkcpuCount = items["clkcpuCount"] + arlcpuCount;
 
                         for (var i = 1; i <= 2; i++)
                         {
@@ -303,13 +338,58 @@ namespace Ow.Managers
                                 else if (itemId >= lf2Count)
                                     leonovlaser[i - 1] += lf2Damage;
                             }
+                            foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_rocketlauncher"].ToString()))
+                            {
+                                if (itemId > bo1Count && itemId <= hs1Count)
+                                    player.AttackManager.RocketLauncher.MaxLoad += 3;
+                                if (itemId > hs1Count && itemId <= hs2Count)
+                                    player.AttackManager.RocketLauncher.MaxLoad += 5;
+                            }
 
                             foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_generators"].ToString()))
                             {
                                 if (itemId >= lf3Count && itemId < bo2Count)
+                                {
                                     shield[i - 1] += bo2Shield;
+                                    shieldabsorption[i - 1] += bo2Shieldabs;
+                                    equipedshieldcount[i - 1]++;
+                                }
                                 else if (itemId >= bo2Count && itemId < g3n7900Count)
-                                    speed[i - 1] += g3nSpeed;
+                                    speed[i - 1] += g3n7900Speed;
+                                else if (itemId >= lf2Count && itemId < g3n6900Count)
+                                    speed[i - 1] += g3n6900Speed;
+                                else if (itemId >= g3n6900Count && itemId < g3n3310Count)
+                                    speed[i - 1] += g3n3310Speed;
+                                else if (itemId >= g3n3310Count && itemId < g3n3210Count)
+                                    speed[i - 1] += g3n3210Speed;
+                                else if (itemId >= g3n3210Count && itemId < g3n2010Count)
+                                    speed[i - 1] += g3n2010Speed;
+                                else if (itemId >= g3n2010Count && itemId < g3n1010Count)
+                                    speed[i - 1] += g3n1010Speed;
+                                else if (itemId >= g3n1010Count && itemId < ao1Count)
+                                {
+                                    shield[i - 1] += ao1Shield;
+                                    shieldabsorption[i - 1] += ao1Shieldabs;
+                                    equipedshieldcount[i - 1]++;
+                                }
+                                else if (itemId >= ao1Count && itemId < ao2Count)
+                                {
+                                    shield[i - 1] += ao2Shield;
+                                    shieldabsorption[i - 1] += ao2Shieldabs;
+                                    equipedshieldcount[i - 1]++;
+                                }
+                                else if (itemId >= ao2Count && itemId < ao3Count)
+                                {
+                                    shield[i - 1] += ao3Shield;
+                                    shieldabsorption[i - 1] += ao3Shieldabs;
+                                    equipedshieldcount[i - 1]++;
+                                }
+                                else if (itemId >= ao3Count && itemId < bo1Count)
+                                {
+                                    shield[i - 1] += bo1Shield;
+                                    shieldabsorption[i - 1] += bo1Shieldabs;
+                                    equipedshieldcount[i - 1]++;
+                                }
                                 if (itemId >= lf3Count && itemId < bo2Count)
                                     leonovshield[i - 1] += bo2Shield;
                             }
@@ -358,13 +438,41 @@ namespace Ow.Managers
                                         damage[i - 1] += mp1Damage;
                                         player.equipedlasercount++;
                                     }
-                                    else if (item >= lf2Count)
+                                    else if (item >= mp1Count && item < lf2Count)
                                     {
                                         damage[i - 1] += lf2Damage;
                                         player.equipedlasercount++;
                                     }
                                     else if (item >= lf3Count && item < bo2Count)
-                                        shield[i - 1] += droneShield + (herculesEquipped ? +Maths.GetPercentage(droneShield, 15) : 0);
+                                    {
+                                        shield[i - 1] += Convert.ToInt32(bo2Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
+                                        shieldabsorption[i - 1] += bo2Shieldabs;
+                                        equipedshieldcount[i-1]++;
+                                    }
+                                    else if (item >= g3n1010Count && item < ao1Count)
+                                    {
+                                        shield[i - 1] += Convert.ToInt32(ao1Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
+                                        shieldabsorption[i - 1] += ao1Shieldabs;
+                                        equipedshieldcount[i-1]++;
+                                    }
+                                    else if (item >= ao1Count && item < ao2Count)
+                                    {
+                                        shield[i - 1] += Convert.ToInt32(ao2Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
+                                        shieldabsorption[i - 1] += ao2Shieldabs;
+                                        equipedshieldcount[i-1]++;
+                                    }
+                                    else if (item >= ao2Count && item < ao3Count)
+                                    {
+                                        shield[i - 1] += Convert.ToInt32(ao3Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
+                                        shieldabsorption[i - 1] += ao3Shieldabs;
+                                        equipedshieldcount[i-1]++;
+                                    }
+                                    else if (item >= ao3Count && item < bo1Count)
+                                    {
+                                        shield[i - 1] += Convert.ToInt32(bo1Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
+                                        shieldabsorption[i - 1] += bo1Shieldabs;
+                                        equipedshieldcount[i-1]++;
+                                    }
                                 }
                             }
 
@@ -376,6 +484,9 @@ namespace Ow.Managers
 
                         speed[0] += Maths.GetPercentage(speed[0], 20);
                         speed[1] += Maths.GetPercentage(speed[1], 20);
+                        player.CurrentShieldAbsConfig1 = shieldabsorption[0] / (equipedshieldcount[0] == 0 ? 1 : equipedshieldcount[0]);
+                        player.CurrentShieldAbsConfig2 = shieldabsorption[1] / (equipedshieldcount[1] == 0 ? 1 : equipedshieldcount[1]);
+                        //player.Name = $"CFG1 = {player.AttackManager.RocketLauncher.MaxLoad} | CFG2 = {player.AttackManager.RocketLauncher.MaxLoad}";
 
                         var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
                         var itemsBase = new ItemsBase(0);//TODO = new ItemsBase((int)items["bootyKeys"]);

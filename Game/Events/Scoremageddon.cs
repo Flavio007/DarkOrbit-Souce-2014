@@ -18,9 +18,9 @@ namespace Ow.Game.Events
         public bool Active = false;
         public List<Portal> Portals = new List<Portal>();
         public int Limit = 20;
-        public int MAX_LIVES = 5; // Player max lives
-        public int MAX_COMBO = 10; // Max multiple
-        public int MAX_COMBO_TIME = 60; // Max combo time "Sec"
+        public static int MAX_LIVES = 5; // Player max lives
+        public static int MAX_COMBO = 10; // Max multiple
+        public static int MAX_COMBO_TIME = 60; // Max combo time "Sec"
 
         public int Lives { get; set; }
 
@@ -34,8 +34,8 @@ namespace Ow.Game.Events
             foreach (var gameSession in GameManager.GameSessions.Values)
             {
                 GameManager.SendPacketToAll("0|A|STD|Scoremageddon event started!");
-                GameManager.SendPacketToAll($"0 | A | SCE | 5 |{MAX_LIVES}| 0 |{MAX_COMBO}| 5000 |{MAX_COMBO_TIME}|{ 100}");
-                //GameManager.SendPacketToAll($"0 | A | SCE | 5 |{MAX_LIVES}| 0 |{MAX_COMBO}| 5000 |{MAX_COMBO_TIME}|{ 100}");
+                GameManager.SendPacketToAll($"0 | A | SCE | 5 |{MAX_LIVES}| 0 |{MAX_COMBO}| 5000 |{MAX_COMBO_TIME}|{100}");
+                //GameManager.SendPacketToAll($"0 | A | SCE | 5 |{MAX_LIVES}| 0 |{MAX_COMBO}| 5000 |{MAX_COMBO_TIME}|{100}");
                 //GameManager.SendPacketToAll("0|n|KSCE");
                 //GameManager.SendPacketToAll("0|n|SCEKL|1");
                 var player = gameSession.Player;

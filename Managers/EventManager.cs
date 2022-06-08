@@ -13,6 +13,7 @@ namespace Ow.Managers
         public static Spaceball Spaceball { get; set; }
         public static UltimateBattleArena UltimateBattleArena { get; set; }
         public static Scoremageddon Scoremageddon { get; set; }
+        public static InvasionGate InvasionGate { get; set; }
 
         public static void InitiateEvents()
         {
@@ -20,6 +21,7 @@ namespace Ow.Managers
             Spaceball = new Spaceball();
             UltimateBattleArena = new UltimateBattleArena();
             Scoremageddon = new Scoremageddon();
+            InvasionGate = new InvasionGate();
         }
     }
 }

@@ -586,6 +586,11 @@ namespace Ow.Chat
 
                 EventManager.Scoremageddon.Start();
             }
+            else if (cmd == "/start_invasiongate")
+            {
+                EventManager.InvasionGate.Startup();
+                EventManager.Scoremageddon.Start();
+            }
             /*
             else if (cmd == "/reward" && Permission == Permissions.ADMINISTRATOR)
             {

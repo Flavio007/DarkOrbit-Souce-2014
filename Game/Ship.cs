@@ -146,6 +146,7 @@ namespace Ow.Game
         public int Damage { get; set; }
         public int BaseHitpoints { get; set; }
         public int BaseShieldPoints { get; set; }
+        public int BaseShieldAbsorption { get; set; }
         public int BaseSpeed { get; set; }
         public string LootId { get; set; }
         public bool Aggressive { get; set; }

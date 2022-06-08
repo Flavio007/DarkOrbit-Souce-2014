@@ -271,10 +271,10 @@ namespace Ow.Game.Objects.Players.Managers
         public bool blockedGroupInvites = false;
         public string selectedLaser = AmmunitionManager.LCB_10;
         public string selectedRocket = AmmunitionManager.R_310;
-        public string selectedRocketLauncher = AmmunitionManager.HSTRM_01;
-        public string selectedFormation = DroneManager.DEFAULT_FORMATION;
+        public string selectedRocketLauncher = AmmunitionManager.ECO_10;
+        public string selectedFormation = DroneManager.WAVE_FORMATION; //DroneManager.DEFAULT_FORMATION;
         public int currentConfig = 1;
-        public List<string> selectedCpus = new List<string> { CpuManager.AUTO_ROCKET_CPU, CpuManager.AUTO_HELLSTROM_CPU };
+        public List<string> selectedCpus = new List<string> { }; //{ CpuManager.AUTO_ROCKET_CPU, CpuManager.AUTO_HELLSTROM_CPU };
     }
 
     class SettingsBase

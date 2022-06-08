@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Ow.Game.Objects;
+using Ow.Game.GalaxyGates;
 using Ow.Game.Objects.Players;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Game.Movements;
@@ -79,6 +80,7 @@ namespace Ow.Game
             CharacterTicker();
             //ObjectsTicker();
         }
+
 
         private void ParseLimits()
         {
