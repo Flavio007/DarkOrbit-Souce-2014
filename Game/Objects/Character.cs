@@ -24,6 +24,7 @@ namespace Ow.Game.Objects
         public override int FactionId { get; set; }
         public override Position Position { get; set; }
         public override Spacemap Spacemap { get; set; }
+        public bool AllMapRange { get; set; }
         public Ship Ship { get; set; }
         public int Expansion { get; set; }
         public override Clan Clan { get; set; }
@@ -37,6 +38,11 @@ namespace Ow.Game.Objects
         public override int MaxShieldPoints { get; set; }
         public override double ShieldAbsorption { get; set; }
         public override double ShieldPenetration { get; set; }
+        public int Credits { get; set; }
+        public int Uridium { get; set; }
+        public int Experience { get; set; }
+        public int Honor { get; set; }
+
 
         public virtual int Speed { get; set; }
         public virtual int Damage { get; set; }

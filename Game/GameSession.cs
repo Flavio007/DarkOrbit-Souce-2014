@@ -81,6 +81,7 @@ namespace Ow.Game
                 QueryManager.SavePlayer.Information(Player);
                 QueryManager.SavePlayer.Boosters(Player);
                 QueryManager.SavePlayer.Position(Player);
+                QueryManager.SavePlayer.Ammo(Player);
                 QueryManager.SavePlayer.Status(Player);
 
                 Player.Storage.InRangeAssets.Clear();

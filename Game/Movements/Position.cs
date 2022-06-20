@@ -12,13 +12,13 @@ namespace Ow.Game.Movements
         public static Position MMOPosition = new Position(1600, 1600);
         public static Position EICPosition = new Position(19500, 1500);
         public static Position VRUPosition = new Position(19500, 11600);
-        public static Position InvasionGatePosition = new Position(9750, 5800);
+        public static Position InvasionGatePosition = new Position(11100, 6500);
 
         public static Position NewMMOPosition = new Position(1600, 6600);
         public static Position NewEICPosition = new Position(10550, 1600);
         public static Position NewVRUPosition = new Position(19500, 6600);
 
-        public static Position SecretPortal = new Position(15000, 13500);
+        public static Position SecretPortal = new Position(20300, 13200);
 
         public static Position Cube1 = new Position(5200, 3200);
         public static Position Cube2 = new Position(15600, 9600);

@@ -17,7 +17,9 @@ namespace Ow.Game.Objects.AI
         private static int RANDOM_MOVE_RANGE = 250;
         public int RespawnX = 0;
         public int RespawnY = 0;
-        private static int MINION_RANGE = 700;
+        public InstanceNpc VIP { set; get; }
+        private static int MINION_RANGE = 200;
+        private static int SWARM_RANGE = 700;
 
         public NpcAI(Npc npc) { Npc = npc; }
 
@@ -128,7 +130,30 @@ namespace Ow.Game.Objects.AI
                             }
                         if (!Npc.Moving)
                         {
-                            Movement.Move(Npc, new Position(RespawnX + Randoms.random.Next(-MINION_RANGE, MINION_RANGE), RespawnY + Randoms.random.Next(-MINION_RANGE, MINION_RANGE)));
+                            Movement.Move(Npc, new Position(RespawnX + Randoms.random.Next(-SWARM_RANGE, SWARM_RANGE), RespawnY + Randoms.random.Next(-SWARM_RANGE, SWARM_RANGE)));
+                        }
+                        break;
+                    case NpcAIOption.ESCORT:
+                        foreach (var players in Npc.InRangeCharacters.Values)
+                            if (players is Player)
+                            {
+                                var player = players as Player;
+
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
+                                {
+                                    Npc.Attacking = false;
+                                    Npc.Selected = null;
+                                }
+                                else
+                                {
+                                    Npc.Selected = player;
+                                    if (Npc.Ship.Aggressive)
+                                        Npc.Attacking = true;
+                                }
+                            }
+                        if (!Npc.Moving)
+                        {
+                            Movement.Move(Npc, new Position(VIP.Position.X + Randoms.random.Next(-MINION_RANGE, MINION_RANGE), VIP.Position.Y + Randoms.random.Next(-MINION_RANGE, MINION_RANGE))); ;
                         }
                         break;
                     case NpcAIOption.MOTHERSHIP_PATH:

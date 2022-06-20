@@ -238,6 +238,7 @@ namespace Ow.Game.Objects.Players.Managers
             { "pet", new Window(50, 50, 260, 130, false) },
             { "spaceball", new Window(10, 10, 170, 70, false) },
             { "scoreevent", new Window(10, 10, 250, 250, false) },
+            { "invasion", new Window(10, 10, 180, 70, false) },
             { "booster", new Window(10, 10, 110, 150, false) },
             { "traininggrounds", new Window(10, 10, 320, 320, false) },
             { "settings", new Window(50, 50, 400, 470, false) },
@@ -536,6 +537,8 @@ namespace Ow.Game.Objects.Players.Managers
                 leftItems.Add("booster", "title_booster");
             if (Player.RankId == 21)
                 leftItems.Add("traininggrounds", "title_traininggrounds");
+            if (EventManager.InvasionGate.Started)
+                leftItems.Add("invasion", "title_invasion");
 
             var topLeftMenuBarItems = new List<ClientUIMenuBarItemModule>();
 
@@ -1926,6 +1929,7 @@ namespace Ow.Game.Objects.Players.Managers
                     if (Player.AttackManager.RocketLauncher.CurrentLoad >= 1) {
                         Player.AttackManager.LaunchRocketLauncher();
                         Player.AttackManager.RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
+                        Player.AttackManager.RocketLauncher.CurrentLoad = 0;
                     }
                 else
                     Player.AttackManager.RocketLauncher.ReloadingActive = Player.Storage.AutoRocketLauncher || Player.AttackManager.RocketLauncher.CurrentLoad == 0 ? true : false;

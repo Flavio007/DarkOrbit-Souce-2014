@@ -15,7 +15,8 @@ namespace Ow.Game.Objects.Players.Managers
     class DroneManager : AbstractManager
     {
         public List<int> DronesTypes = new List<int> { 1, 2, 1, 2, 1, 1, 1, 2, 0, 0 };
-        public List<int> DronesLevels = new List<int> { 321, 134, 342, 13, 3, 551, 2, 231, 0, 0 };
+        public List<int> DronesExperiences = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        public List<int> DronesLevels = new List<int> { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         public List<int> Config1Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public List<int> Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public bool Apis = false;
@@ -83,18 +84,21 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_equipment WHERE userId = {Player.Id}");
                 dynamic dronestypes = JsonConvert.DeserializeObject(querySet["drones"].ToString());
-                dynamic droneslevels = JsonConvert.DeserializeObject(querySet["drones_xp"].ToString());
+                dynamic droneslevels = JsonConvert.DeserializeObject(querySet["drone_xp"].ToString());
 
-                for (var i = 0; i < 10; i++)
+                for (var i = 0; i < 9; i++)
                 {
-                    foreach (var type in dronestypes[i]["type"])
-                        if (dronestypes[i] != null)
-                            DronesTypes[i] = (int)type;
-
-                    foreach (var level in droneslevels[i]["xp"])
-                        if (dronestypes[i] != null)
-                            DronesLevels[i] = (int)level;
+                    DronesTypes[i] = dronestypes[$"drone{i+1}"];
+                    DronesExperiences[i] = droneslevels[$"xp{i+1}"];
                 }
+            }
+        }
+
+        public void UpdateDronesLeves()
+        {
+            for (int x = 0; x < 9; x++)
+            {
+                DronesLevels[x] = DronesExperiences[x] < 100 ? 1 : DronesExperiences[x] < 200 ? 2 : DronesExperiences[x] < 400 ? 3 : DronesExperiences[x] < 800 ? 4 : DronesExperiences[x] < 1600 ? 5 : DronesExperiences[x] > 3200 ? 6 : 0;
             }
         }
 
@@ -108,6 +112,7 @@ namespace Ow.Game.Objects.Players.Managers
                 Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 SetDroneDesigns();
                 SetDroneInfo();
+                UpdateDronesLeves();
             }
 
             string drones = GetDronesPacket();
@@ -125,6 +130,36 @@ namespace Ow.Game.Objects.Players.Managers
                 DronePacket = $"2|6|{GetDesignId(Config2Designs[0])}|2|6|{GetDesignId(Config2Designs[1])}|2|6|{GetDesignId(Config2Designs[2])}|2|6|{GetDesignId(Config2Designs[3])}|2|6|{GetDesignId(Config2Designs[4])}|2|6|{GetDesignId(Config2Designs[5])}|2|6|{GetDesignId(Config2Designs[6])}|2|6|{GetDesignId(Config2Designs[7])}";
         */
 
+        /*public string GetDronesPacket()
+        {
+            var DronePacket = "";
+
+            for (int x = 0; x < 7; x++)
+            {
+                if (DronesTypes[x] != 0)
+                {
+                    if (Player.CurrentConfig == 1)
+                    {
+                        DronePacket += $"{DronesTypes[x]}|{DronesLevels[x]}|{GetDesignId(Config1Designs[x])}";
+                        DronePacket += (x < 9 ? "|" : "");
+                    }
+                    else
+                    {
+                        DronePacket += $"{DronesTypes[x]}|{DronesLevels[x]}|{GetDesignId(Config2Designs[x])}";
+                        DronePacket += (x < 9 ? "|" : "");
+                    }
+                }
+            }
+
+            if (Apis)
+                DronePacket += $"|3|6|{GetDesignId(Player.CurrentConfig == 1 ? Config1Designs[8] : Config2Designs[8])}";
+
+            if (Zeus)
+                DronePacket += $"|4|6|{GetDesignId(Player.CurrentConfig == 1 ? Config1Designs[9] : Config2Designs[9])}";
+
+            var drones = "0|n|d|" + Player.Id + "|" + DronePacket;
+            return drones;
+        }*/
         public string GetDronesPacket()
         {
             var DronePacket = "";

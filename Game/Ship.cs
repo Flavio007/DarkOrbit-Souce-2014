@@ -34,6 +34,41 @@ namespace Ow.Game
         public int y { get; set; }
     }
 
+    class Ammo
+    {
+        public int mcb50 { get; set; }
+        public int mcb25 { get; set; }
+        public int ucb100 { get; set; }
+        public int rsb75 { get; set; }
+        public int sab50 { get; set; }
+        public int pib { get; set; }
+        public int ish { get; set; }
+        public int emp { get; set; }
+        public int smb { get; set; }
+        public int plt3030 { get; set; }
+        public int ice { get; set; }
+        public int dcr { get; set; }
+        public int wiz { get; set; }
+        public int pld { get; set; }
+        public int slm { get; set; }
+        public int ddm { get; set; }
+        public int empm { get; set; }
+        public int sabm { get; set; }
+        public int cloacks { get; set; }
+        public int cbo100 { get; set; }
+        public int job100 { get; set; }
+        public int rb214 { get; set; }
+        public int lcb10 { get; set; }
+        public int r310 { get; set; }
+        public int plt26 { get; set; }
+        public int plt21 { get; set; }
+        public int eco10 { get; set; }
+        public int hstrm01 { get; set; }
+        public int ubr100 { get; set; }
+        public int sar01 { get; set; }
+        public int sar02 { get; set; }
+    }
+
     class ShipStatus
     {
         public int hp { get; set; }

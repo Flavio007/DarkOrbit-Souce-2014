@@ -55,7 +55,9 @@ namespace Ow.Game
         public string StationsJSON { get; set; }
         public Position[] Limits { get; private set; }
         public OptionsBase Options { get; set; }
-
+        public bool Instance { get; set; }
+        public int Curwave { get; set; }
+        public List<InstanceNpc> InstanceNpcs = new List<InstanceNpc>();
         private List<NpcsBase> NpcsBase { get; set; }
         private List<PortalBase> PortalBase { get; set; }
         private List<StationBase> StationBase { get; set; }
@@ -178,9 +180,9 @@ namespace Ow.Game
             {
                 foreach (var otherCharacter in Characters.Values.Where(x => x.Id != character.Id && !x.Equals(character)))
                 {
-                    if (character.InRange(otherCharacter, otherCharacter.RenderRange))
+                    if (character.InRange(otherCharacter, otherCharacter.RenderRange) || character.AllMapRange)
                         character.AddInRangeCharacter(otherCharacter);
-                    else if (character.SelectedCharacter == null || (character.SelectedCharacter != null && !character.SelectedCharacter.Equals(otherCharacter)))
+                    else if (!character.AllMapRange || character.SelectedCharacter == null || (character.SelectedCharacter != null && !character.SelectedCharacter.Equals(otherCharacter)))
                         character.RemoveInRangeCharacter(otherCharacter);
                 }
 

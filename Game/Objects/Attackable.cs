@@ -358,6 +358,36 @@ namespace Ow.Game.Objects
                             PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
                         }
                     }
+                    if (this is InstanceNpc InstNPC && InstNPC.challengers != null)
+                    {
+                        credits = InstNPC.Credits / InstNPC.challengers.Count();
+                        experience = InstNPC.Experience / InstNPC.challengers.Count();
+                        honor = InstNPC.Honor / InstNPC.challengers.Count();
+                        uridium = InstNPC.Uridium / InstNPC.challengers.Count();
+
+                        foreach (var PlayerInstance in InstNPC.challengers)
+                        {
+                            PlayerInstance.ChangeData(DataType.CREDITS, credits);
+                            PlayerInstance.ChangeData(DataType.EXPERIENCE, experience);
+                            PlayerInstance.ChangeData(DataType.HONOR, honor, changeType);
+                            PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
+                        }
+                    }
+                    if (this is Escort escolt && escolt.challengers != null)
+                    {
+                        credits = escolt.Credits / escolt.challengers.Count();
+                        experience = escolt.Experience / escolt.challengers.Count();
+                        honor = escolt.Honor / escolt.challengers.Count();
+                        uridium = escolt.Uridium / escolt.challengers.Count();
+
+                        foreach (var PlayerInstance in escolt.challengers)
+                        {
+                            PlayerInstance.ChangeData(DataType.CREDITS, credits);
+                            PlayerInstance.ChangeData(DataType.EXPERIENCE, experience);
+                            PlayerInstance.ChangeData(DataType.HONOR, honor, changeType);
+                            PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
+                        }
+                    }
                     else if (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0))
                     {
                         destroyerPlayer.ChangeData(DataType.CREDITS, credits);
@@ -411,6 +441,15 @@ namespace Ow.Game.Objects
                 new CargoBox(Position, Spacemap, false, false);
                 if (npc.Ship.Respawnable)
                     npc.Respawn();
+            }
+
+            if (this is Escort escort)
+            {
+                if (escort.Owner is InstanceNpc VIP)
+                {
+                    VIP.Minions.Remove(escort);
+                    VIP.Check();
+                }
             }
 
             if (destroyer is Character)

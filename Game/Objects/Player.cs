@@ -62,7 +62,7 @@ namespace Ow.Game.Objects
 
         public int Score = 0;
 
-        public int EquipExpansion = 3;
+        public int EquipExpansion = 2;
 
         public DateTime UnderEmp = DateTime.Now;
 
@@ -84,6 +84,7 @@ namespace Ow.Game.Objects
         public BoosterManager BoosterManager { get; set; }
         public LastPosition LastPosition { get; set; }
         public ShipStatus ShipStatus { get; set; }
+        public Ammo Ammo = new Ammo();
 
         public int Prometium = 0;
         public int Endurium = 0;
@@ -94,38 +95,6 @@ namespace Ow.Game.Objects
         public int Xenomit = 0;
         public int Seprom = 0;
         public int Palladium = 0;
-
-        public int mcb50 { get; set; }
-        public int mcb25 { get; set; }
-        public int ucb100 { get; set; }
-        public int rsb { get; set; }
-        public int sab { get; set; }
-        public int pib { get; set; }
-        public int ish { get; set; }
-        public int emp { get; set; }
-        public int smb { get; set; }
-        public int plt3030 { get; set; }
-        public int ice { get; set; }
-        public int dcr { get; set; }
-        public int wiz { get; set; }
-        public int pld { get; set; }
-        public int slm { get; set; }
-        public int ddm { get; set; }
-        public int empm { get; set; }
-        public int sabm { get; set; }
-        public int cloacks { get; set; }
-        public int cbo100 { get; set; }
-        public int job100 { get; set; }
-        public int rb214 { get; set; }
-        public int lcb10 { get; set; }
-        public int r310 { get; set; }
-        public int plt26 { get; set; }
-        public int plt21 { get; set; }
-        public int eco10 { get; set; }
-        public int hstrm01 { get; set; }
-        public int ubr100 { get; set; }
-        public int sar01 { get; set; }
-        public int sar02 { get; set; }
 
         public bool fulllf3 = true;
 
@@ -1411,8 +1380,9 @@ namespace Ow.Game.Objects
         public Boolean GetLeonovEffect(int map, int faction)
         {
             //SendPacket("0|UI|SET|CAM|LTC|0|0");
-            SendPacket("0|B|50|50|50|2000|5000|50|50|50|50|50|50");
-            SendPacket("0|UI|CAM|LTC|0|0|5000");
+            //SendPacket("0|B|50|50|50|2000|5000|50|50|50|50|50|50");
+            //SendPacket("0|UI|CAM|LTC|0|0|5000");
+            SendPacket($"0|n|isi|500|5000|50000");
             if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV && Spacemap.Id < 12)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
@@ -1449,36 +1419,36 @@ namespace Ow.Game.Objects
                 var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_accounts WHERE userId = {Id}");
                 dynamic ammo = JsonConvert.DeserializeObject(querySet["ammo"].ToString());
 
-                cbo100 = ammo["cbo100"];
-                job100 = ammo["job100"];
-                rb214 = ammo["rb214"];
-                rsb = ammo["rsb75"];
-                sab = ammo["sab50"];
-                pib = ammo["pib"];
-                ish = ammo["ish"];
-                emp = ammo["emp"];
-                smb = ammo["smb"];
-                ice = ammo["ice"];
-                dcr = ammo["dcr"];
-                wiz = ammo["wiz"];
-                pld = ammo["pld"];
-                slm = ammo["slm"];
-                ddm = ammo["ddm"];
-                empm = ammo["empm"];
-                sabm = ammo["sabm"];
-                hstrm01 = ammo["hstrm01"];
-                ubr100 = ammo["ubr100"];
-                eco10 = ammo["eco10"];
-                sar01 = ammo["sar01"];
-                sar02 = ammo["sar02"];
-                lcb10 = (ammo["lcb10"] != null) ? ammo["lcb10"] : 10000;
-                mcb25 = ammo["mcb25"];
-                mcb50 = ammo["mcb50"];
-                ucb100 = ammo["ucb100"];
-                r310 = (ammo["r310"] != null) ? ammo["r310"] : 500;
-                plt26 = ammo["plt26"];
-                plt21 = ammo["plt21"];
-                plt3030 = ammo["plt3030"];
+                Ammo.cbo100 = ammo["cbo100"];
+                Ammo.job100 = ammo["job100"];
+                Ammo.rb214 = ammo["rb214"];
+                Ammo.rsb75 = ammo["rsb75"];
+                Ammo.sab50 = ammo["sab50"];
+                Ammo.pib = ammo["pib"];
+                Ammo.ish = ammo["ish"];
+                Ammo.emp = ammo["emp"];
+                Ammo.smb = ammo["smb"];
+                Ammo.ice = ammo["ice"];
+                Ammo.dcr = ammo["dcr"];
+                Ammo.wiz = ammo["wiz"];
+                Ammo.pld = ammo["pld"];
+                Ammo.slm = ammo["slm"];
+                Ammo.ddm = ammo["ddm"];
+                Ammo.empm = ammo["empm"];
+                Ammo.sabm = ammo["sabm"];
+                Ammo.hstrm01 = ammo["hstrm01"];
+                Ammo.ubr100 = ammo["ubr100"];
+                Ammo.eco10 = ammo["eco10"];
+                Ammo.sar01 = ammo["sar01"];
+                Ammo.sar02 = ammo["sar02"];
+                Ammo.lcb10 = ammo["lcb10"];
+                Ammo.mcb25 = ammo["mcb25"];
+                Ammo.mcb50 = ammo["mcb50"];
+                Ammo.ucb100 = ammo["ucb100"];
+                Ammo.r310 = ammo["r310"];
+                Ammo.plt26 = ammo["plt26"];
+                Ammo.plt21 = ammo["plt21"];
+                Ammo.plt3030 = ammo["plt3030"];
             }
         }
         public int GetAmmoCount(string ammoId)
@@ -1486,57 +1456,57 @@ namespace Ow.Game.Objects
             switch (ammoId)
             {
                 case AmmunitionManager.LCB_10:
-                    return lcb10;
+                    return Ammo.lcb10;
                 case AmmunitionManager.MCB_25:
-                    return mcb25;
+                    return Ammo.mcb25;
                 case AmmunitionManager.MCB_50:
-                    return mcb50;
+                    return Ammo.mcb50;
                 case AmmunitionManager.UCB_100:
-                    return ucb100;
+                    return Ammo.ucb100;
                 case AmmunitionManager.SAB_50:
-                    return sab;
+                    return Ammo.sab50;
                 case AmmunitionManager.RSB_75:
-                    return rsb;
+                    return Ammo.rsb75;
                 case AmmunitionManager.ISH_01:
-                    return ish;
+                    return Ammo.ish;
                 case AmmunitionManager.EMP_01:
-                    return emp;
+                    return Ammo.emp;
                 case AmmunitionManager.SMB_01:
-                    return smb;
+                    return Ammo.smb;
                 case AmmunitionManager.R_IC3:
-                    return ice;
+                    return Ammo.ice;
                 case AmmunitionManager.DCR_250:
-                    return dcr;
+                    return Ammo.dcr;
                 case AmmunitionManager.WIZ_X:
-                    return wiz;
+                    return Ammo.wiz;
                 case AmmunitionManager.PLD_8:
-                    return pld;
+                    return Ammo.pld;
                 case AmmunitionManager.CBO_100:
-                    return cbo100;
+                    return Ammo.cbo100;
                 case AmmunitionManager.JOB_100:
-                    return job100;
+                    return Ammo.job100;
                 case AmmunitionManager.RB_214:
-                    return rb214;
+                    return Ammo.rb214;
                 case AmmunitionManager.CLK_XL:
-                    return cloacks;
+                    return Ammo.cloacks;
                 case AmmunitionManager.R_310:
-                    return r310;
+                    return Ammo.r310;
                 case AmmunitionManager.PLT_2026:
-                    return plt26;
+                    return Ammo.plt26;
                 case AmmunitionManager.PLT_2021:
-                    return plt21;
+                    return Ammo.plt21;
                 case AmmunitionManager.PLT_3030:
-                    return plt3030;
+                    return Ammo.plt3030;
                 case AmmunitionManager.HSTRM_01:
-                    return hstrm01;
+                    return Ammo.hstrm01;
                 case AmmunitionManager.SAR_02:
-                    return sar02;
+                    return Ammo.sar02;
                 case AmmunitionManager.UBR_100:
-                    return ubr100;
+                    return Ammo.ubr100;
                 case AmmunitionManager.SAR_01:
-                    return sar01;
+                    return Ammo.sar01;
                 case AmmunitionManager.ECO_10:
-                    return eco10;
+                    return Ammo.eco10;
                 default:
                     return 0;
 
@@ -1548,82 +1518,82 @@ namespace Ow.Game.Objects
             switch (ammoId)
             {
                 case AmmunitionManager.LCB_10:
-                    lcb10 -= amount;
+                    Ammo.lcb10 -= amount;
                     break;
                 case AmmunitionManager.MCB_25:
-                    mcb25 -= amount;
+                    Ammo.mcb25 -= amount;
                     break;
                 case AmmunitionManager.MCB_50:
-                    mcb50 -= amount;
+                    Ammo.mcb50 -= amount;
                     break;
                 case AmmunitionManager.UCB_100:
-                    ucb100 -= amount;
+                    Ammo.ucb100 -= amount;
                     break;
                 case AmmunitionManager.SAB_50:
-                    sab -= amount;
+                    Ammo.sab50 -= amount;
                     break;
                 case AmmunitionManager.RSB_75:
-                    rsb -= amount;
+                    Ammo.rsb75 -= amount;
                     break;
                 case AmmunitionManager.ISH_01:
-                    ish -= amount;
+                    Ammo.ish -= amount;
                     break;
                 case AmmunitionManager.EMP_01:
-                    emp -= amount;
+                    Ammo.emp -= amount;
                     break;
                 case AmmunitionManager.SMB_01:
-                    smb -= amount;
+                    Ammo.smb -= amount;
                     break;
                 case AmmunitionManager.R_IC3:
-                    ice -= amount;
+                    Ammo.ice -= amount;
                     break;
                 case AmmunitionManager.DCR_250:
-                    dcr -= amount;
+                    Ammo.dcr -= amount;
                     break;
                 case AmmunitionManager.WIZ_X:
-                    wiz -= amount;
+                    Ammo.wiz -= amount;
                     break;
                 case AmmunitionManager.PLD_8:
-                    pld -= amount;
+                    Ammo.pld -= amount;
                     break;
                 case AmmunitionManager.CBO_100:
-                    cbo100 -= amount;
+                    Ammo.cbo100 -= amount;
                     break;
                 case AmmunitionManager.JOB_100:
-                    job100 -= amount;
+                    Ammo.job100 -= amount;
                     break;
                 case AmmunitionManager.RB_214:
-                    rb214 -= amount;
+                    Ammo.rb214 -= amount;
                     break;
                 case AmmunitionManager.CLK_XL:
-                    cloacks -= amount;
+                    Ammo.cloacks -= amount;
                     break;
                 case AmmunitionManager.R_310:
-                    r310 -= amount;
+                    Ammo.r310 -= amount;
                     break;
                 case AmmunitionManager.PLT_2021:
-                    plt21 -= amount;
+                    Ammo.plt21 -= amount;
                     break;
                 case AmmunitionManager.PLT_2026:
-                    plt26 -= amount;
+                    Ammo.plt26 -= amount;
                     break;
                 case AmmunitionManager.PLT_3030:
-                    plt3030 -= amount;
+                    Ammo.plt3030 -= amount;
                     break;
                 case AmmunitionManager.ECO_10:
-                    eco10 -= amount;
+                    Ammo.eco10 -= amount;
                     break;
                 case AmmunitionManager.SAR_01:
-                    sar01 -= amount;
+                    Ammo.sar01 -= amount;
                     break;
                 case AmmunitionManager.HSTRM_01:
-                    hstrm01 -= amount;
+                    Ammo.hstrm01 -= amount;
                     break;
                 case AmmunitionManager.SAR_02:
-                    sar02 -= amount;
+                    Ammo.sar02 -= amount;
                     break;
                 case AmmunitionManager.UBR_100:
-                    ubr100 -= amount;
+                    Ammo.ubr100 -= amount;
                     break;
             }
             SettingsManager.SendNewItemStatus(ammoId);
@@ -1635,107 +1605,107 @@ namespace Ow.Game.Objects
             switch (ammoId)
             {
                 case AmmunitionManager.LCB_10:
-                    lcb10 += amount;
+                    Ammo.lcb10 += amount;
                     name = "LCB-10";
                     break;
                 case AmmunitionManager.MCB_25:
-                    mcb25 += amount;
+                    Ammo.mcb25 += amount;
                     name = "MCB-25";
                     break;
                 case AmmunitionManager.MCB_50:
-                    mcb50 += amount;
+                    Ammo.mcb50 += amount;
                     name = "MCB-50";
                     break;
                 case AmmunitionManager.UCB_100:
-                    ucb100 += amount;
+                    Ammo.ucb100 += amount;
                     name = "UCB-100";
                     break;
                 case AmmunitionManager.SAB_50:
-                    sab += amount;
+                    Ammo.sab50 += amount;
                     name = "SAB-50";
                     break;
                 case AmmunitionManager.RSB_75:
-                    rsb += amount;
+                    Ammo.rsb75 += amount;
                     name = "RSB-75";
                     break;
                 case AmmunitionManager.ISH_01:
-                    ish += amount;
+                    Ammo.ish += amount;
                     name = "ISH-01";
                     break;
                 case AmmunitionManager.EMP_01:
-                    emp += amount;
+                    Ammo.emp += amount;
                     name = "EMP-01";
                     break;
                 case AmmunitionManager.SMB_01:
-                    smb += amount;
+                    Ammo.smb += amount;
                     name = "SMB-01";
                     break;
                 case AmmunitionManager.R_IC3:
-                    ice += amount;
+                    Ammo.ice += amount;
                     name = "R-IC3";
                     break;
                 case AmmunitionManager.DCR_250:
-                    dcr += amount;
+                    Ammo.dcr += amount;
                     name = "DCR-250";
                     break;
                 case AmmunitionManager.WIZ_X:
-                    wiz += amount;
+                    Ammo.wiz += amount;
                     name = "WIZ-X";
                     break;
                 case AmmunitionManager.PLD_8:
-                    pld += amount;
+                    Ammo.pld += amount;
                     name = "PLD-8";
                     break;
                 case AmmunitionManager.CBO_100:
-                    cbo100 += amount;
+                    Ammo.cbo100 += amount;
                     name = "CBO-100";
                     break;
                 case AmmunitionManager.JOB_100:
-                    job100 += amount;
+                    Ammo.job100 += amount;
                     name = "JOB-100";
                     break;
                 case AmmunitionManager.RB_214:
-                    rb214 += amount;
+                    Ammo.rb214 += amount;
                     name = "RB-214";
                     break;
                 case AmmunitionManager.CLK_XL:
-                    cloacks += amount;
+                    Ammo.cloacks += amount;
                     name = "CLKL";
                     break;
                 case AmmunitionManager.R_310:
-                    r310 += amount;
+                    Ammo.r310 += amount;
                     name = "R_310";
                     break;
                 case AmmunitionManager.PLT_2021:
-                    plt21 += amount;
+                    Ammo.plt21 += amount;
                     name = "PLT-2021";
                     break;
                 case AmmunitionManager.PLT_2026:
-                    plt26 += amount;
+                    Ammo.plt26 += amount;
                     name = "PLT-2026";
                     break;
                 case AmmunitionManager.PLT_3030:
-                    plt3030 += amount;
+                    Ammo.plt3030 += amount;
                     name = "PLT-3030";
                     break;
                 case AmmunitionManager.ECO_10:
-                    eco10 += amount;
+                    Ammo.eco10 += amount;
                     name = "SAR-02";
                     break;
                 case AmmunitionManager.SAR_01:
-                    sar01 += amount;
+                    Ammo.sar01 += amount;
                     name = "SAR-02";
                     break;
                 case AmmunitionManager.HSTRM_01:
-                    hstrm01 += amount;
+                    Ammo.hstrm01 += amount;
                     name = "HSTRM-01";
                     break;
                 case AmmunitionManager.SAR_02:
-                    sar02 += amount;
+                    Ammo.sar02 += amount;
                     name = "SAR-02";
                     break;
                 case AmmunitionManager.UBR_100:
-                    ubr100 += amount;
+                    Ammo.ubr100 += amount;
                     name = "SAR-02";
                     break;
             }

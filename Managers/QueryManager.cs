@@ -49,6 +49,12 @@ namespace Ow.Managers
                     mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET lastPosition = '{JsonConvert.SerializeObject(player.LastPosition)}' WHERE userId = {player.Id}");
             }
 
+            public static void Ammo(Player player)
+            {
+                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                    mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET ammo = '{JsonConvert.SerializeObject(player.Ammo)}' WHERE userId = {player.Id}");
+            }
+
             public static void Status(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())

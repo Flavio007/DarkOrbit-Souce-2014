@@ -557,6 +557,10 @@ namespace Ow.Game.Objects.Players.Managers
                     (target as Protegit).ReceiveAttack(Player);
                 if (target is SolarLordakium)
                     (target as SolarLordakium).ReceiveAttack(Player);
+                if (target is InstanceNpc)
+                    (target as InstanceNpc).ReceiveAttack(Player);
+                if (target is Escort)
+                    (target as Escort).ReceiveAttack(Player);
 
                 var attackHitCommand =
                         AttackHitCommand.write(new AttackTypeModule((short)damageType), Player.Id,

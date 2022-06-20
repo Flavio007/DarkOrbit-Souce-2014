@@ -129,7 +129,7 @@ namespace Ow.Game.Objects
                 DeactivePLD8();
             if (underSLM_01 && underSLM_01Time.AddMilliseconds(TimeManager.SLM_01_DURATION) < DateTime.Now)
                 DeactiveSLM_01();
-            if (Character.Invincible && invincibilityEffectTime.AddMilliseconds(TimeManager.INVINCIBILITY_DURATION) < DateTime.Now)
+            if (Character.Invincible && invincibilityEffectTime.AddMilliseconds(TimeManager.INVINCIBILITY_DURATION) < DateTime.Now && !(Character is InstanceNpc))
                 DeactiveInvincibilityEffect();
             if (mirroredControlEffect && mirroredControlEffectTime.AddMilliseconds(TimeManager.MIRRORED_CONTROL_DURATION) < DateTime.Now)
                 DeactiveMirroredControlEffect();

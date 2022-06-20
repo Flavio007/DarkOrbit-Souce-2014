@@ -23,7 +23,7 @@ namespace Ow.Game.Objects
         public int minioncount = 0;
         public int AgroRange = 500;
 
-        public Npc(int id, Ship ship, Spacemap spacemap, Position position, int Owner) : base(id, ship.Name, 0, ship, position, spacemap, GameManager.GetClan(0),0)
+        public Npc(int id, Ship ship, Spacemap spacemap, Position position, int Owner) : base(id, ship.Name, 0, ship, position, spacemap, GameManager.GetClan(0), 0)
         {
             Spacemap.AddCharacter(this);
 
@@ -40,7 +40,7 @@ namespace Ow.Game.Objects
             NpcAI.RespawnY = Position.Y;
             MotherShipId = Owner;
 
-        Program.TickManager.AddTick(this);
+            Program.TickManager.AddTick(this);
         }
 
         public override void Tick()
@@ -147,11 +147,11 @@ namespace Ow.Game.Objects
             }
         }
 
-        public void SpawnWave(int owner,int npcid, int count)
+        public void SpawnWave(int owner, int npcid, int count)
         {
             for (int i = 1; i < count; i++)
                 new Npc(Randoms.CreateRandomID(), GameManager.GetShip(npcid), this.Spacemap, this.Position, owner);
-                minioncount++;
+            minioncount++;
         }
 
         public DateTime lastShieldRepairTime = new DateTime();
@@ -159,7 +159,7 @@ namespace Ow.Game.Objects
         {
             if (LastCombatTime.AddSeconds(10) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;
 
-                    
+
 
             int repairShield = MaxShieldPoints / 10;
             CurrentShieldPoints += repairShield;
@@ -239,3 +239,4 @@ namespace Ow.Game.Objects
         }
     }
 }
+

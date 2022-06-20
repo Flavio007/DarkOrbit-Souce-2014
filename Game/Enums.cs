@@ -31,7 +31,8 @@ namespace Ow.Game
         RANDOM_POSITION_MOVE,
         MINION,
         MOTHERSHIP_PATH,
-        MOTHERSHIP_RANDOM
+        MOTHERSHIP_RANDOM,
+        ESCORT
     }
 
     public enum DataType
