@@ -122,7 +122,9 @@ namespace Ow.Net.netty.handlers
                 player.SendPacket("0|S|CFG|" + player.CurrentConfig);
           
                 player.SendPacket($"0|A|BK|{player.Equipment.Items.BootyKeys}");
-                player.SendPacket("0|A|JV|5"); //atlama kuponu miktarı
+                player.SendPacket("0|A|JV|0"); //Jump credits
+
+                GameManager.SendPacketToAll($"0|n|LTC|");
 
                 if (player.Group != null)
                     player.Group.InitializeGroup(player);

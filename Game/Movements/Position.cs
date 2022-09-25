@@ -20,10 +20,10 @@ namespace Ow.Game.Movements
 
         public static Position SecretPortal = new Position(20300, 13200);
 
-        public static Position Cube1 = new Position(5200, 3200);
-        public static Position Cube2 = new Position(15600, 9600);
-        public static Position Cube3 = new Position(5200, 9600);
-        public static Position Cube4 = new Position(15600, 3200);
+        public static Position Cube1 = new Position(7500, 3900);
+        public static Position Cube2 = new Position(13400, 7900);
+        public static Position Cube3 = new Position(7500, 7900);
+        public static Position Cube4 = new Position(13400, 3900);
 
         public int X { get; set; }
         public int Y { get; set; }
