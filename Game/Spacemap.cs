@@ -131,7 +131,16 @@ namespace Ow.Game
                 new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(80), this, Position.Cube4, 81, 20);
             }
 
-            if (Id == 58)
+            if (Id == 29)
+            {
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(480), this, Position.GetPosOnCircle(Position.SecretPortal, 6000), 481, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(480), this, Position.GetPosOnCircle(Position.SecretPortal, 6000), 481, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(480), this, Position.GetPosOnCircle(Position.SecretPortal, 6000), 481, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(480), this, Position.GetPosOnCircle(Position.SecretPortal, 6000), 481, 20);
+                new Cubikon(Randoms.CreateRandomID(), GameManager.GetShip(880), this, Position.GetPosOnCircle(Position.SecretPortal, 1000), 881, 20);
+            }
+
+                if (Id == 58)
                 new SolarLordakium(Randoms.CreateRandomID(), GameManager.GetShip(107), this, Position.Random(this, 0,20800,0,12800), 0);
 
             if (PortalBase != null && PortalBase.Count >= 1)

@@ -117,7 +117,12 @@ namespace Ow.Game.Objects
 
         public void SpawnWave(int npcid, int count)
         {
-            //GameManager.SendPacketToMap(this.Spacemap.Id, $"0|n|s|start|{this.Id}");
+            if (Ship.Id == 480 || Ship.Id == 880)
+            {
+                AddVisualModifier(VisualModifierCommand.SKULL, 5, "", 0, true);
+                GameManager.SendPacketToMap(Spacemap.Id, $"0|n|s|start|{Id}");
+            }
+
             for (int i = 1; i < count; i++)
                 if (minioncount < 20)
                 {
@@ -130,8 +135,8 @@ namespace Ow.Game.Objects
         private void CheckShieldPointsRepair()
         {
             if (LastCombatTime.AddSeconds(10) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;
-                //if (this.Ship.Id == 80)
-                    //GameManager.SendPacketToMap(this.Spacemap.Id, $"0|n|s|end|{this.Id}");
+                if (Ship.Id == 480 || Ship.Id == 880)
+                    GameManager.SendPacketToMap(Spacemap.Id, $"0|n|s|end|{Id}");
                     
 
             int repairShield = MaxShieldPoints / 10;

@@ -27,6 +27,7 @@ namespace Ow.Game.Objects
         public int WarRank { get; set; }
         public bool Premium { get; set; }
         public string Title { get; set; }
+        public byte RepairBotId = 3;
 
         public bool AutoRocketCPU = false;
         public bool AutoRocketLauncherCPU = false;
@@ -158,7 +159,7 @@ namespace Ow.Game.Objects
         public DateTime lastHpRepairTime = new DateTime();
         private void CheckHitpointsRepair()
         {
-            if (CurrentHitPoints >= MaxHitPoints || AttackingOrUnderAttack())
+            if (CurrentHitPoints >= MaxHitPoints || AttackingOrUnderAttack() || Moving)
             {
                 if (Storage.RepairBotActivated)
                     RepairBot(false);
@@ -170,7 +171,8 @@ namespace Ow.Game.Objects
             if (!Storage.RepairBotActivated)
                 RepairBot(true);
 
-            int repairHitpoints = MaxHitPoints / 40;
+            //int repairHitpoints = MaxHitPoints / 40;
+            int repairHitpoints = RepairBotId == 1 ? 1000 : RepairBotId == 2 ? 2000 : RepairBotId == 3 ? 3000: RepairBotId == 4 ? 4000 : 500;
             repairHitpoints += Maths.GetPercentage(repairHitpoints, BoosterManager.GetPercentage(BoostedAttributeType.REPAIR));
             repairHitpoints += Maths.GetPercentage(repairHitpoints, GetSkillPercentage("Engineering"));
 

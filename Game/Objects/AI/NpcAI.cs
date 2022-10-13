@@ -27,9 +27,9 @@ namespace Ow.Game.Objects.AI
 
         public void TickAI()
         {
-            if (Npc.Ship.Id == 80)
+            if (Npc.Ship.Id == 80 || Npc.Ship.Id == 480 || Npc.Ship.Id == 880)
                 AIOption = NpcAIOption.MOTHERSHIP_RANDOM;
-            if (Npc.Ship.Id == 81)
+            if (Npc.Ship.Id == 81 || Npc.Ship.Id == 481 || Npc.Ship.Id == 881)
                 AIOption = NpcAIOption.MINION;
             if (Npc.Selected is Player user)
                 if (user.UnderEmp > DateTime.Now)
@@ -52,7 +52,7 @@ namespace Ow.Game.Objects.AI
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
-                                    if (Npc.Ship.Id != 80)
+                                    if (Npc.Ship.Id != 80 || Npc.Ship.Id != 481 || Npc.Ship.Id != 881)
                                         AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
                                 }
                                 else if(Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
@@ -61,7 +61,7 @@ namespace Ow.Game.Objects.AI
                                         Npc.Attacking = true;
 
                                     Npc.Selected = player;
-                                    if (Npc.Ship.Id != 80)
+                                    if (Npc.Ship.Id != 80 || Npc.Ship.Id != 481 || Npc.Ship.Id != 881)
                                         AIOption = NpcAIOption.FLY_TO_ENEMY;
                                 }
                             }

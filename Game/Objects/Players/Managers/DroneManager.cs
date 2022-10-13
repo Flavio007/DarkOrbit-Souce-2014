@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,9 +15,7 @@ namespace Ow.Game.Objects.Players.Managers
 {
     class DroneManager : AbstractManager
     {
-        public List<int> DronesTypes = new List<int> { 1, 2, 1, 2, 1, 1, 1, 2, 0, 0 };
-        public List<int> DronesExperiences = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        public List<int> DronesLevels = new List<int> { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        public List<Drones> DronesList;
         public List<int> Config1Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public List<int> Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public bool Apis = false;
@@ -82,23 +81,13 @@ namespace Ow.Game.Objects.Players.Managers
         {
             using (var mySqlClient = SqlDatabaseManager.GetClient())
             {
-                var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_equipment WHERE userId = {Player.Id}");
-                dynamic dronestypes = JsonConvert.DeserializeObject(querySet["drones"].ToString());
-                dynamic droneslevels = JsonConvert.DeserializeObject(querySet["drone_xp"].ToString());
-
-                for (var i = 0; i < 9; i++)
+                var querySet = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_equipment WHERE userId = {Player.Id}");
+                foreach(DataRow row in querySet.Rows)
+                    DronesList.Add(JsonConvert.DeserializeObject<Drones>(row["drones"].ToString()));
+                /*foreach (int droneId in drones["Id"])
                 {
-                    DronesTypes[i] = dronestypes[$"drone{i+1}"];
-                    DronesExperiences[i] = droneslevels[$"xp{i+1}"];
-                }
-            }
-        }
-
-        public void UpdateDronesLeves()
-        {
-            for (int x = 0; x < 9; x++)
-            {
-                DronesLevels[x] = DronesExperiences[x] < 100 ? 1 : DronesExperiences[x] < 200 ? 2 : DronesExperiences[x] < 400 ? 3 : DronesExperiences[x] < 800 ? 4 : DronesExperiences[x] < 1600 ? 5 : DronesExperiences[x] > 3200 ? 6 : 0;
+                    DronesList.Add(new Drones(drones["Id"], drones["Type"], drones["Exp"], drones["Dmg"], drones["Lvl"]));
+                }*/
             }
         }
 
@@ -106,13 +95,10 @@ namespace Ow.Game.Objects.Players.Managers
         {
             if (updateItems)
             {
-                DronesTypes = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                DronesLevels = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 Config1Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                SetDroneDesigns();
                 SetDroneInfo();
-                UpdateDronesLeves();
+                SetDroneDesigns();
             }
 
             string drones = GetDronesPacket();
@@ -130,25 +116,17 @@ namespace Ow.Game.Objects.Players.Managers
                 DronePacket = $"2|6|{GetDesignId(Config2Designs[0])}|2|6|{GetDesignId(Config2Designs[1])}|2|6|{GetDesignId(Config2Designs[2])}|2|6|{GetDesignId(Config2Designs[3])}|2|6|{GetDesignId(Config2Designs[4])}|2|6|{GetDesignId(Config2Designs[5])}|2|6|{GetDesignId(Config2Designs[6])}|2|6|{GetDesignId(Config2Designs[7])}";
         */
 
-        /*public string GetDronesPacket()
+        public string GetDronesPacket()
         {
             var DronePacket = "";
-
-            for (int x = 0; x < 7; x++)
+            if (DronesList == null)
+                return "0|n|d|" + Player.Id + "";
+            foreach (var drone in DronesList)
             {
-                if (DronesTypes[x] != 0)
-                {
-                    if (Player.CurrentConfig == 1)
-                    {
-                        DronePacket += $"{DronesTypes[x]}|{DronesLevels[x]}|{GetDesignId(Config1Designs[x])}";
-                        DronePacket += (x < 9 ? "|" : "");
-                    }
-                    else
-                    {
-                        DronePacket += $"{DronesTypes[x]}|{DronesLevels[x]}|{GetDesignId(Config2Designs[x])}";
-                        DronePacket += (x < 9 ? "|" : "");
-                    }
-                }
+                //DronePacket = $"2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[0]) : GetDesignId(Config2Designs[0]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[1]) : GetDesignId(Config2Designs[1]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[2]) : GetDesignId(Config2Designs[2]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[3]) : GetDesignId(Config2Designs[3]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[4]) : GetDesignId(Config2Designs[4]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[5]) : GetDesignId(Config2Designs[5]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[6]) : GetDesignId(Config2Designs[6]))}|2|6|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[7]) : GetDesignId(Config2Designs[7]))}";
+                DronePacket = $"{drone.DroneType}|{drone.Level}|{(Player.CurrentConfig == 1 ? GetDesignId(Config1Designs[drone.Id - 1]) : GetDesignId(Config2Designs[drone.Id - 1]))}";
+                if (drone.Id < DronesList.Count())
+                    DronePacket += "|";
             }
 
             if (Apis)
@@ -159,8 +137,8 @@ namespace Ow.Game.Objects.Players.Managers
 
             var drones = "0|n|d|" + Player.Id + "|" + DronePacket;
             return drones;
-        }*/
-        public string GetDronesPacket()
+        }
+        /*public string GetDronesPacket()
         {
             var DronePacket = "";
 
@@ -180,7 +158,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             var drones = "0|n|d|" + Player.Id + "|" + DronePacket;
             return drones;
-        }
+        }*/
 
         public int GetDesignId(int designItemId)
         {
@@ -191,7 +169,7 @@ namespace Ow.Game.Objects.Players.Managers
             return 0;
         }
 
-        public int GetDroneLevel(int xp)
+        public int GetDroneLevel(int xp) //Place holder
         {
             if (xp < 100)
                 return 1;

@@ -82,6 +82,7 @@
     <Compile Include="Game\Objects\Cubikon.cs" />
     <Compile Include="Game\Objects\InstanceNpc.cs" />
     <Compile Include="Game\Objects\Escort.cs" />
+    <Compile Include="Game\Objects\Players\Drones.cs" />
     <Compile Include="Game\Objects\Players\Quests\Quests.cs" />
     <Compile Include="Game\Objects\SolarLordakium.cs" />
     <Compile Include="Game\Objects\Protegit.cs" />
