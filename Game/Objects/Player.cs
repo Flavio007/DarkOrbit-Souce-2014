@@ -196,11 +196,59 @@ namespace Ow.Game.Objects
         }
 
         public DateTime lastRadiationDamageTime = new DateTime();
+        public DateTime RadiationEnterTime = new DateTime();
         public void CheckRadiation()
         {
-            if (Storage.Jumping || !Storage.IsInRadiationZone || Storage.invincibilityEffectTime.AddSeconds(5) >= DateTime.Now || lastRadiationDamageTime.AddSeconds(1) >= DateTime.Now) return;
+            if (Storage.Jumping || Storage.invincibilityEffectTime.AddSeconds(5) >= DateTime.Now) return;
 
-            AttackManager.Damage(this, this, DamageType.RADIATION, MaxHitPoints / 20, true, true, false);
+            if (!Storage.IsInRadiationZone)
+            {
+                RadiationEnterTime = new DateTime();
+                return;
+            }
+
+            if (RadiationEnterTime == new DateTime())
+                RadiationEnterTime = DateTime.Now;
+
+            if (RadiationEnterTime.AddSeconds(3) > DateTime.Now) return;
+
+            if (lastRadiationDamageTime.AddSeconds(1) >= DateTime.Now) return;
+
+            double distanceOutside = 0;
+            try
+            {
+                if (Spacemap != null && Spacemap.Limits != null && Spacemap.Limits.Length == 2 && Spacemap.Limits[0] != null && Spacemap.Limits[1] != null)
+                {
+                    var left = Spacemap.Limits[0].X;
+                    var top = Spacemap.Limits[0].Y;
+                    var right = Spacemap.Limits[1].X;
+                    var bottom = Spacemap.Limits[1].Y;
+
+                    double outsideX = 0;
+                    double outsideY = 0;
+
+                    if (Position.X < left) outsideX = left - Position.X;
+                    else if (Position.X > right) outsideX = Position.X - right;
+
+                    if (Position.Y < top) outsideY = top - Position.Y;
+                    else if (Position.Y > bottom) outsideY = Position.Y - bottom;
+
+                    distanceOutside = Math.Sqrt(outsideX * outsideX + outsideY * outsideY);
+                }
+            }
+            catch { distanceOutside = 0; }
+
+            const double DISTANCE_STEP = 1000.0;
+            const double BASE_PERCENT = 0.01;
+            const double MAX_PERCENT = 0.10;
+
+            double exponent = Math.Floor(distanceOutside / DISTANCE_STEP);
+            double percent = BASE_PERCENT * Math.Pow(2, exponent);
+            if (percent > MAX_PERCENT) percent = MAX_PERCENT;
+
+            int damage = (int)Math.Ceiling(MaxHitPoints * percent);
+
+            AttackManager.Damage(this, this, DamageType.RADIATION, damage, true, true, false);
             lastRadiationDamageTime = DateTime.Now;
         }
 
