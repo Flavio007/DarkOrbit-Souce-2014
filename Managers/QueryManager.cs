@@ -618,6 +618,9 @@ namespace Ow.Managers
                     int hitpoints = Convert.ToInt32(row["health"]);
                     int speed = Convert.ToInt32(row["speed"]);
                     string lootID = Convert.ToString(row["lootID"]);
+                    int displayId = 0;
+                    if (row.Table.Columns.Contains("ShipDisplayID") && row["ShipDisplayID"] != DBNull.Value && row["ShipDisplayID"].ToString() != "")
+                        displayId = Convert.ToInt32(row["ShipDisplayID"]);
                     bool aggressive = Convert.ToBoolean(row["aggressive"]);
                     bool respawnable = Convert.ToBoolean(row["respawnable"]);
                     var rewards = JsonConvert.DeserializeObject<ShipRewards>(row["reward"].ToString());
@@ -625,7 +628,7 @@ namespace Ow.Managers
                     int type = Convert.ToInt32(row["type"]);
                     var ores = JsonConvert.DeserializeObject<Cargo>(row["ores"].ToString());
 
-                    var ship = new Ship(name, shipID, hitpoints, shields, speed, lootID, damage, aggressive, respawnable, rewards, waves, type, ores);
+                    var ship = new Ship(name, shipID, hitpoints, shields, speed, lootID, damage, aggressive, respawnable, rewards, waves, type, ores, displayId);
                     GameManager.Ships.TryAdd(ship.Id, ship);
                 }
             }

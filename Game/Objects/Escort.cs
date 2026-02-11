@@ -73,7 +73,7 @@ namespace Ow.Game.Objects
         {
             return ShipCreateCommand.write(
                 Id,
-                Convert.ToString(Ship.Id),
+                Convert.ToString(Ship.GetDisplayShipId()),
                 3,
                 "",
                 Ship.Name + Suffix,

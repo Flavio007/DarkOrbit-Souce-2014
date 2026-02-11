@@ -101,16 +101,18 @@ namespace Ow.Game
         public static int PHOENIX = 1;
         public static int YAMATO = 2;
         public static int LEONOV = 3;
+        public static int DEFCON = 4;
         public static int LIBERATOR = 5;
         public static int PIRANHA = 6;
         public static int NOSTROMO = 7;
-        public static int BIGBOY = 8;
+        public static int VENGEANCE = 8;
+        public static int BIGBOY = 9;
+        public const int GOLIATH = 10;
 
         public static int SPACEBALL_SUMMER = 442;
         public static int SPACEBALL_WINTER = 443;
         public static int SPACEBALL_SOCCER = 444;
 
-        public const int GOLIATH = 10;
         public const int GOLIATH_ENFORCER = 56;
         public const int GOLIATH_BASTION = 59;
         public const int GOLIATH_VETERAN = 61;
@@ -184,6 +186,7 @@ namespace Ow.Game
         public int BaseShieldAbsorption { get; set; }
         public int BaseSpeed { get; set; }
         public string LootId { get; set; }
+        public int DisplayId { get; set; }
         public bool Aggressive { get; set; }
         public bool Respawnable { get; set; }
         public ShipRewards Rewards { get; set; }
@@ -191,7 +194,7 @@ namespace Ow.Game
         public Cargo Drops { get; set; }
         public int Type { get; set; }
 
-        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves,int type, Cargo drops)
+        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves, int type, Cargo drops, int displayId)
         {
             Name = name;
             Id = id;
@@ -200,12 +203,18 @@ namespace Ow.Game
             BaseHitpoints = baseHitpoints;
             BaseSpeed = speed;
             LootId = lootID;
+            DisplayId = displayId;
             Aggressive = aggressive;
             Respawnable = respawnable;
             Rewards = rewards;
             Waves = waves;
             Type = type;
             Drops = drops;
+        }
+
+        public int GetDisplayShipId()
+        {
+            return DisplayId > 0 ? DisplayId : Id;
         }
 
         public int GetHitPointsBoost(int hitpoints)

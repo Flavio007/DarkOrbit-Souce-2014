@@ -154,7 +154,7 @@ namespace Ow.Game.Objects
                             if (otherPlayer.Title != "" && !EventManager.JackpotBattle.InEvent(otherPlayer))
                                 player.SendPacket($"0|n|t|{otherPlayer.Id}|1|{otherPlayer.Title}");
 
-                            player.SendPacket(otherPlayer.DroneManager.GetDronesPacket());
+                            player.SendPacket(otherPlayer.DroneManager.GetDronesPacket(0));
                             player.SendCommand(DroneFormationChangeCommand.write(otherPlayer.Id, DroneManager.GetSelectedFormationId(otherPlayer.Settings.InGameSettings.selectedFormation)));
                         }
                         else if (character is Pet)

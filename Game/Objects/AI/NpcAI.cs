@@ -24,20 +24,32 @@ namespace Ow.Game.Objects.AI
         public NpcAI(Npc npc) { Npc = npc; }
 
         public DateTime lastMovement = new DateTime();
+        private DateTime nextDecisionTime = DateTime.MinValue;
+        private int decisionIntervalMs = 0;
 
         public void TickAI()
         {
+            var now = DateTime.Now;
+            if (nextDecisionTime == DateTime.MinValue)
+            {
+                decisionIntervalMs = Randoms.random.Next(850, 1350);
+                nextDecisionTime = now.AddMilliseconds(Randoms.random.Next(0, decisionIntervalMs));
+            }
+
+            if (now < nextDecisionTime)
+                return;
+
             if (Npc.Ship.Id == 80 || Npc.Ship.Id == 480 || Npc.Ship.Id == 880)
                 AIOption = NpcAIOption.MOTHERSHIP_RANDOM;
             if (Npc.Ship.Id == 81 || Npc.Ship.Id == 481 || Npc.Ship.Id == 881)
                 AIOption = NpcAIOption.MINION;
             if (Npc.Selected is Player user)
-                if (user.UnderEmp > DateTime.Now)
+                if (user.UnderEmp > now)
                 {
                     Npc.Selected = null;
                     Npc.Attacking = false;
                 }
-            if (lastMovement.AddSeconds(1) < DateTime.Now)
+            if (lastMovement.AddSeconds(1) < now)
             {
                 switch (AIOption)
                 {
@@ -52,7 +64,7 @@ namespace Ow.Game.Objects.AI
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
-                                    if (Npc.Ship.Id != 80 || Npc.Ship.Id != 481 || Npc.Ship.Id != 881)
+                                    if (Npc.Ship.Id != 80 && Npc.Ship.Id != 481 && Npc.Ship.Id != 881)
                                         AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
                                 }
                                 else if(Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
@@ -61,8 +73,9 @@ namespace Ow.Game.Objects.AI
                                         Npc.Attacking = true;
 
                                     Npc.Selected = player;
-                                    if (Npc.Ship.Id != 80 || Npc.Ship.Id != 481 || Npc.Ship.Id != 881)
+                                    if (Npc.Ship.Id != 80 && Npc.Ship.Id != 481 && Npc.Ship.Id != 881)
                                         AIOption = NpcAIOption.FLY_TO_ENEMY;
+                                    break;
                                 }
                             }
                         }
@@ -126,6 +139,7 @@ namespace Ow.Game.Objects.AI
                                     Npc.Selected = player;
                                     if (Npc.Ship.Aggressive)
                                         Npc.Attacking = true;
+                                    break;
                                 }
                             }
                         if (!Npc.Moving)
@@ -149,6 +163,7 @@ namespace Ow.Game.Objects.AI
                                     Npc.Selected = player;
                                     if (Npc.Ship.Aggressive)
                                         Npc.Attacking = true;
+                                    break;
                                 }
                             }
                         if (!Npc.Moving)
@@ -167,7 +182,9 @@ namespace Ow.Game.Objects.AI
                         break;
                 }
 
-                lastMovement = DateTime.Now;
+                lastMovement = now;
+                decisionIntervalMs = Randoms.random.Next(850, 1350);
+                nextDecisionTime = now.AddMilliseconds(decisionIntervalMs);
             }
         }
 
