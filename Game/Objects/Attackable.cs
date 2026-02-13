@@ -215,6 +215,8 @@ namespace Ow.Game.Objects
 
             if (this is Player player)
             {
+                player.DroneManager?.ApplyDeathDamage();
+
                 if (EventManager.JackpotBattle.InEvent(player))
                     GameManager.SendPacketToMap(EventManager.JackpotBattle.Spacemap.Id, $"0|A|STM|msg_jackpot_players_left|%COUNT%|{(EventManager.JackpotBattle.Spacemap.Characters.Count - 1)}");
 
@@ -341,6 +343,9 @@ namespace Ow.Game.Objects
 
                 if (reward)
                 {
+                    if (this is Npc)
+                        destroyerPlayer.DroneManager?.AddNpcKillExperience(100);
+
                     var groupMembers = destroyerPlayer.Group?.Members.Values.Where(x => x.AttackingOrUnderAttack());
 
                     if (this is SolarLordakium Lord && Lord.challengers != null)

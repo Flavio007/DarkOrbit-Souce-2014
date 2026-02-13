@@ -66,6 +66,38 @@ namespace Ow.Managers
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
                     mySqlClient.ExecuteNonQuery($"UPDATE player_equipment SET modules = '{JsonConvert.SerializeObject(player.Storage.BattleStationModules)}' WHERE userId = {player.Id}");
             }
+
+            public static bool Drones(Player player)
+            {
+                try
+                {
+                    using (var mySqlClient = SqlDatabaseManager.GetClient())
+                    {
+                        var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_equipment WHERE userId = {player.Id}");
+                        if (querySet == null)
+                            return false;
+
+                        var column = "";
+                        if (querySet.Table.Columns.Contains("drone"))
+                            column = "drone";
+                        else if (querySet.Table.Columns.Contains("drones"))
+                            column = "drones";
+
+                        if (string.IsNullOrWhiteSpace(column))
+                            return false;
+
+                        var dronesJson = JsonConvert.SerializeObject(player.DroneManager?.DronesList ?? new List<Drones>());
+                        dronesJson = dronesJson.Replace("'", "''");
+                        mySqlClient.ExecuteNonQuery($"UPDATE player_equipment SET {column} = '{dronesJson}' WHERE userId = {player.Id}");
+                        return true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("error_log", $"- [QueryManager.cs] SavePlayer.Drones({player.Id}) exception: {e}");
+                    return false;
+                }
+            }
         }
 
         public class ChatFunctions
@@ -266,6 +298,84 @@ namespace Ow.Managers
             };
         }
 
+        public static Dictionary<int, List<string>> GetDroneEquippedItemsDebugByConfig(Player player)
+        {
+            Dictionary<int, List<string>> inventoryLoadoutDebug;
+            if (TryGetDroneEquippedItemsDebugByConfigFromInventoryLoadout(player, out inventoryLoadoutDebug))
+                return inventoryLoadoutDebug;
+            return new Dictionary<int, List<string>>
+            {
+                { 1, new List<string>() },
+                { 2, new List<string>() }
+            };
+        }
+
+        public static List<string> GetDroneLoadoutDebugDiagnostics(Player player)
+        {
+            var lines = new List<string>();
+            if (player == null)
+                return lines;
+
+            try
+            {
+                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                {
+                    var loadoutRows = TryGetTableByUser(mySqlClient, "player_inventory_loadout", player.Id);
+                    if (loadoutRows == null)
+                    {
+                        lines.Add("loadout table not found/readable");
+                        return lines;
+                    }
+
+                    var shipRows = 0;
+                    var droneRows = 0;
+                    var unknownRows = 0;
+                    var rawOrigins = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (DataRow row in loadoutRows.Rows)
+                    {
+                        var rawOrigin = ReadRowString(
+                            row,
+                            "mode",
+                            "equipment_mode",
+                            "equipmentMode",
+                            "origin",
+                            "loadout_origin",
+                            "loadoutOrigin",
+                            "equipment_origin",
+                            "equipmentOrigin",
+                            "target");
+
+                        if (string.IsNullOrWhiteSpace(rawOrigin))
+                            rawOrigin = "(empty)";
+
+                        if (rawOrigins.ContainsKey(rawOrigin))
+                            rawOrigins[rawOrigin] += 1;
+                        else
+                            rawOrigins[rawOrigin] = 1;
+
+                        var parsed = ParseLoadoutOrigin(row);
+                        if (parsed == LoadoutOrigin.Ship)
+                            shipRows++;
+                        else if (parsed == LoadoutOrigin.Drone)
+                            droneRows++;
+                        else
+                            unknownRows++;
+                    }
+
+                    lines.Add($"loadout rows: total={loadoutRows.Rows.Count}, ship={shipRows}, drone={droneRows}, unknown={unknownRows}");
+                    foreach (var kv in rawOrigins.OrderBy(x => x.Key))
+                        lines.Add($"raw origin '{kv.Key}' x{kv.Value}");
+                }
+            }
+            catch (Exception e)
+            {
+                lines.Add("diagnostics exception: " + e.Message);
+            }
+
+            return lines;
+        }
+
         private enum LoadoutItemKind
         {
             Unknown = 0,
@@ -296,6 +406,14 @@ namespace Ow.Managers
             public int Config;
             public int ItemId;
             public LoadoutItemKind Kind;
+            public LoadoutOrigin Origin;
+        }
+
+        private enum LoadoutOrigin
+        {
+            Unknown = 0,
+            Ship = 1,
+            Drone = 2
         }
 
         private static bool TrySetEquipmentFromInventoryLoadout(Player player)
@@ -343,6 +461,9 @@ namespace Ow.Managers
             {
                 var configIndex = item.Config - 1;
                 if (configIndex < 0 || configIndex > 1)
+                    continue;
+
+                if (item.Origin == LoadoutOrigin.Drone && !IsDroneLoadoutKindAllowed(item.Kind))
                     continue;
 
                 switch (item.Kind)
@@ -429,6 +550,22 @@ namespace Ow.Managers
                 }
             }
 
+            var droneDamageBonusPercent = 0;
+            var droneShieldBonusPercent = 0;
+            if (player.DroneManager != null)
+                player.DroneManager.GetActiveDroneLevelBonus(out droneDamageBonusPercent, out droneShieldBonusPercent);
+            if (droneDamageBonusPercent > 0)
+            {
+                damage[0] += Maths.GetPercentage(damage[0], droneDamageBonusPercent);
+                damage[1] += Maths.GetPercentage(damage[1], droneDamageBonusPercent);
+            }
+
+            if (droneShieldBonusPercent > 0)
+            {
+                shield[0] += Maths.GetPercentage(shield[0], droneShieldBonusPercent);
+                shield[1] += Maths.GetPercentage(shield[1], droneShieldBonusPercent);
+            }
+
             speed[0] += Maths.GetPercentage(speed[0], 20);
             speed[1] += Maths.GetPercentage(speed[1], 20);
             player.CurrentShieldAbsConfig1 = shieldabsorption[0] / (equipedshieldcount[0] == 0 ? 1 : equipedshieldcount[0]);
@@ -477,6 +614,39 @@ namespace Ow.Managers
             return true;
         }
 
+        private static bool TryGetDroneEquippedItemsDebugByConfigFromInventoryLoadout(Player player, out Dictionary<int, List<string>> result)
+        {
+            result = null;
+
+            List<ResolvedLoadoutItem> equippedItems;
+            if (!TryGetResolvedShipLoadoutItems(player, out equippedItems))
+                return false;
+
+            var config1 = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var config2 = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in equippedItems.Where(x => x.Origin == LoadoutOrigin.Drone))
+            {
+                var summary = item.Config == 2 ? config2 : config1;
+                var name = ResolveDebugItemName(item);
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                if (summary.ContainsKey(name))
+                    summary[name] += 1;
+                else
+                    summary[name] = 1;
+            }
+
+            result = new Dictionary<int, List<string>>
+            {
+                { 1, BuildDebugLines(config1) },
+                { 2, BuildDebugLines(config2) }
+            };
+
+            return true;
+        }
+
         private static bool TryGetResolvedShipLoadoutItems(Player player, out List<ResolvedLoadoutItem> equippedItems)
         {
             equippedItems = new List<ResolvedLoadoutItem>();
@@ -496,7 +666,8 @@ namespace Ow.Managers
 
                     foreach (DataRow row in loadoutRows.Rows)
                     {
-                        if (!IsShipLoadoutRow(row))
+                        var origin = ParseLoadoutOrigin(row);
+                        if (origin == LoadoutOrigin.Unknown)
                             continue;
 
                         var config = ParseConfigId(row);
@@ -509,18 +680,26 @@ namespace Ow.Managers
 
                         var slotGroup = ReadRowString(row, "slot_group", "slotGroup", "group", "category");
                         var slotIndex = ParseInt(row, 0, "slot_index", "slotIndex", "slot", "position");
-                        var key = config + "|" + slotGroup + "|" + slotIndex;
+                        var key = config + "|" + origin + "|" + slotGroup + "|" + slotIndex;
                         selectedSlots[key] = row;
                     }
 
                     var equippedPerItem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                    foreach (DataRow slotRow in selectedSlots.Values)
+                    var orderedRows = selectedSlots.Values
+                        .OrderBy(x => ParseLoadoutOrigin(x) == LoadoutOrigin.Ship ? 0 : 1)
+                        .ToList();
+
+                    foreach (DataRow slotRow in orderedRows)
                     {
                         var itemId = ParseItemId(slotRow);
                         if (itemId < 0)
                             continue;
 
                         var config = ParseConfigId(slotRow);
+                        var origin = ParseLoadoutOrigin(slotRow);
+                        if (origin == LoadoutOrigin.Unknown)
+                            continue;
+
                         var slotGroup = ReadRowString(slotRow, "slot_group", "slotGroup", "group", "category");
                         var equipCountKey = config + "|" + slotGroup + "|" + itemId;
 
@@ -549,7 +728,8 @@ namespace Ow.Managers
                         {
                             Config = config,
                             ItemId = itemId,
-                            Kind = kind
+                            Kind = kind,
+                            Origin = origin
                         });
                     }
 
@@ -828,20 +1008,65 @@ namespace Ow.Managers
             return kind;
         }
 
-        private static bool IsShipLoadoutRow(DataRow row)
+        private static LoadoutOrigin ParseLoadoutOrigin(DataRow row)
         {
-            var mode = ReadRowString(row, "mode", "equipment_mode", "equipmentMode");
+            var mode = ReadRowString(
+                row,
+                "mode",
+                "equipment_mode",
+                "equipmentMode",
+                "origin",
+                "loadout_origin",
+                "loadoutOrigin",
+                "equipment_origin",
+                "equipmentOrigin",
+                "target");
+
             if (string.IsNullOrWhiteSpace(mode))
-                return true;
+            {
+                foreach (DataColumn column in row.Table.Columns)
+                {
+                    var value = row[column];
+                    if (value == null || value == DBNull.Value)
+                        continue;
 
-            mode = mode.Trim().ToLowerInvariant();
-            if (mode == "ship" || mode == "ships")
-                return true;
+                    var parsed = ParseLoadoutOriginValue(value.ToString());
+                    if (parsed != LoadoutOrigin.Unknown)
+                        return parsed;
+                }
 
-            if (mode == "0")
-                return true;
+                return LoadoutOrigin.Ship;
+            }
 
-            return false;
+            var parsedMode = ParseLoadoutOriginValue(mode);
+            if (parsedMode != LoadoutOrigin.Unknown)
+                return parsedMode;
+
+            return LoadoutOrigin.Unknown;
+        }
+
+        private static LoadoutOrigin ParseLoadoutOriginValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return LoadoutOrigin.Unknown;
+
+            var normalized = value.Trim().ToLowerInvariant();
+            if (normalized == "ship" || normalized == "ships")
+                return LoadoutOrigin.Ship;
+
+            if (normalized == "drone" || normalized == "drones")
+                return LoadoutOrigin.Drone;
+
+            if (normalized == "0")
+                return LoadoutOrigin.Ship;
+
+            if (normalized == "1")
+                return LoadoutOrigin.Drone;
+
+            if (normalized == "2")
+                return LoadoutOrigin.Drone;
+
+            return LoadoutOrigin.Unknown;
         }
 
         private static int ParseConfigId(DataRow row)
@@ -1163,6 +1388,36 @@ namespace Ow.Managers
         {
             // New backend has drones disabled for equipment mode=ship; keep method for parity.
             return null;
+        }
+
+        private static bool IsDroneLoadoutKindAllowed(LoadoutItemKind kind)
+        {
+            switch (kind)
+            {
+                case LoadoutItemKind.Lf1:
+                case LoadoutItemKind.Mp1:
+                case LoadoutItemKind.Lf2:
+                case LoadoutItemKind.Lf3:
+                case LoadoutItemKind.Lf4:
+                case LoadoutItemKind.Bo2:
+                case LoadoutItemKind.Ao1:
+                case LoadoutItemKind.Ao2:
+                case LoadoutItemKind.Ao3:
+                case LoadoutItemKind.Bo1:
+                    return true;
+                case LoadoutItemKind.Hst1:
+                case LoadoutItemKind.Hst2:
+                    return false;
+                case LoadoutItemKind.G3n7900:
+                case LoadoutItemKind.G3n6900:
+                case LoadoutItemKind.G3n3310:
+                case LoadoutItemKind.G3n3210:
+                case LoadoutItemKind.G3n2010:
+                case LoadoutItemKind.G3n1010:
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         public static void LoadMaps()

@@ -2,6 +2,7 @@
 using Ow.Game.Events;
 using Ow.Game.Movements;
 using Ow.Game.Objects;
+using Ow.Game.Objects.Players;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Managers;
 using Ow.Managers.MySQLManager;
@@ -242,14 +243,16 @@ namespace Ow.Net.netty.handlers
             var cfg1Lines = configLines.ContainsKey(1) ? configLines[1] : new List<string>();
             var cfg2Lines = configLines.ContainsKey(2) ? configLines[2] : new List<string>();
             if (cfg1Lines.Count == 0 && cfg2Lines.Count == 0)
-            {
                 player.SendPacket("0|A|STD|[debug] No equipped items found.");
-                return;
+            else
+            {
+                player.SendPacket("0|A|STD|[debug] Equipped items by config:");
+                SendConfigLines(player, 1, cfg1Lines);
+                SendConfigLines(player, 2, cfg2Lines);
             }
 
-            player.SendPacket("0|A|STD|[debug] Equipped items by config:");
-            SendConfigLines(player, 1, cfg1Lines);
-            SendConfigLines(player, 2, cfg2Lines);
+            SendDroneEquipmentDebug(player);
+            SendDroneStateDebug(player);
         }
 
         private static void SendConfigLines(Player player, int configId, List<string> lines)
@@ -263,6 +266,76 @@ namespace Ow.Net.netty.handlers
             player.SendPacket($"0|A|STD|[debug] CFG{configId}:");
             foreach (var line in lines)
                 player.SendPacket($"0|A|STD|[debug] {line}");
+        }
+
+        private static void SendDroneEquipmentDebug(Player player)
+        {
+            var droneConfigLines = QueryManager.GetDroneEquippedItemsDebugByConfig(player);
+            var cfg1Lines = droneConfigLines.ContainsKey(1) ? droneConfigLines[1] : new List<string>();
+            var cfg2Lines = droneConfigLines.ContainsKey(2) ? droneConfigLines[2] : new List<string>();
+
+            player.SendPacket("0|A|STD|[debug] Drone equipment by config:");
+            SendDroneConfigLines(player, 1, cfg1Lines);
+            SendDroneConfigLines(player, 2, cfg2Lines);
+
+            if (cfg1Lines.Count == 0 && cfg2Lines.Count == 0)
+            {
+                var diagnostics = QueryManager.GetDroneLoadoutDebugDiagnostics(player);
+                foreach (var line in diagnostics)
+                    player.SendPacket($"0|A|STD|[debug] Drone loadout diag: {line}");
+            }
+        }
+
+        private static void SendDroneConfigLines(Player player, int configId, List<string> lines)
+        {
+            if (lines.Count == 0)
+            {
+                player.SendPacket($"0|A|STD|[debug] Drone CFG{configId}: (empty)");
+                return;
+            }
+
+            player.SendPacket($"0|A|STD|[debug] Drone CFG{configId}:");
+            foreach (var line in lines)
+                player.SendPacket($"0|A|STD|[debug] {line}");
+        }
+
+        private static void SendDroneStateDebug(Player player)
+        {
+            var drones = player.DroneManager != null && player.DroneManager.DronesList != null
+                ? player.DroneManager.DronesList.Where(x => x != null).OrderBy(x => x.Id).ToList()
+                : new List<Drones>();
+
+            if (drones.Count == 0)
+            {
+                player.SendPacket("0|A|STD|[debug] Drones: (none)");
+                return;
+            }
+
+            player.SendPacket("0|A|STD|[debug] Drones status:");
+            foreach (var drone in drones)
+            {
+                var level = DroneManager.getdronelevel(drone.Experience);
+                if (level < 1) level = 1;
+                if (level > 6) level = 6;
+
+                var damagePercent = drone.Damage;
+                if (damagePercent < 0) damagePercent = 0;
+                if (damagePercent > 100) damagePercent = 100;
+
+                player.SendPacket($"0|A|STD|[debug] {GetDroneTypeName(drone.DroneType)}#{drone.Id} Lvl {level} Damage {damagePercent}%");
+            }
+        }
+
+        private static string GetDroneTypeName(byte droneType)
+        {
+            switch (droneType)
+            {
+                case 1: return "Flax";
+                case 2: return "Iris";
+                case 3: return "Apis";
+                case 4: return "Zeus";
+                default: return "Drone";
+            }
         }
     }
 }

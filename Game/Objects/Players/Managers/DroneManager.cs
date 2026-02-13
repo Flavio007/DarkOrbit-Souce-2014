@@ -4,6 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Ow.Game.Objects;
+using Ow.Managers;
 using Ow.Managers.MySQLManager;
 using Ow.Net.netty.commands;
 using Ow.Utils;
@@ -17,6 +18,9 @@ namespace Ow.Game.Objects.Players.Managers
         public List<int> Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public bool Apis = false;
         public bool Zeus = false;
+        private bool DroneStateDirty = false;
+        private DateTime lastDroneStateSave = DateTime.Now;
+        private const int DRONE_AUTOSAVE_SECONDS = 60;
 
         public DroneManager(Player player) : base(player)
         {
@@ -52,6 +56,7 @@ namespace Ow.Game.Objects.Players.Managers
         {
             ShieldRegeneration();
             ShieldWeaken();
+            TryPersistDroneStateByInterval();
         }
 
         public void SetDroneDesigns()
@@ -86,10 +91,15 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 DronesList = new List<Drones>();
                 var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_equipment WHERE userId = {Player.Id}");
-                if (querySet == null || !querySet.Table.Columns.Contains("drones") || querySet["drones"] == null)
+                if (querySet == null)
                     return;
 
-                var dronesJson = querySet["drones"].ToString();
+                string dronesJson = null;
+                if (querySet.Table.Columns.Contains("drone") && querySet["drone"] != null)
+                    dronesJson = querySet["drone"].ToString();
+                else if (querySet.Table.Columns.Contains("drones") && querySet["drones"] != null)
+                    dronesJson = querySet["drones"].ToString();
+
                 if (string.IsNullOrWhiteSpace(dronesJson))
                     return;
 
@@ -106,6 +116,18 @@ namespace Ow.Game.Objects.Players.Managers
                     if (drone != null)
                         DronesList.Add(drone);
                 }
+
+                foreach (var drone in DronesList.Where(x => x != null))
+                {
+                    if (drone.Damage < 0)
+                        drone.Damage = 0;
+                    else if (drone.Damage > 100)
+                        drone.Damage = 100;
+
+                    drone.Level = getdronelevel(drone.Experience);
+                }
+
+                DroneStateDirty = false;
             }
         }
 
@@ -156,7 +178,7 @@ namespace Ow.Game.Objects.Players.Managers
                 for (var i = 0; i < drones.Count; i++)
                 {
                     var drone = drones[i];
-                    var level = drone.Level > 0 ? drone.Level : getdronelevel(drone.Experience);
+                    var level = getdronelevel(drone.Experience);
 
                     if (level < 1)
                         level = 1;
@@ -235,18 +257,153 @@ namespace Ow.Game.Objects.Players.Managers
 
         public static int getdronelevel(int xp)
         {
+            // So level 1 needs 0 XP, level 2 needs 100 XP, level 3 needs 200 XP, level 4 needs 400 XP, level 5 needs 800 XP, level 6 needs 1600 XP
             if (xp < 100)
                 return 1;
-            if (xp >= 100 && xp <= 199)
+            if (xp < 300)
                 return 2;
-            if (xp >= 200 && xp <= 399)
+            if (xp < 700)
                 return 3;
-            if (xp >= 400 && xp <= 799)
+            if (xp < 1500)
                 return 4;
-            if (xp >= 800 && xp <= 1599)
+            if (xp < 3100)
                 return 5;
-            else
-                return 6;
+            return 6;
+        }
+
+        public void GetActiveDroneLevelBonus(out int damagePercent, out int shieldPercent)
+        {
+            damagePercent = 0;
+            shieldPercent = 0;
+
+            foreach (var drone in GetActiveDrones())
+            {
+                var level = getdronelevel(drone.Experience);
+                if (level < 1)
+                    level = 1;
+                else if (level > 6)
+                    level = 6;
+
+                damagePercent += (level - 1) * 2;
+                shieldPercent += (level - 1) * 4;
+            }
+        }
+
+        public void ApplyDeathDamage()
+        {
+            if (DronesList == null || DronesList.Count == 0)
+                return;
+
+            var changed = false;
+            var destroyed = new List<Drones>();
+
+            foreach (var drone in GetActiveDrones())
+            {
+                var droneDamage = drone.DroneType == 1 ? 4 : 2; // Flax takes more damage than Iris/Apis/Zeus.
+                var nextDamage = drone.Damage + droneDamage;
+                if (nextDamage > 100)
+                    nextDamage = 100;
+
+                if (nextDamage != drone.Damage)
+                {
+                    drone.Damage = nextDamage;
+                    changed = true;
+                }
+
+                if (drone.Damage >= 100)
+                    destroyed.Add(drone);
+            }
+
+            if (destroyed.Count > 0)
+            {
+                foreach (var drone in destroyed)
+                    DronesList.Remove(drone);
+
+                changed = true;
+            }
+
+            if (!changed)
+                return;
+
+            UpdateDrones();
+            QueryManager.SetEquipment(Player);
+            Player.UpdateStatus();
+            MarkDroneStateDirty();
+            PersistDroneStateNow();
+        }
+
+        public void AddNpcKillExperience(int xp = 2)
+        {
+            if (xp <= 0 || DronesList == null || DronesList.Count == 0)
+                return;
+
+            var levelChanged = false;
+            foreach (var drone in GetActiveDrones())
+            {
+                var previousLevel = getdronelevel(drone.Experience);
+                if (previousLevel >= 6)
+                    continue;
+
+                drone.Experience += xp;
+                MarkDroneStateDirty();
+
+                var newLevel = getdronelevel(drone.Experience);
+                if (newLevel < 1)
+                    newLevel = 1;
+                else if (newLevel > 6)
+                    newLevel = 6;
+
+                if (newLevel != previousLevel)
+                {
+                    drone.Level = newLevel;
+                    levelChanged = true;
+                    MarkDroneStateDirty();
+                }
+            }
+
+            if (!levelChanged)
+                return;
+
+            // Sends drone update packets to player + in-range players.
+            UpdateDrones();
+            QueryManager.SetEquipment(Player);
+            Player.UpdateStatus();
+            PersistDroneStateNow();
+        }
+
+        private List<Drones> GetActiveDrones()
+        {
+            return DronesList
+                .Where(x => x != null && x.Damage < 100)
+                .ToList();
+        }
+
+        private void MarkDroneStateDirty()
+        {
+            DroneStateDirty = true;
+        }
+
+        private void TryPersistDroneStateByInterval()
+        {
+            if (!DroneStateDirty)
+                return;
+
+            if (lastDroneStateSave.AddSeconds(DRONE_AUTOSAVE_SECONDS) > DateTime.Now)
+                return;
+
+            PersistDroneStateNow();
+        }
+
+        private void PersistDroneStateNow()
+        {
+            if (!DroneStateDirty)
+                return;
+
+            if (QueryManager.SavePlayer.Drones(Player))
+            {
+                DroneStateDirty = false;
+                lastDroneStateSave = DateTime.Now;
+            }
         }
 
         public static int GetSelectedFormationId(string formation)
