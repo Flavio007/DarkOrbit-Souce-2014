@@ -233,278 +233,936 @@ namespace Ow.Managers
         {
             try
             {
-                var lf1Damage = 40;
-                var mp1Damage = 60;
-                var lf2Damage = 100;
-                var lf3Damage = 150;
-                var lf4Damage = 200;
-                var bo2Shield = 10000;
-                var bo2Shieldabs = 80;
-                var bo1Shield = 4000;
-                var bo1Shieldabs = 70;
-                var ao1Shield = 1000;
-                var ao1Shieldabs = 40;
-                var ao2Shield = 2000;
-                var ao2Shieldabs = 50;
-                var ao3Shield = 5000;
-                var ao3Shieldabs = 60;
-                var g3n7900Speed = 10;
-                var g3n6900Speed = 7;
-                var g3n3310Speed = 5;
-                var g3n3210Speed = 4;
-                var g3n2010Speed = 3;
-                var g3n1010Speed = 2;
-
-
-                var hitpoints = new int[] { player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull"), player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull") };
-                var speed = new int[] { player.Ship.BaseSpeed, player.Ship.BaseSpeed };
-                var damage = new int[] { 0, 0 };
-                var shield = new int[] { 0, 0 };
-                var equipedshieldcount = new int[] { 0, 0 };
-                var shieldabsorption = new int[] { 0, 0 };
-                var leonovlaser = new int[] { 0, 0 };
-                var leonovshield = new int[] { 0, 0 };
-
-                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                if (!TrySetEquipmentFromInventoryLoadout(player))
                 {
-                    var equipment = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_equipment WHERE userId = {player.Id}");
-                    foreach (DataRow row in equipment.Rows)
-                    {
-                        dynamic items = JsonConvert.DeserializeObject(row["items"].ToString());
-
-                        /*This is the order of items in the inventory, both sides Emulator and CMS 
-                         * have to have the items in the same order otherwise this code doesn't work.
-                         * TODO: Redo the entire inventory system, this works very confusingly for many items.*/
-
-                        int lf3Count = items["lf3Count"];
-                        int bo2Count = items["bo2Count"] + lf3Count;
-                        int g3n7900Count = items["g3n7900Count"] + bo2Count;
-                        int havocItemCount = items["havocCount"] + g3n7900Count;
-                        int herculesItemCount = items["herculesCount"] + havocItemCount;
-                        int lf4Count = items["lf4Count"] + herculesItemCount;
-                        int lf1Count = items["lf1Count"] + lf4Count;
-                        int mp1Count = items["mp1Count"] + lf1Count;
-                        int lf2Count = items["lf2Count"] + mp1Count;
-                        int g3n6900Count = items["g3n6900Count"] + lf2Count;
-                        int g3n3310Count = items["g3n3310Count"] + g3n6900Count;
-                        int g3n3210Count = items["g3n3210Count"] + g3n3310Count;
-                        int g3n2010Count = items["g3n2010Count"] + g3n3210Count;
-                        int g3n1010Count = items["g3n1010Count"] + g3n2010Count;
-                        int ao1Count = items["ao1Count"] + g3n1010Count;
-                        int ao2Count = items["ao2Count"] + ao1Count;
-                        int ao3Count = items["ao3Count"] + ao2Count;
-                        int bo1Count = items["bo1Count"] + ao3Count;
-                        int hs1Count = items["hs1Count"] + bo1Count;
-                        int hs2Count = items["hs2Count"] + hs1Count;
-                        int arcpuCount = items["arcpuCount"] + hs2Count;
-                        int arlcpuCount = items["arlcpuCount"] + arcpuCount;
-                        int clkcpuCount = items["clkcpuCount"] + arlcpuCount;
-
-                        for (var i = 1; i <= 2; i++)
-                        {
-                            foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_lasers"].ToString()))
-                            {
-                                if (itemId >= 0 && itemId < lf3Count)
-                                {
-                                    damage[i - 1] += lf3Damage;
-                                    player.equipedlasercount++;
-                                }
-                                else if (itemId >= herculesItemCount && itemId < lf4Count)
-                                {
-                                    damage[i - 1] += lf4Damage;
-                                    player.fulllf3 = false;
-                                    player.equipedlasercount++;
-                                }
-                                else if (itemId >= lf4Count && itemId < lf1Count)
-                                {
-                                    damage[i - 1] += lf1Damage;
-                                    player.fulllf3 = false;
-                                    player.equipedlasercount++;
-                                }
-                                else if (itemId >= lf1Count && itemId < mp1Count)
-                                {
-                                    damage[i - 1] += mp1Damage;
-                                    player.fulllf3 = false;
-                                    player.equipedlasercount++;
-                                }
-                                else if (itemId >= lf2Count)
-                                {
-                                    damage[i - 1] += lf2Damage;
-                                    player.fulllf3 = false;
-                                    player.equipedlasercount++;
-                                }
-                                if (itemId >= 0 && itemId < lf3Count)
-                                    leonovlaser[i - 1] += lf3Damage;
-                                else if (itemId >= herculesItemCount && itemId < lf4Count)
-                                    leonovlaser[i - 1] += lf4Damage;
-                                else if (itemId >= lf4Count && itemId < lf1Count)
-                                    leonovlaser[i - 1] += lf1Damage;
-                                else if (itemId >= lf1Count && itemId < mp1Count)
-                                    leonovlaser[i - 1] += mp1Damage;
-                                else if (itemId >= lf2Count)
-                                    leonovlaser[i - 1] += lf2Damage;
-                            }
-                            foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_rocketlauncher"].ToString()))
-                            {
-                                if (itemId > bo1Count && itemId <= hs1Count)
-                                    player.AttackManager.RocketLauncher.MaxLoad += 3;
-                                if (itemId > hs1Count && itemId <= hs2Count)
-                                    player.AttackManager.RocketLauncher.MaxLoad += 5;
-                            }
-
-                            foreach (int itemId in (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_generators"].ToString()))
-                            {
-                                if (itemId >= lf3Count && itemId < bo2Count)
-                                {
-                                    shield[i - 1] += bo2Shield;
-                                    shieldabsorption[i - 1] += bo2Shieldabs;
-                                    equipedshieldcount[i - 1]++;
-                                }
-                                else if (itemId >= bo2Count && itemId < g3n7900Count)
-                                    speed[i - 1] += g3n7900Speed;
-                                else if (itemId >= lf2Count && itemId < g3n6900Count)
-                                    speed[i - 1] += g3n6900Speed;
-                                else if (itemId >= g3n6900Count && itemId < g3n3310Count)
-                                    speed[i - 1] += g3n3310Speed;
-                                else if (itemId >= g3n3310Count && itemId < g3n3210Count)
-                                    speed[i - 1] += g3n3210Speed;
-                                else if (itemId >= g3n3210Count && itemId < g3n2010Count)
-                                    speed[i - 1] += g3n2010Speed;
-                                else if (itemId >= g3n2010Count && itemId < g3n1010Count)
-                                    speed[i - 1] += g3n1010Speed;
-                                else if (itemId >= g3n1010Count && itemId < ao1Count)
-                                {
-                                    shield[i - 1] += ao1Shield;
-                                    shieldabsorption[i - 1] += ao1Shieldabs;
-                                    equipedshieldcount[i - 1]++;
-                                }
-                                else if (itemId >= ao1Count && itemId < ao2Count)
-                                {
-                                    shield[i - 1] += ao2Shield;
-                                    shieldabsorption[i - 1] += ao2Shieldabs;
-                                    equipedshieldcount[i - 1]++;
-                                }
-                                else if (itemId >= ao2Count && itemId < ao3Count)
-                                {
-                                    shield[i - 1] += ao3Shield;
-                                    shieldabsorption[i - 1] += ao3Shieldabs;
-                                    equipedshieldcount[i - 1]++;
-                                }
-                                else if (itemId >= ao3Count && itemId < bo1Count)
-                                {
-                                    shield[i - 1] += bo1Shield;
-                                    shieldabsorption[i - 1] += bo1Shieldabs;
-                                    equipedshieldcount[i - 1]++;
-                                }
-                                if (itemId >= lf3Count && itemId < bo2Count)
-                                    leonovshield[i - 1] += bo2Shield;
-                            }
-
-                            var havocCount = 0;
-                            var herculesCount = 0;
-
-                            var drones = (dynamic)JsonConvert.DeserializeObject(row[$"config{i}_drones"].ToString());
-
-                            foreach (var drone in drones)
-                            {
-                                var herculesEquipped = false;
-
-                                foreach (int design in drone["designs"])
-                                {
-                                    if (design >= g3n7900Count && design < havocItemCount)
-                                        havocCount++;
-                                    else if (design >= havocItemCount && design < herculesItemCount)
-                                    {
-                                        herculesEquipped = true;
-                                        herculesCount++;
-                                    }
-                                }
-
-                                var droneShield = bo2Shield + 2000;
-
-                                foreach (int item in drone["items"])
-                                {
-                                    if (item >= 0 && item < lf3Count)
-                                    {
-                                        damage[i - 1] += lf3Damage;
-                                        player.equipedlasercount++;
-                                    }
-                                    else if (item >= herculesItemCount && item < lf4Count)
-                                    {
-                                        damage[i - 1] += lf4Damage;
-                                        player.equipedlasercount++;
-                                    }
-                                    else if (item >= lf4Count && item < lf1Count)
-                                    {
-                                        damage[i - 1] += lf1Damage;
-                                        player.equipedlasercount++;
-                                    }
-                                    else if (item >= lf1Count && item < mp1Count)
-                                    {
-                                        damage[i - 1] += mp1Damage;
-                                        player.equipedlasercount++;
-                                    }
-                                    else if (item >= mp1Count && item < lf2Count)
-                                    {
-                                        damage[i - 1] += lf2Damage;
-                                        player.equipedlasercount++;
-                                    }
-                                    else if (item >= lf3Count && item < bo2Count)
-                                    {
-                                        shield[i - 1] += Convert.ToInt32(bo2Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
-                                        shieldabsorption[i - 1] += bo2Shieldabs;
-                                        equipedshieldcount[i-1]++;
-                                    }
-                                    else if (item >= g3n1010Count && item < ao1Count)
-                                    {
-                                        shield[i - 1] += Convert.ToInt32(ao1Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
-                                        shieldabsorption[i - 1] += ao1Shieldabs;
-                                        equipedshieldcount[i-1]++;
-                                    }
-                                    else if (item >= ao1Count && item < ao2Count)
-                                    {
-                                        shield[i - 1] += Convert.ToInt32(ao2Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
-                                        shieldabsorption[i - 1] += ao2Shieldabs;
-                                        equipedshieldcount[i-1]++;
-                                    }
-                                    else if (item >= ao2Count && item < ao3Count)
-                                    {
-                                        shield[i - 1] += Convert.ToInt32(ao3Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
-                                        shieldabsorption[i - 1] += ao3Shieldabs;
-                                        equipedshieldcount[i-1]++;
-                                    }
-                                    else if (item >= ao3Count && item < bo1Count)
-                                    {
-                                        shield[i - 1] += Convert.ToInt32(bo1Shield * 1.2) + (herculesEquipped ? +Maths.GetPercentage(Convert.ToInt32(bo2Shield * 0.2), 15) : 0);
-                                        shieldabsorption[i - 1] += bo1Shieldabs;
-                                        equipedshieldcount[i-1]++;
-                                    }
-                                }
-                            }
-
-                            if (havocCount == drones.Count)
-                                damage[i - 1] += Maths.GetPercentage(damage[i - 1], 10);
-                            else if (herculesCount == 10)
-                                hitpoints[i - 1] += Maths.GetPercentage(hitpoints[i - 1], 20);
-                        }
-
-                        speed[0] += Maths.GetPercentage(speed[0], 20);
-                        speed[1] += Maths.GetPercentage(speed[1], 20);
-                        player.CurrentShieldAbsConfig1 = shieldabsorption[0] / (equipedshieldcount[0] == 0 ? 1 : equipedshieldcount[0]);
-                        player.CurrentShieldAbsConfig2 = shieldabsorption[1] / (equipedshieldcount[1] == 0 ? 1 : equipedshieldcount[1]);
-                        //player.Name = $"CFG1 = {player.AttackManager.RocketLauncher.MaxLoad} | CFG2 = {player.AttackManager.RocketLauncher.MaxLoad}";
-
-                        var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
-                        var itemsBase = new ItemsBase(0);//TODO = new ItemsBase((int)items["bootyKeys"]);
-
-                        player.Equipment = new EquipmentBase(configsBase, itemsBase);
-                    }
+                    var hp = player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull");
+                    var baseSpeed = player.Ship.BaseSpeed + Maths.GetPercentage(player.Ship.BaseSpeed, 20);
+                    player.equipedlasercount = 0;
+                    player.fulllf3 = true;
+                    player.AttackManager.RocketLauncher.MaxLoad = 0;
+                    player.CurrentShieldAbsConfig1 = 0;
+                    player.CurrentShieldAbsConfig2 = 0;
+                    player.Equipment = new EquipmentBase(
+                        new ConfigsBase(hp, 0, 0, baseSpeed, hp, 0, 0, baseSpeed, 0, 0, 0, 0),
+                        new ItemsBase(0)
+                    );
                 }
             }
             catch (Exception e)
             {
                 Logger.Log("error_log", $"- [QueryManager.cs] SetEquipment({player.Id}) exception: {e}");
             }
+        }
+
+        public static Dictionary<int, List<string>> GetEquippedItemsDebugByConfig(Player player)
+        {
+            Dictionary<int, List<string>> inventoryLoadoutDebug;
+            if (TryGetEquippedItemsDebugByConfigFromInventoryLoadout(player, out inventoryLoadoutDebug))
+                return inventoryLoadoutDebug;
+            return new Dictionary<int, List<string>>
+            {
+                { 1, new List<string>() },
+                { 2, new List<string>() }
+            };
+        }
+
+        private enum LoadoutItemKind
+        {
+            Unknown = 0,
+            Lf1,
+            Mp1,
+            Lf2,
+            Lf3,
+            Lf4,
+            Hst1,
+            Hst2,
+            Bo2,
+            G3n7900,
+            G3n6900,
+            G3n3310,
+            G3n3210,
+            G3n2010,
+            G3n1010,
+            Ao1,
+            Ao2,
+            Ao3,
+            Bo1,
+            Havoc,
+            Hercules
+        }
+
+        private class ResolvedLoadoutItem
+        {
+            public int Config;
+            public int ItemId;
+            public LoadoutItemKind Kind;
+        }
+
+        private static bool TrySetEquipmentFromInventoryLoadout(Player player)
+        {
+            List<ResolvedLoadoutItem> equippedItems;
+            if (!TryGetResolvedShipLoadoutItems(player, out equippedItems))
+                return false;
+
+            const int lf1Damage = 40;
+            const int mp1Damage = 60;
+            const int lf2Damage = 100;
+            const int lf3Damage = 150;
+            const int lf4Damage = 200;
+            const int bo2Shield = 10000;
+            const int bo2Shieldabs = 80;
+            const int bo1Shield = 4000;
+            const int bo1Shieldabs = 70;
+            const int ao1Shield = 1000;
+            const int ao1Shieldabs = 40;
+            const int ao2Shield = 2000;
+            const int ao2Shieldabs = 50;
+            const int ao3Shield = 5000;
+            const int ao3Shieldabs = 60;
+            const int g3n7900Speed = 10;
+            const int g3n6900Speed = 7;
+            const int g3n3310Speed = 5;
+            const int g3n3210Speed = 4;
+            const int g3n2010Speed = 3;
+            const int g3n1010Speed = 2;
+
+            var hitpoints = new int[] { player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull"), player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull") };
+            var speed = new int[] { player.Ship.BaseSpeed, player.Ship.BaseSpeed };
+            var damage = new int[] { 0, 0 };
+            var shield = new int[] { 0, 0 };
+            var equipedshieldcount = new int[] { 0, 0 };
+            var shieldabsorption = new int[] { 0, 0 };
+            var leonovlaser = new int[] { 0, 0 };
+            var leonovshield = new int[] { 0, 0 };
+
+            player.equipedlasercount = 0;
+            player.fulllf3 = true;
+            player.AttackManager.RocketLauncher.MaxLoad = 0;
+
+            foreach (var item in equippedItems)
+            {
+                var configIndex = item.Config - 1;
+                if (configIndex < 0 || configIndex > 1)
+                    continue;
+
+                switch (item.Kind)
+                {
+                    case LoadoutItemKind.Lf3:
+                        damage[configIndex] += lf3Damage;
+                        leonovlaser[configIndex] += lf3Damage;
+                        player.equipedlasercount++;
+                        break;
+                    case LoadoutItemKind.Lf4:
+                        damage[configIndex] += lf4Damage;
+                        leonovlaser[configIndex] += lf4Damage;
+                        player.fulllf3 = false;
+                        player.equipedlasercount++;
+                        break;
+                    case LoadoutItemKind.Lf1:
+                        damage[configIndex] += lf1Damage;
+                        leonovlaser[configIndex] += lf1Damage;
+                        player.fulllf3 = false;
+                        player.equipedlasercount++;
+                        break;
+                    case LoadoutItemKind.Mp1:
+                        damage[configIndex] += mp1Damage;
+                        leonovlaser[configIndex] += mp1Damage;
+                        player.fulllf3 = false;
+                        player.equipedlasercount++;
+                        break;
+                    case LoadoutItemKind.Lf2:
+                        damage[configIndex] += lf2Damage;
+                        leonovlaser[configIndex] += lf2Damage;
+                        player.fulllf3 = false;
+                        player.equipedlasercount++;
+                        break;
+                    case LoadoutItemKind.Hst1:
+                        player.AttackManager.RocketLauncher.MaxLoad += 3;
+                        break;
+                    case LoadoutItemKind.Hst2:
+                        player.AttackManager.RocketLauncher.MaxLoad += 5;
+                        break;
+                    case LoadoutItemKind.Bo2:
+                        shield[configIndex] += bo2Shield;
+                        shieldabsorption[configIndex] += bo2Shieldabs;
+                        equipedshieldcount[configIndex]++;
+                        leonovshield[configIndex] += bo2Shield;
+                        break;
+                    case LoadoutItemKind.G3n7900:
+                        speed[configIndex] += g3n7900Speed;
+                        break;
+                    case LoadoutItemKind.G3n6900:
+                        speed[configIndex] += g3n6900Speed;
+                        break;
+                    case LoadoutItemKind.G3n3310:
+                        speed[configIndex] += g3n3310Speed;
+                        break;
+                    case LoadoutItemKind.G3n3210:
+                        speed[configIndex] += g3n3210Speed;
+                        break;
+                    case LoadoutItemKind.G3n2010:
+                        speed[configIndex] += g3n2010Speed;
+                        break;
+                    case LoadoutItemKind.G3n1010:
+                        speed[configIndex] += g3n1010Speed;
+                        break;
+                    case LoadoutItemKind.Ao1:
+                        shield[configIndex] += ao1Shield;
+                        shieldabsorption[configIndex] += ao1Shieldabs;
+                        equipedshieldcount[configIndex]++;
+                        break;
+                    case LoadoutItemKind.Ao2:
+                        shield[configIndex] += ao2Shield;
+                        shieldabsorption[configIndex] += ao2Shieldabs;
+                        equipedshieldcount[configIndex]++;
+                        break;
+                    case LoadoutItemKind.Ao3:
+                        shield[configIndex] += ao3Shield;
+                        shieldabsorption[configIndex] += ao3Shieldabs;
+                        equipedshieldcount[configIndex]++;
+                        break;
+                    case LoadoutItemKind.Bo1:
+                        shield[configIndex] += bo1Shield;
+                        shieldabsorption[configIndex] += bo1Shieldabs;
+                        equipedshieldcount[configIndex]++;
+                        break;
+                }
+            }
+
+            speed[0] += Maths.GetPercentage(speed[0], 20);
+            speed[1] += Maths.GetPercentage(speed[1], 20);
+            player.CurrentShieldAbsConfig1 = shieldabsorption[0] / (equipedshieldcount[0] == 0 ? 1 : equipedshieldcount[0]);
+            player.CurrentShieldAbsConfig2 = shieldabsorption[1] / (equipedshieldcount[1] == 0 ? 1 : equipedshieldcount[1]);
+
+            var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
+            var itemsBase = new ItemsBase(0);
+            player.Equipment = new EquipmentBase(configsBase, itemsBase);
+
+            if (player.AttackManager.RocketLauncher.CurrentLoad > player.AttackManager.RocketLauncher.MaxLoad)
+                player.AttackManager.RocketLauncher.CurrentLoad = player.AttackManager.RocketLauncher.MaxLoad;
+
+            return true;
+        }
+
+        private static bool TryGetEquippedItemsDebugByConfigFromInventoryLoadout(Player player, out Dictionary<int, List<string>> result)
+        {
+            result = null;
+
+            List<ResolvedLoadoutItem> equippedItems;
+            if (!TryGetResolvedShipLoadoutItems(player, out equippedItems))
+                return false;
+
+            var config1 = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var config2 = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in equippedItems)
+            {
+                var summary = item.Config == 2 ? config2 : config1;
+                var name = ResolveDebugItemName(item);
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                if (summary.ContainsKey(name))
+                    summary[name] += 1;
+                else
+                    summary[name] = 1;
+            }
+
+            result = new Dictionary<int, List<string>>
+            {
+                { 1, BuildDebugLines(config1) },
+                { 2, BuildDebugLines(config2) }
+            };
+
+            return true;
+        }
+
+        private static bool TryGetResolvedShipLoadoutItems(Player player, out List<ResolvedLoadoutItem> equippedItems)
+        {
+            equippedItems = new List<ResolvedLoadoutItem>();
+
+            try
+            {
+                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                {
+                    var loadoutRows = TryGetTableByUser(mySqlClient, "player_inventory_loadout", player.Id);
+                    if (loadoutRows == null)
+                        return false;
+
+                    var inventoryRows = TryGetTableByUser(mySqlClient, "player_inventory_items", player.Id);
+                    var ownedCounts = BuildOwnedItemCount(inventoryRows);
+                    var knownKinds = BuildKnownItemKinds(mySqlClient, inventoryRows);
+                    var selectedSlots = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (DataRow row in loadoutRows.Rows)
+                    {
+                        if (!IsShipLoadoutRow(row))
+                            continue;
+
+                        var config = ParseConfigId(row);
+                        if (config != 1 && config != 2)
+                            continue;
+
+                        var itemId = ParseItemId(row);
+                        if (itemId < 0)
+                            continue;
+
+                        var slotGroup = ReadRowString(row, "slot_group", "slotGroup", "group", "category");
+                        var slotIndex = ParseInt(row, 0, "slot_index", "slotIndex", "slot", "position");
+                        var key = config + "|" + slotGroup + "|" + slotIndex;
+                        selectedSlots[key] = row;
+                    }
+
+                    var equippedPerItem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                    foreach (DataRow slotRow in selectedSlots.Values)
+                    {
+                        var itemId = ParseItemId(slotRow);
+                        if (itemId < 0)
+                            continue;
+
+                        var config = ParseConfigId(slotRow);
+                        var slotGroup = ReadRowString(slotRow, "slot_group", "slotGroup", "group", "category");
+                        var equipCountKey = config + "|" + slotGroup + "|" + itemId;
+
+                        if (ownedCounts.Count > 0)
+                        {
+                            int ownedCount;
+                            if (!ownedCounts.TryGetValue(itemId, out ownedCount) || ownedCount <= 0)
+                                continue;
+
+                            int equippedCount;
+                            if (!equippedPerItem.TryGetValue(equipCountKey, out equippedCount))
+                                equippedCount = 0;
+
+                            if (equippedCount >= ownedCount)
+                                continue;
+                        }
+
+                        var kind = ResolveLoadoutItemKind(slotRow, itemId, knownKinds);
+
+                        int currentCount;
+                        if (!equippedPerItem.TryGetValue(equipCountKey, out currentCount))
+                            currentCount = 0;
+                        equippedPerItem[equipCountKey] = currentCount + 1;
+
+                        equippedItems.Add(new ResolvedLoadoutItem
+                        {
+                            Config = config,
+                            ItemId = itemId,
+                            Kind = kind
+                        });
+                    }
+
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log("error_log", $"- [QueryManager.cs] TryGetResolvedShipLoadoutItems({player.Id}) exception: {e}");
+                return false;
+            }
+        }
+
+        private static DataTable TryGetTableByUser(dynamic mySqlClient, string tableName, int userId)
+        {
+            try
+            {
+                var sample = mySqlClient.ExecuteQueryTable($"SELECT * FROM {tableName} LIMIT 1") as DataTable;
+                if (sample == null)
+                    return null;
+
+                string userColumn = null;
+                foreach (var candidate in new[] { "user_id", "userId", "userid" })
+                {
+                    if (sample.Columns.Contains(candidate))
+                    {
+                        userColumn = candidate;
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(userColumn))
+                    return null;
+
+                return mySqlClient.ExecuteQueryTable($"SELECT * FROM {tableName} WHERE {userColumn} = {userId}") as DataTable;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static Dictionary<int, int> BuildOwnedItemCount(DataTable inventoryRows)
+        {
+            var result = new Dictionary<int, int>();
+            if (inventoryRows == null)
+                return result;
+
+            foreach (DataRow row in inventoryRows.Rows)
+            {
+                var itemId = ParseInt(row, 0, "item_id", "itemId");
+                if (itemId < 0)
+                    continue;
+
+                var count = ParseInt(row, 1, "amount", "count", "quantity", "qty", "owned_count", "stack");
+                if (count < 1)
+                    count = 1;
+
+                if (result.ContainsKey(itemId))
+                    result[itemId] += count;
+                else
+                    result[itemId] = count;
+            }
+
+            return result;
+        }
+
+        private static Dictionary<int, LoadoutItemKind> BuildKnownItemKinds(dynamic mySqlClient, DataTable inventoryRows)
+        {
+            var result = new Dictionary<int, LoadoutItemKind>();
+
+            // Canonical definitions table used by CMS and gameserver.
+            var canonicalTables = new[] { "server_item_definitions", "inventory_item_definitions" };
+            foreach (var definitionTable in canonicalTables)
+            {
+                try
+                {
+                    var table = mySqlClient.ExecuteQueryTable($"SELECT * FROM {definitionTable}") as DataTable;
+                    if (table == null || table.Rows.Count == 0)
+                        continue;
+
+                    foreach (DataRow row in table.Rows)
+                    {
+                        var itemId = ParseInt(row, -1, "item_id", "id", "itemId");
+                        if (itemId < 0 || result.ContainsKey(itemId))
+                            continue;
+
+                        var isActive = ParseInt(row, 1, "is_active", "isActive", "active");
+                        if (isActive == 0)
+                            continue;
+
+                        var kind = ResolveKindFromDefinitionRow(row, itemId);
+                        if (kind != LoadoutItemKind.Unknown)
+                            result[itemId] = kind;
+                    }
+                }
+                catch
+                {
+                    // Table not available in this schema version.
+                }
+            }
+
+            if (inventoryRows != null)
+            {
+                foreach (DataRow row in inventoryRows.Rows)
+                {
+                    var itemId = ParseInt(row, 0, "item_id", "itemId");
+                    if (itemId < 0 || result.ContainsKey(itemId))
+                        continue;
+
+                    var kind = ResolveKindFromText(ReadRowString(row, "loot_id", "lootId", "item_loot_id", "itemLootId", "code", "name", "type"));
+                    if (kind != LoadoutItemKind.Unknown)
+                        result[itemId] = kind;
+                }
+            }
+
+            var definitionTables = new[] { "inventory_items", "player_inventory_catalog", "server_inventory_items" };
+            foreach (var definitionTable in definitionTables)
+            {
+                try
+                {
+                    var table = mySqlClient.ExecuteQueryTable($"SELECT * FROM {definitionTable}") as DataTable;
+                    if (table == null || table.Rows.Count == 0)
+                        continue;
+
+                    foreach (DataRow row in table.Rows)
+                    {
+                        var itemId = ParseInt(row, 0, "item_id", "id", "itemId");
+                        if (itemId < 0 || result.ContainsKey(itemId))
+                            continue;
+
+                        var mergedText = string.Join(" ",
+                            ReadRowString(row, "loot_id", "lootId", "item_loot_id", "itemLootId"),
+                            ReadRowString(row, "type", "item_type", "itemType", "category"),
+                            ReadRowString(row, "name", "title"));
+                        var kind = ResolveKindFromText(mergedText);
+                        if (kind != LoadoutItemKind.Unknown)
+                            result[itemId] = kind;
+                    }
+                }
+                catch
+                {
+                    // Table is optional depending on CMS schema/version.
+                }
+            }
+
+            return result;
+        }
+
+        private static LoadoutItemKind ResolveKindFromDefinitionRow(DataRow row, int itemId)
+        {
+            var legacyKey = ReadRowString(row, "legacy_count_key", "legacyCountKey");
+            var category = ReadRowString(row, "category", "item_type", "itemType", "type");
+            var name = ReadRowString(row, "name", "title");
+            var shopName = ReadRowString(row, "shop_name", "shopName");
+
+            var byLegacy = ResolveKindFromLegacyKey(legacyKey);
+            if (byLegacy != LoadoutItemKind.Unknown)
+                return byLegacy;
+
+            var byText = ResolveKindFromText(string.Join(" ", name, shopName, category));
+            if (byText != LoadoutItemKind.Unknown)
+                return byText;
+
+            return ResolveKindFromItemId(itemId);
+        }
+
+        private static LoadoutItemKind ResolveKindFromLegacyKey(string legacyKey)
+        {
+            if (string.IsNullOrWhiteSpace(legacyKey))
+                return LoadoutItemKind.Unknown;
+
+            switch (legacyKey.Trim())
+            {
+                case "lf1Count":
+                    return LoadoutItemKind.Lf1;
+                case "mp1Count":
+                    return LoadoutItemKind.Mp1;
+                case "lf2Count":
+                    return LoadoutItemKind.Lf2;
+                case "lf3Count":
+                    return LoadoutItemKind.Lf3;
+                case "lf4Count":
+                    return LoadoutItemKind.Lf4;
+                case "hs1Count":
+                    return LoadoutItemKind.Hst1;
+                case "hs2Count":
+                    return LoadoutItemKind.Hst2;
+                case "bo2Count":
+                    return LoadoutItemKind.Bo2;
+                case "g3n7900Count":
+                    return LoadoutItemKind.G3n7900;
+                case "g3n6900Count":
+                    return LoadoutItemKind.G3n6900;
+                case "g3n3310Count":
+                    return LoadoutItemKind.G3n3310;
+                case "g3n3210Count":
+                    return LoadoutItemKind.G3n3210;
+                case "g3n2010Count":
+                    return LoadoutItemKind.G3n2010;
+                case "g3n1010Count":
+                    return LoadoutItemKind.G3n1010;
+                case "ao1Count":
+                    return LoadoutItemKind.Ao1;
+                case "ao2Count":
+                    return LoadoutItemKind.Ao2;
+                case "ao3Count":
+                    return LoadoutItemKind.Ao3;
+                case "bo1Count":
+                    return LoadoutItemKind.Bo1;
+                case "havocCount":
+                    return LoadoutItemKind.Havoc;
+                case "herculesCount":
+                    return LoadoutItemKind.Hercules;
+                default:
+                    return LoadoutItemKind.Unknown;
+            }
+        }
+
+        private static LoadoutItemKind ResolveKindFromItemId(int itemId)
+        {
+            switch (itemId)
+            {
+                case 0:
+                    return LoadoutItemKind.Bo2;
+                case 1:
+                    return LoadoutItemKind.G3n7900;
+                case 5:
+                    return LoadoutItemKind.Havoc;
+                case 6:
+                    return LoadoutItemKind.Hercules;
+                case 7:
+                    return LoadoutItemKind.Lf3;
+                case 8:
+                    return LoadoutItemKind.Lf4;
+                case 123:
+                    return LoadoutItemKind.Lf1;
+                case 124:
+                    return LoadoutItemKind.Mp1;
+                case 125:
+                    return LoadoutItemKind.Lf2;
+                case 126:
+                    return LoadoutItemKind.G3n6900;
+                case 127:
+                    return LoadoutItemKind.G3n3310;
+                case 128:
+                    return LoadoutItemKind.G3n3210;
+                case 129:
+                    return LoadoutItemKind.G3n2010;
+                case 130:
+                    return LoadoutItemKind.G3n1010;
+                case 131:
+                    return LoadoutItemKind.Ao1;
+                case 132:
+                    return LoadoutItemKind.Ao2;
+                case 133:
+                    return LoadoutItemKind.Ao3;
+                case 134:
+                    return LoadoutItemKind.Bo1;
+                case 135:
+                    return LoadoutItemKind.Hst1;
+                case 136:
+                    return LoadoutItemKind.Hst2;
+                default:
+                    return LoadoutItemKind.Unknown;
+            }
+        }
+
+        private static LoadoutItemKind ResolveLoadoutItemKind(DataRow loadoutRow, int itemId, Dictionary<int, LoadoutItemKind> knownKinds)
+        {
+            LoadoutItemKind kind;
+            if (knownKinds.TryGetValue(itemId, out kind))
+                return kind;
+
+            kind = ResolveKindFromText(ReadRowString(loadoutRow, "item_code", "itemCode", "loot_id", "lootId", "item_loot_id", "itemLootId", "type", "category"));
+            return kind;
+        }
+
+        private static bool IsShipLoadoutRow(DataRow row)
+        {
+            var mode = ReadRowString(row, "mode", "equipment_mode", "equipmentMode");
+            if (string.IsNullOrWhiteSpace(mode))
+                return true;
+
+            mode = mode.Trim().ToLowerInvariant();
+            if (mode == "ship" || mode == "ships")
+                return true;
+
+            if (mode == "0")
+                return true;
+
+            return false;
+        }
+
+        private static int ParseConfigId(DataRow row)
+        {
+            var config = ParseInt(row, 1, "config_id", "configId", "config", "configuration");
+            if (config < 1)
+                config = 1;
+            if (config > 2)
+                config = 2;
+            return config;
+        }
+
+        private static int ParseItemId(DataRow row)
+        {
+            return ParseInt(row, -1, "item_id", "itemId", "inventory_item_id", "inventoryItemId");
+        }
+
+        private static int ParseInt(DataRow row, int fallback, params string[] columns)
+        {
+            foreach (var col in columns)
+            {
+                if (!row.Table.Columns.Contains(col))
+                    continue;
+
+                try
+                {
+                    if (row[col] == null || row[col] == DBNull.Value)
+                        continue;
+
+                    int value;
+                    if (int.TryParse(row[col].ToString(), out value))
+                        return value;
+                }
+                catch { }
+            }
+
+            return fallback;
+        }
+
+        private static string ReadRowString(DataRow row, params string[] columns)
+        {
+            foreach (var col in columns)
+            {
+                if (!row.Table.Columns.Contains(col))
+                    continue;
+
+                try
+                {
+                    if (row[col] == null || row[col] == DBNull.Value)
+                        continue;
+
+                    var value = row[col].ToString();
+                    if (!string.IsNullOrWhiteSpace(value))
+                        return value;
+                }
+                catch { }
+            }
+
+            return "";
+        }
+
+        private static LoadoutItemKind ResolveKindFromText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return LoadoutItemKind.Unknown;
+
+            var normalized = text.Trim().ToLowerInvariant();
+
+            if (normalized.Contains("lf-4") || normalized.Contains("lf4"))
+                return LoadoutItemKind.Lf4;
+            if (normalized.Contains("lf-3") || normalized.Contains("lf3"))
+                return LoadoutItemKind.Lf3;
+            if (normalized.Contains("lf-2") || normalized.Contains("lf2"))
+                return LoadoutItemKind.Lf2;
+            if (normalized.Contains("lf-1") || normalized.Contains("lf1"))
+                return LoadoutItemKind.Lf1;
+            if (normalized.Contains("mp-1") || normalized.Contains("mp1"))
+                return LoadoutItemKind.Mp1;
+            if (normalized.Contains("hst-2") || normalized.Contains("hst2"))
+                return LoadoutItemKind.Hst2;
+            if (normalized.Contains("hst-1") || normalized.Contains("hst1"))
+                return LoadoutItemKind.Hst1;
+            if (normalized.Contains("sg3n-bo2") || normalized.Contains("bo2"))
+                return LoadoutItemKind.Bo2;
+            if (normalized.Contains("g3n-7900") || normalized.Contains("g3n7900"))
+                return LoadoutItemKind.G3n7900;
+            if (normalized.Contains("g3n-6900") || normalized.Contains("g3n6900"))
+                return LoadoutItemKind.G3n6900;
+            if (normalized.Contains("g3n-3310") || normalized.Contains("g3n3310"))
+                return LoadoutItemKind.G3n3310;
+            if (normalized.Contains("g3n-3210") || normalized.Contains("g3n3210"))
+                return LoadoutItemKind.G3n3210;
+            if (normalized.Contains("g3n-2010") || normalized.Contains("g3n2010"))
+                return LoadoutItemKind.G3n2010;
+            if (normalized.Contains("g3n-1010") || normalized.Contains("g3n1010"))
+                return LoadoutItemKind.G3n1010;
+            if (normalized.Contains("sg3n-ao1") || normalized.Contains("ao1"))
+                return LoadoutItemKind.Ao1;
+            if (normalized.Contains("sg3n-ao2") || normalized.Contains("ao2"))
+                return LoadoutItemKind.Ao2;
+            if (normalized.Contains("sg3n-ao3") || normalized.Contains("ao3"))
+                return LoadoutItemKind.Ao3;
+            if (normalized.Contains("sg3n-bo1") || normalized.Contains("bo1"))
+                return LoadoutItemKind.Bo1;
+            if (normalized.Contains("havoc"))
+                return LoadoutItemKind.Havoc;
+            if (normalized.Contains("hercules"))
+                return LoadoutItemKind.Hercules;
+
+            return LoadoutItemKind.Unknown;
+        }
+
+        private static string GetLoadoutItemName(LoadoutItemKind kind)
+        {
+            switch (kind)
+            {
+                case LoadoutItemKind.Lf3:
+                    return "LF-3";
+                case LoadoutItemKind.Lf4:
+                    return "LF-4";
+                case LoadoutItemKind.Lf1:
+                    return "LF-1";
+                case LoadoutItemKind.Mp1:
+                    return "MP-1";
+                case LoadoutItemKind.Lf2:
+                    return "LF-2";
+                case LoadoutItemKind.Hst1:
+                    return "HST-1";
+                case LoadoutItemKind.Hst2:
+                    return "HST-2";
+                case LoadoutItemKind.Bo2:
+                    return "SG3N-BO2";
+                case LoadoutItemKind.G3n7900:
+                    return "G3N-7900";
+                case LoadoutItemKind.G3n6900:
+                    return "G3N-6900";
+                case LoadoutItemKind.G3n3310:
+                    return "G3N-3310";
+                case LoadoutItemKind.G3n3210:
+                    return "G3N-3210";
+                case LoadoutItemKind.G3n2010:
+                    return "G3N-2010";
+                case LoadoutItemKind.G3n1010:
+                    return "G3N-1010";
+                case LoadoutItemKind.Ao1:
+                    return "SG3N-AO1";
+                case LoadoutItemKind.Ao2:
+                    return "SG3N-AO2";
+                case LoadoutItemKind.Ao3:
+                    return "SG3N-AO3";
+                case LoadoutItemKind.Bo1:
+                    return "SG3N-BO1";
+                case LoadoutItemKind.Havoc:
+                    return "Havoc";
+                case LoadoutItemKind.Hercules:
+                    return "Hercules";
+                default:
+                    return null;
+            }
+        }
+
+        private static string ResolveDebugItemName(ResolvedLoadoutItem item)
+        {
+            // Migrated legacy debug helpers: same semantic groups, now driven by canonical item_id/kind.
+            return GetLaserNameForShip(item.ItemId, item.Kind)
+                ?? GetRocketLauncherName(item.ItemId, item.Kind)
+                ?? GetGeneratorName(item.ItemId, item.Kind)
+                ?? GetDroneDesignName(item.ItemId, item.Kind)
+                ?? GetDroneItemName(item.ItemId, item.Kind)
+                ?? $"UNKNOWN-ITEM({item.ItemId})";
+        }
+
+        private static void AddItem(Dictionary<string, int> summary, string itemName)
+        {
+            if (string.IsNullOrWhiteSpace(itemName)) return;
+
+            if (summary.ContainsKey(itemName))
+                summary[itemName] += 1;
+            else
+                summary[itemName] = 1;
+        }
+
+        private static List<string> BuildDebugLines(Dictionary<string, int> summary)
+        {
+            var lines = new List<string>();
+            var order = new List<string>
+            {
+                "LF-3",
+                "LF-4",
+                "LF-1",
+                "MP-1",
+                "LF-2",
+                "HST-1",
+                "HST-2",
+                "SG3N-BO2",
+                "G3N-7900",
+                "G3N-6900",
+                "G3N-3310",
+                "G3N-3210",
+                "G3N-2010",
+                "G3N-1010",
+                "SG3N-AO1",
+                "SG3N-AO2",
+                "SG3N-AO3",
+                "SG3N-BO1",
+                "Havoc",
+                "Hercules"
+            };
+
+            foreach (var name in order)
+            {
+                if (summary.TryGetValue(name, out var count) && count > 0)
+                    lines.Add($"{name} x{count}");
+            }
+
+            // Keep unknown/unordered entries visible for site-vs-server mismatch checks.
+            foreach (var kv in summary.Where(x => !order.Contains(x.Key)).OrderBy(x => x.Key))
+            {
+                if (kv.Value > 0)
+                    lines.Add($"{kv.Key} x{kv.Value}");
+            }
+
+            return lines;
+        }
+
+        private static List<int> ReadIntList(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return new List<int>();
+
+            try
+            {
+                return JsonConvert.DeserializeObject<List<int>>(json) ?? new List<int>();
+            }
+            catch
+            {
+                return new List<int>();
+            }
+        }
+
+        private static JArray ReadDroneArray(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return new JArray();
+
+            try
+            {
+                return JArray.Parse(json);
+            }
+            catch
+            {
+                return new JArray();
+            }
+        }
+
+        private static string GetLaserNameForShip(int itemId, LoadoutItemKind kind)
+        {
+            if (kind == LoadoutItemKind.Lf3)
+                return "LF-3";
+            if (kind == LoadoutItemKind.Lf4)
+                return "LF-4";
+            if (kind == LoadoutItemKind.Lf1)
+                return "LF-1";
+            if (kind == LoadoutItemKind.Mp1)
+                return "MP-1";
+            if (kind == LoadoutItemKind.Lf2)
+                return "LF-2";
+
+            return null;
+        }
+
+        private static string GetRocketLauncherName(int itemId, LoadoutItemKind kind)
+        {
+            if (kind == LoadoutItemKind.Hst1)
+                return "HST-1";
+            if (kind == LoadoutItemKind.Hst2)
+                return "HST-2";
+
+            return null;
+        }
+
+        private static string GetGeneratorName(int itemId, LoadoutItemKind kind)
+        {
+            if (kind == LoadoutItemKind.Bo2)
+                return "SG3N-BO2";
+            if (kind == LoadoutItemKind.G3n7900)
+                return "G3N-7900";
+            if (kind == LoadoutItemKind.G3n6900)
+                return "G3N-6900";
+            if (kind == LoadoutItemKind.G3n3310)
+                return "G3N-3310";
+            if (kind == LoadoutItemKind.G3n3210)
+                return "G3N-3210";
+            if (kind == LoadoutItemKind.G3n2010)
+                return "G3N-2010";
+            if (kind == LoadoutItemKind.G3n1010)
+                return "G3N-1010";
+            if (kind == LoadoutItemKind.Ao1)
+                return "SG3N-AO1";
+            if (kind == LoadoutItemKind.Ao2)
+                return "SG3N-AO2";
+            if (kind == LoadoutItemKind.Ao3)
+                return "SG3N-AO3";
+            if (kind == LoadoutItemKind.Bo1)
+                return "SG3N-BO1";
+
+            return null;
+        }
+
+        private static string GetDroneDesignName(int designId, LoadoutItemKind kind)
+        {
+            if (kind == LoadoutItemKind.Havoc)
+                return "Havoc";
+            if (kind == LoadoutItemKind.Hercules)
+                return "Hercules";
+
+            return null;
+        }
+
+        private static string GetDroneItemName(int itemId, LoadoutItemKind kind)
+        {
+            // New backend has drones disabled for equipment mode=ship; keep method for parity.
+            return null;
         }
 
         public static void LoadMaps()

@@ -15,6 +15,7 @@ using Ow.Net.netty;
 using System.Threading.Tasks;
 using Ow.Managers.MySQLManager;
 using Newtonsoft.Json;
+using Ow.Game.Ticks;
 
 namespace Ow.Game.Objects
 {
@@ -154,6 +155,8 @@ namespace Ow.Game.Objects
             TechManager.Tick();
             SkillManager.Tick();
             BoosterManager.Tick();
+            AttackManager.FlushPendingDamageHits();
+            FlushPendingDataChanges();
         }
 
         public DateTime lastHpRepairTime = new DateTime();
@@ -1065,41 +1068,85 @@ namespace Ow.Game.Objects
         {
             if (amount == 0) return;
             amount = Convert.ToInt32(amount);
+            var currentTickId = TickManager.CurrentTickId;
+            var signedAmount = changeType == ChangeType.DECREASE ? -amount : amount;
 
-            using (var mySqlClient = SqlDatabaseManager.GetClient())
-            {
-                var result = mySqlClient.ExecuteQueryRow($"SELECT data FROM player_accounts WHERE userId = {Id}");
-                Data = JsonConvert.DeserializeObject<DataBase>(result["data"].ToString());
-            }
+            if (pendingDataTickId != -1 && currentTickId != pendingDataTickId && pendingDataChanges.Count > 0)
+                FlushPendingDataChanges();
+
+            pendingDataTickId = currentTickId;
+            if (pendingDataChanges.ContainsKey(dataType))
+                pendingDataChanges[dataType] += signedAmount;
+            else
+                pendingDataChanges.Add(dataType, signedAmount);
 
             switch (dataType)
             {
                 case DataType.URIDIUM:
-                    Data.uridium = (changeType == ChangeType.INCREASE ? (Data.uridium + amount) : (Data.uridium - amount));
+                    Data.uridium += signedAmount;
                     if (Data.uridium < 0) Data.uridium = 0;
-                    SendPacket($"0|LM|ST|URI|{(changeType == ChangeType.DECREASE ? "-" : "")}{amount}|{Data.uridium}");
                     break;
                 case DataType.CREDITS:
-                    Data.credits = (changeType == ChangeType.INCREASE ? (Data.credits + amount) : (Data.credits - amount));
+                    Data.credits += signedAmount;
                     if (Data.credits < 0) Data.credits = 0;
-                    SendPacket($"0|LM|ST|CRE|{(changeType == ChangeType.DECREASE ? "-" : "")}{amount}|{Data.credits}");
                     break;
                 case DataType.HONOR:
-                    Data.honor = (changeType == ChangeType.INCREASE ? (Data.honor + amount) : (Data.honor - amount));
+                    Data.honor += signedAmount;
                     if (Data.honor < 0) Data.honor = 0;
-                    SendPacket($"0|LM|ST|HON|{(changeType == ChangeType.DECREASE ? "-" : "")}{amount}|{Data.honor}");
                     break;
                 case DataType.EXPERIENCE:
-                    Data.experience = (changeType == ChangeType.INCREASE ? (Data.experience + amount) : (Data.experience - amount));
+                    Data.experience += signedAmount;
                     if (Data.experience < 0) Data.experience = 0;
-                    SendPacket($"0|LM|ST|EP|{(changeType == ChangeType.DECREASE ? "-" : "")}{amount}|{Data.experience}|{Level}");
-                    CheckNextLevel(Data.experience);
+                    pendingExperienceLevelCheck = true;
                     break;
                 case DataType.JACKPOT:
                     break;
             }
+        }
+
+        private readonly Dictionary<DataType, int> pendingDataChanges = new Dictionary<DataType, int>();
+        private long pendingDataTickId = -1;
+        private bool pendingExperienceLevelCheck;
+
+        private void FlushPendingDataChanges()
+        {
+            if (pendingDataChanges.Count == 0)
+                return;
+
+            foreach (var change in pendingDataChanges.ToList())
+            {
+                if (change.Value == 0)
+                    continue;
+
+                var amount = Math.Abs(change.Value);
+                var prefix = change.Value < 0 ? "-" : "";
+
+                switch (change.Key)
+                {
+                    case DataType.URIDIUM:
+                        SendPacket($"0|LM|ST|URI|{prefix}{amount}|{Data.uridium}");
+                        break;
+                    case DataType.CREDITS:
+                        SendPacket($"0|LM|ST|CRE|{prefix}{amount}|{Data.credits}");
+                        break;
+                    case DataType.HONOR:
+                        SendPacket($"0|LM|ST|HON|{prefix}{amount}|{Data.honor}");
+                        break;
+                    case DataType.EXPERIENCE:
+                        SendPacket($"0|LM|ST|EP|{prefix}{amount}|{Data.experience}|{Level}");
+                        break;
+                }
+            }
+
+            if (pendingExperienceLevelCheck)
+            {
+                CheckNextLevel(Data.experience);
+                pendingExperienceLevelCheck = false;
+            }
 
             QueryManager.SavePlayer.Information(this);
+            pendingDataChanges.Clear();
+            pendingDataTickId = -1;
         }
 
         public void ChangeCargo(Ores oreType, int amount)

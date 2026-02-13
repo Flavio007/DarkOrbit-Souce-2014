@@ -12,6 +12,7 @@ namespace Ow.Game.Ticks
     class TickManager
     {
         public static short TICKS_PER_SECOND = 84;
+        public static long CurrentTickId { get; private set; }
 
         public List<Tick> Ticks = new List<Tick>();
 
@@ -40,6 +41,8 @@ namespace Ow.Game.Ticks
             {
                 while (true)
                 {
+                    CurrentTickId++;
+
                     for (var i = 0; i < Ticks.Count; i++)
                         if (Ticks[i] != null)
                             Ticks[i].Tick();

@@ -55,6 +55,7 @@ namespace Ow.Net.netty.handlers
                 {
                     SendSettings(Player);
                     SendPlayer(Player);
+                    SendEquippedItemsDebug(Player);
                     Player.Spacemap.AddCharacter(Player);
                 }
             }
@@ -231,6 +232,37 @@ namespace Ow.Net.netty.handlers
                 Out.WriteLine("UID: " + player.Id + " SendSettings void exception: " + e, "LoginRequestHandler.cs");
                 Logger.Log("error_log", $"- [LoginRequestHandler.cs] SendSettings void exception: {e}");
             }
+        }
+
+        private static void SendEquippedItemsDebug(Player player)
+        {
+            if (!Program.DebugEquippedItems || player == null) return;
+
+            var configLines = QueryManager.GetEquippedItemsDebugByConfig(player);
+            var cfg1Lines = configLines.ContainsKey(1) ? configLines[1] : new List<string>();
+            var cfg2Lines = configLines.ContainsKey(2) ? configLines[2] : new List<string>();
+            if (cfg1Lines.Count == 0 && cfg2Lines.Count == 0)
+            {
+                player.SendPacket("0|A|STD|[debug] No equipped items found.");
+                return;
+            }
+
+            player.SendPacket("0|A|STD|[debug] Equipped items by config:");
+            SendConfigLines(player, 1, cfg1Lines);
+            SendConfigLines(player, 2, cfg2Lines);
+        }
+
+        private static void SendConfigLines(Player player, int configId, List<string> lines)
+        {
+            if (lines.Count == 0)
+            {
+                player.SendPacket($"0|A|STD|[debug] CFG{configId}: (empty)");
+                return;
+            }
+
+            player.SendPacket($"0|A|STD|[debug] CFG{configId}:");
+            foreach (var line in lines)
+                player.SendPacket($"0|A|STD|[debug] {line}");
         }
     }
 }

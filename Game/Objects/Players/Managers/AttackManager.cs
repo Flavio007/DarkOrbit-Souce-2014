@@ -1,6 +1,7 @@
 ﻿using Ow.Game.Objects;
 using Ow.Game.Objects.Players.Techs;
 using Ow.Game.Objects.Stations;
+using Ow.Game.Ticks;
 using Ow.Managers;
 using Ow.Net.netty.commands;
 using Ow.Utils;
@@ -23,6 +24,94 @@ namespace Ow.Game.Objects.Players.Managers
         public DateTime lastAttackTime = new DateTime();
         public DateTime lastRSBAttackTime = new DateTime();
         public DateTime mineCooldown = new DateTime();
+
+        private class PendingDamageHit
+        {
+            public Attackable Target { get; set; }
+            public DamageType DamageType { get; set; }
+            public int Damage { get; set; }
+            public long TickId { get; set; }
+        }
+
+        private readonly Dictionary<string, PendingDamageHit> pendingDamageHits = new Dictionary<string, PendingDamageHit>();
+
+        private string GetDamageKey(Attackable target, DamageType damageType)
+        {
+            return $"{(short)damageType}:{target.Id}";
+        }
+
+        private void QueueDamageHit(Attackable target, DamageType damageType, int damage)
+        {
+            if (target == null || damage <= 0)
+                return;
+
+            var tickId = TickManager.CurrentTickId;
+            var key = GetDamageKey(target, damageType);
+
+            if (pendingDamageHits.TryGetValue(key, out var pending))
+            {
+                if (pending.TickId == tickId)
+                {
+                    pending.Damage += damage;
+                    return;
+                }
+
+                SendPendingDamageHit(pending);
+            }
+
+            pendingDamageHits[key] = new PendingDamageHit
+            {
+                Target = target,
+                DamageType = damageType,
+                Damage = damage,
+                TickId = tickId
+            };
+        }
+
+        private void SendPendingDamageHit(PendingDamageHit pending)
+        {
+            if (pending?.Target == null || pending.Damage <= 0)
+                return;
+
+            var attackHitCommand =
+                AttackHitCommand.write(new AttackTypeModule((short)pending.DamageType), Player.Id,
+                    pending.Target.Id, pending.Target.CurrentHitPoints,
+                    pending.Target.CurrentShieldPoints, pending.Target.CurrentNanoHull,
+                    pending.Damage, false);
+
+            Player.SendCommand(attackHitCommand);
+            Player.SendCommandToInRangePlayers(attackHitCommand);
+        }
+
+        public void FlushPendingDamageHits()
+        {
+            if (pendingDamageHits.Count == 0)
+                return;
+
+            foreach (var pending in pendingDamageHits.Values.ToList())
+                SendPendingDamageHit(pending);
+
+            pendingDamageHits.Clear();
+        }
+
+        public void FlushPendingDamageHitsForTarget(Attackable target)
+        {
+            if (target == null || pendingDamageHits.Count == 0)
+                return;
+
+            var keysToFlush = pendingDamageHits
+                .Where(x => x.Value != null && x.Value.Target == target)
+                .Select(x => x.Key)
+                .ToList();
+
+            foreach (var key in keysToFlush)
+            {
+                if (pendingDamageHits.TryGetValue(key, out var pending))
+                    SendPendingDamageHit(pending);
+
+                pendingDamageHits.Remove(key);
+            }
+        }
 
         public void LaserAttack()
         {
@@ -451,14 +540,7 @@ namespace Ow.Game.Objects.Players.Managers
             }
             else
             {
-                var attackHitCommand =
-                AttackHitCommand.write(new AttackTypeModule((short)damageType), Player.Id,
-                     target.Id, target.CurrentHitPoints,
-                     target.CurrentShieldPoints, target.CurrentNanoHull,
-                     damage, false);
-
-                Player.SendCommand(attackHitCommand);
-                Player.SendCommandToInRangePlayers(attackHitCommand);
+                QueueDamageHit(target, damageType, damage);
             }
 
             target.UpdateStatus();
@@ -563,13 +645,9 @@ namespace Ow.Game.Objects.Players.Managers
                     (target as Escort).ReceiveAttack(Player);
 
                 var attackHitCommand =
-                        AttackHitCommand.write(new AttackTypeModule((short)damageType), Player.Id,
-                                             target.Id, target.CurrentHitPoints,
-                                             target.CurrentShieldPoints, target.CurrentNanoHull,
-                                             damage > damageShd ? damage : damageShd, false);
+                        damage > damageShd ? damage : damageShd;
 
-                Player.SendCommand(attackHitCommand);
-                Player.SendCommandToInRangePlayers(attackHitCommand);
+                QueueDamageHit(target, damageType, attackHitCommand);
             }
 
             if (Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.CBO_100)
@@ -589,7 +667,10 @@ namespace Ow.Game.Objects.Players.Managers
             }
 
             if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+            {
+                FlushPendingDamageHitsForTarget(target);
                 target.Destroy(Player, DestructionType.PLAYER);
+            }
             else
             {
                 if (target.CurrentNanoHull > 0)
@@ -639,6 +720,9 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (toHp && toDestroy && (damage >= target.CurrentHitPoints || target.CurrentHitPoints <= 0))
             {
+                if (attacker.AttackManager != null)
+                    attacker.AttackManager.FlushPendingDamageHitsForTarget(target);
+
                 if (damageType == DamageType.RADIATION)
                     target.Destroy(null, DestructionType.RADIATION);
                 else if (damageType == DamageType.MINE && attacker.Attackers.Count <= 0)
@@ -666,14 +750,19 @@ namespace Ow.Game.Objects.Players.Managers
             if (toShd)
                 target.CurrentShieldPoints -= damage;
 
-            var attackHitCommand =
-                    AttackHitCommand.write(new AttackTypeModule((short)damageType), attacker.Id,
-                                         target.Id, target.CurrentHitPoints,
-                                         target.CurrentShieldPoints, target.CurrentNanoHull,
-                                         damage, false);
+            if (attacker.AttackManager != null)
+                attacker.AttackManager.QueueDamageHit(target, damageType, damage);
+            else
+            {
+                var attackHitCommand =
+                        AttackHitCommand.write(new AttackTypeModule((short)damageType), attacker.Id,
+                                             target.Id, target.CurrentHitPoints,
+                                             target.CurrentShieldPoints, target.CurrentNanoHull,
+                                             damage, false);
 
-            attacker.SendCommand(attackHitCommand);
-            attacker.SendCommandToInRangePlayers(attackHitCommand);
+                attacker.SendCommand(attackHitCommand);
+                attacker.SendCommandToInRangePlayers(attackHitCommand);
+            }
 
             target.UpdateStatus();
         }

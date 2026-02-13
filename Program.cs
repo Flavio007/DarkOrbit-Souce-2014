@@ -22,6 +22,7 @@ namespace Ow
     class Program
     {
         public static TickManager TickManager = new TickManager();
+        public static bool DebugEquippedItems = true;
 
         public static void Main(string[] args)
         {
