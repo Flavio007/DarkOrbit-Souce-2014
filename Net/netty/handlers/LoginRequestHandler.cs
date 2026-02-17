@@ -314,7 +314,7 @@ namespace Ow.Net.netty.handlers
             player.SendPacket("0|A|STD|[debug] Drones status:");
             foreach (var drone in drones)
             {
-                var level = DroneManager.getdronelevel(drone.Experience);
+                var level = drone.Level;
                 if (level < 1) level = 1;
                 if (level > 6) level = 6;
 

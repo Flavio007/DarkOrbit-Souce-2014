@@ -64,7 +64,7 @@ namespace Ow.Game.Objects
 
         public int Score = 0;
 
-        public int EquipExpansion = 2;
+        public int EquipExpansion = 1;
 
         public DateTime UnderEmp = DateTime.Now;
 

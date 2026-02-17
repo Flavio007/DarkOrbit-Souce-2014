@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using static Ow.Game.GameSession;
@@ -87,7 +88,22 @@ class SocketServer
 
     public static void Execute(JObject json, JObject parameters, Socket handler)
     {
-        switch (String(json["Action"]))
+        var action = String(json?["Action"]);
+        var syncRevision = String(parameters?["SyncRevision"]);
+
+        if (RequiresSyncRevisionValidation(action))
+        {
+            var syncPlayer = GameManager.GetPlayerById(Int(parameters?["UserId"]));
+            if (!IsSyncRevisionValid(syncPlayer, syncRevision))
+            {
+                var current = syncPlayer?.GameSession != null ? BuildPlayerSyncRevision(syncPlayer) : "offline";
+                Logger.Log("sync_log", $"Sync mismatch user={syncPlayer?.Id} action={action} expected={syncRevision} current={current}");
+                ForceReloadFromDatabase(syncPlayer);
+                return;
+            }
+        }
+
+        switch (action)
         {
             case "OnlineIds":
                 Send(handler, JsonConvert.SerializeObject(GameManager.GameSessions.Keys).ToString());
@@ -160,6 +176,155 @@ class SocketServer
             case "KickPlayer":
                 KickPlayer(GameManager.GetPlayerById(Int(parameters["UserId"])), String(parameters["Reason"]));
                 break;
+            case "RepairDrone":
+                RepairDrone(GameManager.GetPlayerById(Int(parameters["UserId"])), Int(parameters["DroneId"]));
+                break;
+            case "SellDrone":
+                SellDrone(GameManager.GetPlayerById(Int(parameters["UserId"])), Int(parameters["DroneId"]));
+                break;
+        }
+    }
+
+    private static bool RequiresSyncRevisionValidation(string action)
+    {
+        return action == "BuyItem" ||
+               action == "UpdateStatus" ||
+               action == "RepairDrone" ||
+               action == "SellDrone";
+    }
+
+    private static bool IsSyncRevisionValid(Player player, string expected)
+    {
+        if (player?.GameSession == null)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(expected))
+            return true; // Backward compatibility for old payloads.
+
+        var current = BuildPlayerSyncRevision(player);
+        return string.Equals(current, expected, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildPlayerSyncRevision(Player player)
+    {
+        if (player == null)
+            return string.Empty;
+
+        var config = player.Equipment?.Configs;
+        var items = player.Equipment?.Items;
+        var drones = player.DroneManager?.DronesList?
+            .Where(x => x != null)
+            .OrderBy(x => x.Id)
+            .Select(x => $"{x.Id}:{x.DroneType}:{x.Level}:{x.Experience}:{x.Damage}")
+            .ToList() ?? new List<string>();
+
+        var config1Designs = player.DroneManager?.Config1Designs ?? new List<int>();
+        var config2Designs = player.DroneManager?.Config2Designs ?? new List<int>();
+
+        var seed = string.Join("|", new[]
+        {
+            player.Id.ToString(),
+            player.Ship?.Id.ToString() ?? "0",
+            player.Data?.credits.ToString() ?? "0",
+            player.Data?.uridium.ToString() ?? "0",
+            player.Data?.honor.ToString() ?? "0",
+            player.Data?.experience.ToString() ?? "0",
+            player.Data?.jackpot.ToString() ?? "0",
+            config?.Config1Hitpoints.ToString() ?? "0",
+            config?.Config1Damage.ToString() ?? "0",
+            config?.Config1Shield.ToString() ?? "0",
+            config?.Config1Speed.ToString() ?? "0",
+            config?.Config2Hitpoints.ToString() ?? "0",
+            config?.Config2Damage.ToString() ?? "0",
+            config?.Config2Shield.ToString() ?? "0",
+            config?.Config2Speed.ToString() ?? "0",
+            items?.BootyKeys.ToString() ?? "0",
+            string.Join(",", config1Designs),
+            string.Join(",", config2Designs),
+            (player.DroneManager?.Apis ?? false) ? "1" : "0",
+            (player.DroneManager?.Zeus ?? false) ? "1" : "0",
+            string.Join(";", drones)
+        });
+
+        using (var sha = SHA256.Create())
+        {
+            var bytes = Encoding.UTF8.GetBytes(seed);
+            var hash = sha.ComputeHash(bytes);
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        }
+    }
+
+    private static void ForceReloadFromDatabase(Player player)
+    {
+        if (player?.GameSession == null)
+            return;
+
+        try
+        {
+            using (var mySqlClient = SqlDatabaseManager.GetClient())
+            {
+                var accountRow = mySqlClient.ExecuteQueryRow($"SELECT data FROM player_accounts WHERE userId = {player.Id}");
+                if (accountRow != null && accountRow.Table.Columns.Contains("data") && accountRow["data"] != null)
+                    player.Data = JsonConvert.DeserializeObject<DataBase>(accountRow["data"].ToString());
+
+                var equipmentRow = mySqlClient.ExecuteQueryRow($"SELECT boosters FROM player_equipment WHERE userId = {player.Id}");
+                if (equipmentRow != null && equipmentRow.Table.Columns.Contains("boosters") && equipmentRow["boosters"] != null)
+                {
+                    var boosters = JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(equipmentRow["boosters"].ToString());
+                    if (boosters != null)
+                    {
+                        player.BoosterManager.Boosters = boosters;
+                        player.BoosterManager.Update();
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Log("error_log", $"- [SocketServer.cs] ForceReloadFromDatabase({player.Id}) DB reload exception: {e}");
+        }
+
+        try
+        {
+            QueryManager.SetEquipment(player);
+            player.DroneManager.UpdateDrones(true);
+            player.UpdateStatus();
+        }
+        catch (Exception e)
+        {
+            Logger.Log("error_log", $"- [SocketServer.cs] ForceReloadFromDatabase({player.Id}) refresh exception: {e}");
+        }
+    }
+
+    public static void RepairDrone(Player player, int droneId)
+    {
+        if (player?.GameSession != null)
+        {
+            var drone = player.DroneManager.GetDroneById(droneId);
+            if (drone != null)
+            {
+                drone.Damage = 0;
+                drone.Level = Math.Max(1, drone.Level - 1);
+                drone.Experience = GetDroneBaseXpForLevel(drone.Level);
+
+                QueryManager.SavePlayer.Drones(player);
+
+                player.DroneManager.UpdateDrones(true);
+                UpdateStatus(player);
+            }
+        }
+    }
+
+    public static void SellDrone(Player player, int droneId)
+    {
+        if (player?.GameSession != null)
+        {
+            var drone = player.DroneManager.GetDroneById(droneId);
+            if (drone != null)
+            {
+                player.DroneManager.RemoveDrone(droneId);
+                UpdateStatus(player);
+            }
         }
     }
 
@@ -181,6 +346,12 @@ class SocketServer
 
                 if (!string.IsNullOrEmpty(content))
                 {
+                        try
+                        {
+                            Console.WriteLine($"[SocketServer] Received from {handler.RemoteEndPoint}: {content}");
+                        }
+                        catch { }
+
                     var json = Parse(content);
                     var parameters = Parse(json["Parameters"]);
 
@@ -552,5 +723,26 @@ class SocketServer
             return null;
         }
        
+    }
+
+    private static int GetDroneBaseXpForLevel(int level)
+    {
+        switch (level)
+        {
+            case 1:
+                return 0;
+            case 2:
+                return 100;
+            case 3:
+                return 300;
+            case 4:
+                return 700;
+            case 5:
+                return 1500;
+            case 6:
+                return 3100;
+            default:
+                return 0;
+        }
     }
 }

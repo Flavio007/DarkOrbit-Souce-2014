@@ -20,6 +20,7 @@ namespace Ow.Game.Objects.Stations
     class HomeStation : Activatable
     {
         public static int SECURE_ZONE_RANGE = 1500;
+        private static readonly int[] SolitaryHomeMaps = { 20, 24, 28 };
 
         public RepairStation RepairStation { get; set; }
         public HangarStation HangarStation { get; set; }
@@ -28,7 +29,23 @@ namespace Ow.Game.Objects.Stations
 
         public HomeStation(Spacemap spacemap, int factionId, Position position, Clan clan) : base(spacemap, factionId, position, clan, AssetTypeModule.BASE_COMPANY)
         {
-            PrepareStations();
+            if (!UseSolitaryVisual())
+                PrepareStations();
+        }
+
+        private bool UseSolitaryVisual()
+        {
+            return SolitaryHomeMaps.Contains(Spacemap.Id);
+        }
+
+        private int GetVisualFactionId()
+        {
+            return UseSolitaryVisual() ? FactionId + 3 : FactionId;
+        }
+
+        private AssetTypeModule GetVisualAssetType()
+        {
+            return new AssetTypeModule(UseSolitaryVisual() ? AssetTypeModule.HANGAR_HOME : AssetTypeId);
         }
 
         public void PrepareStations()
@@ -53,8 +70,8 @@ namespace Ow.Game.Objects.Stations
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
-            return AssetCreateCommand.write(GetAssetType(), "HQ",
-                                          FactionId, "", Id, 0, 0,
+            return AssetCreateCommand.write(GetVisualAssetType(), "HQ",
+                                          GetVisualFactionId(), "", Id, 0, 0,
                                           Position.X, Position.Y, 0, true, true, true, false,
                                           new ClanRelationModule(clanRelationModule),
                                           new List<VisualModifierCommand>());

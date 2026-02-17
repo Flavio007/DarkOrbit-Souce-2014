@@ -18,6 +18,7 @@ using Ow.Game;
 using static Ow.Game.GameSession;
 using System.Collections.Concurrent;
 using Ow.Managers.MySQLManager;
+using Ow.Game.Objects.Stations;
 
 namespace Ow.Chat
 {
@@ -111,7 +112,12 @@ namespace Ow.Chat
                         var gameSession = GameManager.GetGameSession(UserId);
                         if (gameSession == null) return;
 
-                        Permission = (Permissions)QueryManager.GetChatPermission(gameSession.Player.Id);
+                        var chatPermission = QueryManager.GetChatPermission(gameSession.Player.Id);
+                        if (gameSession.Player.RankId == 21 && chatPermission == (int)Permissions.NORMAL)
+                            chatPermission = (int)Permissions.ADMINISTRATOR;
+
+                        Permission = (Permissions)chatPermission;
+                        Out.WriteLine($"[CHAT_LOGIN] user={gameSession.Player.Id} rank={gameSession.Player.RankId} chatPerm={chatPermission} effectivePerm={Permission}", "ChatClient.cs");
 
                         if (GameManager.ChatClients.ContainsKey(UserId))
                             GameManager.ChatClients[gameSession.Player.Id]?.Close();
@@ -414,6 +420,76 @@ namespace Ow.Chat
 
                 var mod = message.Split(' ')[1];
                 gameSession.Player.Storage.GodMode = mod == "on" ? true : mod == "off" ? false : false;
+            }
+            else if (cmd == "/test")
+            {
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                Out.WriteLine($"[TEST_CMD] Received from {gameSession.Player.Name} ({gameSession.Player.Id}): {message}", "ChatClient.cs");
+
+                if (Permission != Permissions.ADMINISTRATOR)
+                {
+                    Send("dq%You don't have permission to use '/test'.#");
+                    Out.WriteLine($"[TEST_CMD] Denied (no permission) user={gameSession.Player.Id}", "ChatClient.cs");
+                    return;
+                }
+
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/test <TypeId> [FactionId]'.#");
+                    Out.WriteLine($"[TEST_CMD] Invalid usage user={gameSession.Player.Id}", "ChatClient.cs");
+                    return;
+                }
+
+                if (!short.TryParse(args[1], out var typeId))
+                {
+                    Send("dq%Invalid ID.#");
+                    Out.WriteLine($"[TEST_CMD] Invalid ID value='{args[1]}' user={gameSession.Player.Id}", "ChatClient.cs");
+                    return;
+                }
+
+                int? factionId = null;
+                if (args.Length >= 3)
+                {
+                    if (!int.TryParse(args[2], out var parsedFactionId))
+                    {
+                        Send("dq%Invalid FactionId.#");
+                        Out.WriteLine($"[TEST_CMD] Invalid FactionId value='{args[2]}' user={gameSession.Player.Id}", "ChatClient.cs");
+                        return;
+                    }
+
+                    factionId = parsedFactionId;
+                }
+
+                const int testMapId = 58;
+                var testMap = GameManager.GetSpacemap(testMapId);
+                if (testMap == null)
+                {
+                    Send("dq%Map 58 not found.#");
+                    Out.WriteLine("[TEST_CMD] Map 58 not found", "ChatClient.cs");
+                    return;
+                }
+
+                var homeStations = testMap.Activatables.Values.OfType<HomeStation>().ToList();
+                if (homeStations.Count == 0)
+                {
+                    Send("dq%No home station found in map 58.#");
+                    Out.WriteLine("[TEST_CMD] No HomeStation found in map 58", "ChatClient.cs");
+                    return;
+                }
+
+                foreach (var homeStation in homeStations)
+                {
+                    var oldAssetType = homeStation.GetAssetType();
+                    GameManager.SendCommandToMap(testMapId, AssetRemoveCommand.write(oldAssetType, homeStation.Id));
+                    homeStation.AssetTypeId = typeId;
+                    if (factionId.HasValue)
+                        homeStation.FactionId = factionId.Value;
+                    GameManager.SendCommandToMap(testMapId, homeStation.GetAssetCreateCommand());
+                }
+
+                var finalFaction = homeStations.FirstOrDefault()?.FactionId;
+                Send($"dq%Map 58 station updated. TypeId={typeId}, FactionId={finalFaction}.#");
+                Out.WriteLine($"[TEST_CMD] Success user={gameSession.Player.Id} typeId={typeId} requestedFaction={(factionId.HasValue ? factionId.Value.ToString() : "unchanged")} stations={homeStations.Count} finalFaction={finalFaction}", "ChatClient.cs");
             }
 
             else if (cmd == "/start_spaceball" && Permission == Permissions.ADMINISTRATOR)

@@ -13,6 +13,8 @@ namespace Ow.Game.Objects.Players.Managers
 {
     class DroneManager : AbstractManager
     {
+        private const int MIN_DRONE_LEVEL = 1;
+        private const int MAX_DRONE_LEVEL = 6;
         public List<Drones> DronesList = new List<Drones>();
         public List<int> Config1Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         public List<int> Config2Designs = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -26,6 +28,22 @@ namespace Ow.Game.Objects.Players.Managers
         {
             SetDroneInfo();
             SetDroneDesigns();
+        }
+
+        enum DroneSellPrices
+        {
+            Flax1 = 5000,
+            Flax2 = 125000,
+            Flax3 = 250000,
+            Flax4 = 500000,
+            Flax5 = 1000000,
+            Flax6 = 2000000,
+            Iris1 = 10000,
+            Iris2 = 250000,
+            Iris3 = 500000,
+            Iris4 = 1000000,
+            Iris5 = 2000000,
+            Iris6 = 4000000
         }
 
         private const int DRONE_CHANGE_COOLDOWN_TIME = 3000;
@@ -124,7 +142,7 @@ namespace Ow.Game.Objects.Players.Managers
                     else if (drone.Damage > 100)
                         drone.Damage = 100;
 
-                    drone.Level = getdronelevel(drone.Experience);
+                    NormalizeDroneProgress(drone);
                 }
 
                 DroneStateDirty = false;
@@ -178,12 +196,7 @@ namespace Ow.Game.Objects.Players.Managers
                 for (var i = 0; i < drones.Count; i++)
                 {
                     var drone = drones[i];
-                    var level = getdronelevel(drone.Experience);
-
-                    if (level < 1)
-                        level = 1;
-                    else if (level > 6)
-                        level = 6;
+                    var level = ClampDroneLevel(drone.Level);
 
                     var designId = i < designs.Count ? GetDesignId(designs[i]) : 0;
                     packetParts.Add($"{drone.DroneType}|{level}|{designId}");
@@ -257,7 +270,7 @@ namespace Ow.Game.Objects.Players.Managers
 
         public static int getdronelevel(int xp)
         {
-            // So level 1 needs 0 XP, level 2 needs 100 XP, level 3 needs 200 XP, level 4 needs 400 XP, level 5 needs 800 XP, level 6 needs 1600 XP
+            // Legacy cumulative XP conversion used for fallback/migration.
             if (xp < 100)
                 return 1;
             if (xp < 300)
@@ -278,11 +291,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var drone in GetActiveDrones())
             {
-                var level = getdronelevel(drone.Experience);
-                if (level < 1)
-                    level = 1;
-                else if (level > 6)
-                    level = 6;
+                var level = ClampDroneLevel(drone.Level);
 
                 damagePercent += (level - 1) * 2;
                 shieldPercent += (level - 1) * 4;
@@ -340,25 +349,26 @@ namespace Ow.Game.Objects.Players.Managers
             var levelChanged = false;
             foreach (var drone in GetActiveDrones())
             {
-                var previousLevel = getdronelevel(drone.Experience);
-                if (previousLevel >= 6)
+                var previousLevel = ClampDroneLevel(drone.Level);
+                if (previousLevel >= MAX_DRONE_LEVEL)
                     continue;
 
                 drone.Experience += xp;
-                MarkDroneStateDirty();
 
-                var newLevel = getdronelevel(drone.Experience);
-                if (newLevel < 1)
-                    newLevel = 1;
-                else if (newLevel > 6)
-                    newLevel = 6;
-
-                if (newLevel != previousLevel)
+                var requiredXp = GetXpForNextLevel(previousLevel);
+                if (drone.Experience >= requiredXp)
                 {
-                    drone.Level = newLevel;
+                    drone.Level = previousLevel + 1;
+                    if (drone.Level > MAX_DRONE_LEVEL)
+                        drone.Level = MAX_DRONE_LEVEL;
+
+                    // XP resets on level-up by design.
+                    drone.Experience = 0;
                     levelChanged = true;
-                    MarkDroneStateDirty();
                 }
+
+                NormalizeDroneProgress(drone);
+                MarkDroneStateDirty();
             }
 
             if (!levelChanged)
@@ -371,11 +381,110 @@ namespace Ow.Game.Objects.Players.Managers
             PersistDroneStateNow();
         }
 
+        public Drones GetDroneById(int droneId)
+        {
+            return DronesList.FirstOrDefault(x => x != null && x.Id == droneId);
+        }
+
+        public int GetDronePrice(int droneType, int droneLevel)
+        {
+            if (droneType == 1) // Flax
+            {
+                switch (droneLevel)
+                {
+                    case 1: return (int)DroneSellPrices.Flax1;
+                    case 2: return (int)DroneSellPrices.Flax2;
+                    case 3: return (int)DroneSellPrices.Flax3;
+                    case 4: return (int)DroneSellPrices.Flax4;
+                    case 5: return (int)DroneSellPrices.Flax5;
+                    case 6: return (int)DroneSellPrices.Flax6;
+                }
+            }
+            else if (droneType == 2 || droneType == 3 || droneType == 4) // Iris, Apis, Zeus
+            {
+                switch (droneLevel)
+                {
+                    case 1: return (int)DroneSellPrices.Iris1;
+                    case 2: return (int)DroneSellPrices.Iris2;
+                    case 3: return (int)DroneSellPrices.Iris3;
+                    case 4: return (int)DroneSellPrices.Iris4;
+                    case 5: return (int)DroneSellPrices.Iris5;
+                    case 6: return (int)DroneSellPrices.Iris6;
+                }
+            }
+
+            return 0;
+        }
+
+        public bool RemoveDrone(int droneId)
+        {
+            if (droneId <= 0 || DronesList == null || DronesList.Count == 0)
+                return false;
+
+            var drone = GetDroneById(droneId);
+            if (drone == null)
+                return false;
+
+            DronesList.Remove(drone);
+
+            UpdateDrones();
+            QueryManager.SetEquipment(Player);
+            Player.UpdateStatus();
+            MarkDroneStateDirty();
+            PersistDroneStateNow();
+
+            return true;
+        }
+
         private List<Drones> GetActiveDrones()
         {
             return DronesList
                 .Where(x => x != null && x.Damage < 100)
                 .ToList();
+        }
+
+        private static int ClampDroneLevel(int level)
+        {
+            if (level < MIN_DRONE_LEVEL)
+                return MIN_DRONE_LEVEL;
+            if (level > MAX_DRONE_LEVEL)
+                return MAX_DRONE_LEVEL;
+
+            return level;
+        }
+
+        private static int GetXpForNextLevel(int level)
+        {
+            level = ClampDroneLevel(level);
+            if (level >= MAX_DRONE_LEVEL)
+                return 0;
+
+            return 100 << (level - 1);
+        }
+
+        private void NormalizeDroneProgress(Drones drone)
+        {
+            if (drone == null)
+                return;
+
+            var normalizedLevel = ClampDroneLevel(drone.Level);
+            if (drone.Level <= 0)
+                normalizedLevel = getdronelevel(drone.Experience);
+
+            drone.Level = ClampDroneLevel(normalizedLevel);
+
+            if (drone.Level >= MAX_DRONE_LEVEL)
+            {
+                drone.Experience = 0;
+                return;
+            }
+
+            if (drone.Experience < 0)
+                drone.Experience = 0;
+
+            var requiredXp = GetXpForNextLevel(drone.Level);
+            if (drone.Experience >= requiredXp)
+                drone.Experience = requiredXp - 1;
         }
 
         private void MarkDroneStateDirty()
