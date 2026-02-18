@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Ow.Managers.MySQLManager;
 using Newtonsoft.Json;
 using Ow.Game.Ticks;
+using System.Globalization;
 
 namespace Ow.Game.Objects
 {
@@ -84,6 +85,7 @@ namespace Ow.Game.Objects
         public TechManager TechManager { get; set; }
         public SkillManager SkillManager { get; set; }
         public BoosterManager BoosterManager { get; set; }
+        public AchievementManager Achievements { get; set; }
         public LastPosition LastPosition { get; set; }
         public ShipStatus ShipStatus { get; set; }
         public Ammo Ammo = new Ammo();
@@ -114,6 +116,7 @@ namespace Ow.Game.Objects
             WarRank = warRank;
             LoadAmmo();
             InitiateManagers();
+            Achievements = new AchievementManager(this);
 
             MaxNanoHull = ship.BaseHitpoints;
         }
@@ -1476,9 +1479,6 @@ namespace Ow.Game.Objects
 
         public Boolean GetLeonovEffect(int map, int faction)
         {
-            //SendPacket("0|UI|SET|CAM|LTC|0|0");
-            //SendPacket("0|B|50|50|50|2000|5000|50|50|50|50|50|50");
-            //SendPacket("0|UI|CAM|LTC|0|0|5000");
             if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV && Spacemap.Id < 12)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
@@ -1495,7 +1495,33 @@ namespace Ow.Game.Objects
 
         public void achievement()
         {
-            SendPacket($"0|ach|set|1|true|1");
+            Achievements.Set(1, true, 1, true);
+        }
+
+        private static string FormatCameraNumber(double value)
+        {
+            return value.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+
+        public void CameraLockToHero()
+        {
+            SendPacket($"0|{ServerCommands.USER_INTERFACE}|{ServerCommands.CAMERA}|{ServerCommands.CAMERA_LOCK_TO_HERO}");
+        }
+
+        public void CameraLockToShip(int shipUserId, double zoomFactor = 1, double tweenDurationInSeconds = 3)
+        {
+            if (shipUserId <= 0) return;
+
+            SendPacket(
+                $"0|{ServerCommands.USER_INTERFACE}|{ServerCommands.CAMERA}|{ServerCommands.CAMERA_LOCK_TO_SHIP}|{shipUserId}|{FormatCameraNumber(zoomFactor)}|{FormatCameraNumber(tweenDurationInSeconds)}"
+            );
+        }
+
+        public void CameraLockToCoordinates(int x, int y, double tweenDurationInSeconds = 3)
+        {
+            SendPacket(
+                $"0|{ServerCommands.USER_INTERFACE}|{ServerCommands.CAMERA}|{ServerCommands.CAMERA_LOCK_TO_COORDINATES}|{x}|{y}|{FormatCameraNumber(tweenDurationInSeconds)}"
+            );
         }
 
 

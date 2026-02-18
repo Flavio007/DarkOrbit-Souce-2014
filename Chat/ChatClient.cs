@@ -343,7 +343,14 @@ namespace Ow.Chat
                     .Replace("MSG_SEPERATOR", ChatConstants.MSG_SEPERATOR.ToString());
 
                 Out.WriteLine($"[PK_CMD] Packet lido de {gameSession.Player.Name} ({gameSession.Player.Id}): {packetToSend}", "ChatClient.cs");
-                gameSession.Player.SendPacket(packetToSend);
+                if (gameSession.Client != null && gameSession.Client.Socket != null && gameSession.Client.Socket.IsBound && gameSession.Client.Socket.Connected)
+                {
+                    gameSession.Client.Send(LegacyModule.write(packetToSend));
+                }
+                else
+                {
+                    Send("dq%PK failed: game socket is not connected.#");
+                }
             }
             else if (cmd == "/destroy" && Permission == Permissions.ADMINISTRATOR)
             {

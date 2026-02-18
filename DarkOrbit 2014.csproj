@@ -66,6 +66,7 @@
     <Compile Include="Game\Clan.cs" />
     <Compile Include="Game\Enums.cs" />
     <Compile Include="Game\Events\Duel.cs" />
+    <Compile Include="Game\Events\Achievements.cs" />
     <Compile Include="Game\Events\JackpotBattle.cs" />
     <Compile Include="Game\Events\Scoremageddon.cs" />
     <Compile Include="Game\Events\InvasionGate.cs" />

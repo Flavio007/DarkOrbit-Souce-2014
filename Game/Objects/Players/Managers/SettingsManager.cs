@@ -246,7 +246,8 @@ namespace Ow.Game.Objects.Players.Managers
             { "logout", new Window(50, 50, 200, 200, false) },
             { "refinement", new Window(50, 50, 455, 525, false) },
             { "achievement", new Window(50, 50, 460, 180, false) },
-            { "quests", new Window(50, 50, 200, 200, false) }
+            { "quests", new Window(50, 50, 200, 200, false) },
+            { "cli", new Window(50, 50, 200, 200, false) }
         };
     }
 
@@ -526,17 +527,19 @@ namespace Ow.Game.Objects.Players.Managers
             leftItems.Add("log", "title_log");
             leftItems.Add("refinement", "title_refinement");
             leftItems.Add("quests", "title_quests");
-            //leftItems.Add("achievement", "title_achievement");
-            if (Player.Pet != null)
-                leftItems.Add("pet", "title_pet");
+            leftItems.Add("achievement", "title_achievement");
+            /*if (Player.Pet != null)
+                leftItems.Add("pet", "title_pet");*/
             if (EventManager.Spaceball.Active)
                 leftItems.Add("spaceball", "title_spaceball");
             if (EventManager.Scoremageddon.Active)
                 leftItems.Add("scoreevent", "title_scoreevent");
             if (Player.BoosterManager.Boosters.Count >= 1)
                 leftItems.Add("booster", "title_booster");
+            /*if (Player.RankId == 21)
+                leftItems.Add("traininggrounds", "title_traininggrounds");*/
             if (Player.RankId == 21)
-                leftItems.Add("traininggrounds", "title_traininggrounds");
+                leftItems.Add("cli", "title_cli");
             if (EventManager.InvasionGate.Started)
                 leftItems.Add("invasion", "title_invasion");
 

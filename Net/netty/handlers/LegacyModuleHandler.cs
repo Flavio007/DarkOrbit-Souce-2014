@@ -29,6 +29,14 @@ namespace Ow.Net.netty.handlers
                             break;
                     }
                     break;
+                case ServerCommands.ACHIEVEMENTS:
+                    if (packet.Length > 2 && packet[1] == ServerCommands.ACHIEVEMENT_BUY)
+                    {
+                        int achievementId;
+                        if (int.TryParse(packet[2], out achievementId))
+                            player.Achievements?.HandleBuyRequest(achievementId);
+                    }
+                    break;
             }
         }
     }

@@ -167,6 +167,7 @@ namespace Ow.Net.netty.handlers
                 }
                 
                 player.UpdateStatus();
+                player.Achievements?.SendAll();
 
                 //player.SendCommand(UbaWindowInitializationCommand.write(new Ubas3wModule(new UbaG3FModule(0, 0, 0, 0), new Uba64iModule("", 0, new //List<UbaHtModule>()), new UbahsModule(new List<Ubal4bModule>())), 0));
 

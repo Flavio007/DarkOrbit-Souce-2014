@@ -51,6 +51,12 @@ namespace Ow.Game.Events
 
         public async void Start()
         {
+            var centerX = (Position1.X + Position2.X) / 2;
+            var centerY = (Position1.Y + Position2.Y) / 2;
+
+            foreach (var player in Players.Values)
+                player.CameraLockToCoordinates(centerX, centerY, 1.5);
+
             for (int i = 25; i > 0; i--)
             {
                 var packet = $"0|A|STM|jp_no_attack_n_seconds|%!|{i}";
@@ -95,7 +101,6 @@ namespace Ow.Game.Events
                     foreach (var obj in objects)
                         (obj as Mine).Remove(true);
 
-                    player.RemoveVisualModifier(VisualModifierCommand.CAMERA);
                     RemovePlayer(player);
                 }
             }
@@ -103,6 +108,7 @@ namespace Ow.Game.Events
 
         public static void RemovePlayer(Player player)
         {
+            player.CameraLockToHero();
             player.RemoveVisualModifier(VisualModifierCommand.CAMERA);
 
             if (InDuel(player))

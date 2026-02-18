@@ -37,6 +37,37 @@ namespace Ow.Managers
                     mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET data = '{JsonConvert.SerializeObject(player.Data)}', nanohull = {player.CurrentNanoHull}, destructions = '{JsonConvert.SerializeObject(player.Destructions)}'  WHERE userId = {player.Id}");
             }
 
+            public static bool Achievements(Player player)
+            {
+                try
+                {
+                    using (var mySqlClient = SqlDatabaseManager.GetClient())
+                    {
+                        var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_accounts WHERE userId = {player.Id}");
+                        if (querySet == null)
+                            return false;
+
+                        var column = "";
+                        if (querySet.Table.Columns.Contains("achievements"))
+                            column = "achievements";
+                        else if (querySet.Table.Columns.Contains("achievement"))
+                            column = "achievement";
+
+                        if (string.IsNullOrWhiteSpace(column))
+                            return false;
+
+                        var json = (player.Achievements?.Serialize() ?? "[]").Replace("'", "''");
+                        mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET {column} = '{json}' WHERE userId = {player.Id}");
+                        return true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("error_log", $"- [QueryManager.cs] SavePlayer.Achievements({player.Id}) exception: {e}");
+                    return false;
+                }
+            }
+
             public static void Boosters(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
@@ -185,6 +216,7 @@ namespace Ow.Managers
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
                 {
                     var data = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_accounts WHERE userId = {playerId}");
+                    string achievementsJson = "";
                     foreach (DataRow row in data.Rows)
                     {
                         var name = Convert.ToString(row["pilotName"]);
@@ -205,6 +237,17 @@ namespace Ow.Managers
                         player.Destructions = JsonConvert.DeserializeObject<DestructionsBase>(row["destructions"].ToString());
                         player.CurrentNanoHull = Convert.ToInt32(row["nanohull"]);
                         player.PetName = Convert.ToString(row["petName"]);
+
+                        if (row.Table.Columns.Contains("achievements") && row["achievements"] != DBNull.Value)
+                            achievementsJson = row["achievements"].ToString();
+                        else if (row.Table.Columns.Contains("achievement") && row["achievement"] != DBNull.Value)
+                            achievementsJson = row["achievement"].ToString();
+                    }
+
+                    if (player != null)
+                    {
+                        player.Achievements.Load(achievementsJson);
+                        player.Achievements.EnsureDefaultSeed();
                     }
 
                     var settings = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_settings WHERE userId = {playerId}");
