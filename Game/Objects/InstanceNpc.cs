@@ -7,6 +7,7 @@ using Ow.Managers;
 using Ow.Net.netty.commands;
 using Ow.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,7 @@ namespace Ow.Game.Objects
         public List<Escort> Minions = new List<Escort>();
         public bool KeyNpc = false;
         public List<Player> challengers = new List<Player>();
+        public ConcurrentDictionary<int, long> DamageContributors = new ConcurrentDictionary<int, long>();
         public InstanceNpc(int id, Ship ship, Spacemap spacemap, Position position, int Owner, float multiplier, string suffix, bool Key) : base(id, ship, spacemap, position, Owner)
         {
             Spacemap.AddCharacter(this);
@@ -65,6 +67,12 @@ namespace Ow.Game.Objects
                 Invincible = false;
                 RemoveVisualModifier(VisualModifierCommand.INVINCIBILITY);
             }
+        }
+
+        public void RegisterDamage(Player player, int damage)
+        {
+            if (player == null || damage <= 0) return;
+            DamageContributors.AddOrUpdate(player.Id, damage, (k, v) => v + damage);
         }
 
         public new void ReceiveAttack(Character character)

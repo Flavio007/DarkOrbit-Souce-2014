@@ -7,6 +7,7 @@ using Ow.Managers;
 using Ow.Net.netty.commands;
 using Ow.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,7 @@ namespace Ow.Game.Objects
         public InstanceNpc Owner { get; set; }
         public string Suffix = "";
         public List<Player> challengers = new List<Player>();
+        public ConcurrentDictionary<int, long> DamageContributors = new ConcurrentDictionary<int, long>();
         public Escort(int id, Ship ship, Spacemap spacemap, Position position, float multiplier, string suffix, InstanceNpc VIP) : base(id, ship, spacemap, position, 0)
         {
             Spacemap.AddCharacter(this);
@@ -51,6 +53,12 @@ namespace Ow.Game.Objects
             Experience = Convert.ToInt32(Ship.Rewards.Experience * multiplier);
 
             Program.TickManager.AddTick(this);
+        }
+
+        public void RegisterDamage(Player player, int damage)
+        {
+            if (player == null || damage <= 0) return;
+            DamageContributors.AddOrUpdate(player.Id, damage, (k, v) => v + damage);
         }
 
         public new void ReceiveAttack(Character character)

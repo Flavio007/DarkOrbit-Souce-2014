@@ -631,6 +631,15 @@ namespace Ow.Game.Objects.Players.Managers
             }
             else
             {
+                var effectiveDamage = damageHp + damageShd;
+                if (effectiveDamage > 0)
+                {
+                    if (target is InstanceNpc instanceNpc)
+                        instanceNpc.RegisterDamage(Player, effectiveDamage);
+                    else if (target is Escort escortNpc)
+                        escortNpc.RegisterDamage(Player, effectiveDamage);
+                }
+
                 if (target is Npc)
                     (target as Npc).ReceiveAttack(Player);
                 if (target is Cubikon)

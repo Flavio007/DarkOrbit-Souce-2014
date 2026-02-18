@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Ow.Game.Ticks;
+using System.Threading;
+using Ow.Game.Movements;
+using Ow.Game.Objects;
 using Ow.Managers;
 using Ow.Managers.MySQLManager;
-using Ow.Game.Objects;
-using Ow.Game.Movements;
-using System.Threading;
 using Ow.Utils;
 
 namespace Ow.Game.Events
@@ -22,7 +19,7 @@ namespace Ow.Game.Events
         public int KeyNpc { get; set; }
         public int MinionsID { get; set; }
         public int MinionsCount { get; set; }
-        public int MinionsMultiplier { set; get; }
+        public int MinionsMultiplier { get; set; }
     }
 
     class InvasionGate
@@ -49,50 +46,173 @@ namespace Ow.Game.Events
         public List<int> PointsCounter = new List<int>();
         public List<int> WavesCounter = new List<int>();
 
-        private void BroadcastInvasionInit(int mmoScore, int eicScore, int vruScore, int wave)
+        private readonly object stateLock = new object();
+        private readonly Dictionary<int, Dictionary<int, int>> tierScores = new Dictionary<int, Dictionary<int, int>>();
+        private readonly Dictionary<int, Dictionary<int, int>> tierHonorRemainders = new Dictionary<int, Dictionary<int, int>>();
+        private readonly Dictionary<int, int> tierCurrentWave = new Dictionary<int, int>();
+        private readonly Dictionary<int, int> mapWaveQuarterProgress = new Dictionary<int, int>();
+
+        private const float Portal1ForceMultiplier = 0.5f;
+        private const float Portal2ForceMultiplier = 1.5f;
+        private const float Portal3ForceMultiplier = 3.0f;
+
+        private const float Portal1DropMultiplier = 0.8f;
+        private const float Portal2DropMultiplier = 2.2f;
+        private const float Portal3DropMultiplier = 5.0f;
+
+        private void ResetTierState()
         {
-            MmoScore = mmoScore;
-            EicScore = eicScore;
-            VruScore = vruScore;
-            CurrentWave = wave;
-            GameManager.SendPacketToAll($"0|n|{Ow.Net.netty.ServerCommands.INIT_INVASION_SCOREBOARD}|{mmoScore}|{eicScore}|{vruScore}|{wave}");
+            lock (stateLock)
+            {
+                tierScores.Clear();
+                tierHonorRemainders.Clear();
+                tierCurrentWave.Clear();
+                mapWaveQuarterProgress.Clear();
+
+                for (var tier = 1; tier <= 3; tier++)
+                {
+                    tierScores[tier] = new Dictionary<int, int> { { 1, 0 }, { 2, 0 }, { 3, 0 } };
+                    tierHonorRemainders[tier] = new Dictionary<int, int> { { 1, 0 }, { 2, 0 }, { 3, 0 } };
+                    tierCurrentWave[tier] = 1;
+                }
+
+                MmoScore = 0;
+                EicScore = 0;
+                VruScore = 0;
+                CurrentWave = 1;
+            }
         }
 
-        private void BroadcastInvasionScore(int factionId, int score)
+        private int GetPortalTierByMap(Spacemap map)
         {
-            if (factionId == 1) MmoScore = score;
-            else if (factionId == 2) EicScore = score;
-            else if (factionId == 3) VruScore = score;
-            GameManager.SendPacketToAll($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|{factionId}|{score}");
+            if (map == null) return 0;
+
+            if (map.Id == SpacemapMMO1.Id || map.Id == SpacemapEIC1.Id || map.Id == SpacemapVRU1.Id)
+                return 1;
+            if (map.Id == SpacemapMMO2.Id || map.Id == SpacemapEIC2.Id || map.Id == SpacemapVRU2.Id)
+                return 2;
+            if (map.Id == SpacemapMMO3.Id || map.Id == SpacemapEIC3.Id || map.Id == SpacemapVRU3.Id)
+                return 3;
+
+            return 0;
         }
 
-        private void BroadcastInvasionWave(int wave)
+        private int GetPortalTierByLevel(int level)
         {
-            CurrentWave = wave;
-            GameManager.SendPacketToAll($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_WAVE}|{wave}");
+            if (level >= 5 && level <= 9) return 1;
+            if (level >= 10 && level <= 14) return 2;
+            if (level >= 15) return 3;
+            return 0;
+        }
+
+        private float GetPortalForceMultiplier(Spacemap map)
+        {
+            var tier = GetPortalTierByMap(map);
+            if (tier == 1) return Portal1ForceMultiplier;
+            if (tier == 2) return Portal2ForceMultiplier;
+            return Portal3ForceMultiplier;
+        }
+
+        private float GetPortalDropMultiplier(Spacemap map)
+        {
+            var tier = GetPortalTierByMap(map);
+            if (tier == 1) return Portal1DropMultiplier;
+            if (tier == 2) return Portal2DropMultiplier;
+            return Portal3DropMultiplier;
+        }
+
+        private void ApplyDropMultiplier(Character npc, float dropMultiplier, float forceMultiplier)
+        {
+            if (npc == null || forceMultiplier <= 0) return;
+
+            var dropRatio = dropMultiplier / forceMultiplier;
+            npc.Credits = Convert.ToInt32(npc.Credits * dropRatio);
+            npc.Experience = Convert.ToInt32(npc.Experience * dropRatio);
+            npc.Honor = Convert.ToInt32(npc.Honor * dropRatio);
+            npc.Uridium = Convert.ToInt32(npc.Uridium * dropRatio);
+        }
+
+        private void SyncLegacyFieldsForTier(int tier)
+        {
+            if (!tierScores.ContainsKey(tier) || !tierCurrentWave.ContainsKey(tier))
+                return;
+
+            MmoScore = tierScores[tier][1];
+            EicScore = tierScores[tier][2];
+            VruScore = tierScores[tier][3];
+            CurrentWave = tierCurrentWave[tier];
+        }
+
+        private void SendTierState(Player player, int tier)
+        {
+            if (player == null || tier <= 0) return;
+            if (!tierScores.ContainsKey(tier) || !tierCurrentWave.ContainsKey(tier)) return;
+
+            Dictionary<int, int> scores;
+            int wave;
+
+            lock (stateLock)
+            {
+                scores = new Dictionary<int, int>(tierScores[tier]);
+                wave = tierCurrentWave[tier];
+            }
+
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.INIT_INVASION_SCOREBOARD}|{scores[1]}|{scores[2]}|{scores[3]}|{wave}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|1|{scores[1]}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|2|{scores[2]}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|3|{scores[3]}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_WAVE}|{wave}");
+        }
+
+        private void BroadcastTierState(int tier)
+        {
+            foreach (var session in GameManager.GameSessions.Values)
+            {
+                var player = session.Player;
+                if (player == null) continue;
+                if (GetPortalTierByLevel(player.Level) != tier) continue;
+                SendTierState(player, tier);
+            }
+        }
+
+        public void AddHonorContribution(Player player, Spacemap map, int honorAmount)
+        {
+            if (!Started || player == null || map == null || honorAmount <= 0) return;
+
+            var tier = GetPortalTierByMap(map);
+            var factionId = player.FactionId;
+
+            if (tier <= 0 || factionId < 1 || factionId > 3) return;
+
+            lock (stateLock)
+            {
+                tierHonorRemainders[tier][factionId] += honorAmount;
+
+                var points = tierHonorRemainders[tier][factionId] / 100;
+                if (points > 0)
+                {
+                    tierScores[tier][factionId] += points;
+                    tierHonorRemainders[tier][factionId] %= 100;
+                    SyncLegacyFieldsForTier(tier);
+                }
+            }
         }
 
         public void SendWindowState(Player player)
         {
             if (player == null) return;
 
-            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.INIT_INVASION_SCOREBOARD}|{MmoScore}|{EicScore}|{VruScore}|{CurrentWave}");
-            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|1|{MmoScore}");
-            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|2|{EicScore}");
-            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|3|{VruScore}");
-            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_WAVE}|{CurrentWave}");
+            var tier = GetPortalTierByLevel(player.Level);
+            if (tier <= 0) return;
+
+            SendTierState(player, tier);
         }
 
         public void Startup()
         {
             if (Started) return;
             Started = true;
-
-            BroadcastInvasionInit(0, 0, 0, 1);
-            BroadcastInvasionScore(1, 0);
-            BroadcastInvasionScore(2, 0);
-            BroadcastInvasionScore(3, 0);
-            BroadcastInvasionWave(1);
+            ResetTierState();
 
             foreach (var sesion in GameManager.GameSessions.Values)
             {
@@ -100,7 +220,6 @@ namespace Ow.Game.Events
                 player.SettingsManager.SendMenuBarsCommand();
                 SendWindowState(player);
             }
-
 
             Portals.Add(new Portal(GameManager.GetSpacemap(1), Position.InvasionGatePosition, Position.InvasionGatePosition, SpacemapMMO1.Id, 41, 0, true, true, false));
             Portals.Add(new Portal(GameManager.GetSpacemap(3), Position.InvasionGatePosition, Position.InvasionGatePosition, SpacemapMMO2.Id, 42, 0, true, true, false));
@@ -126,26 +245,19 @@ namespace Ow.Game.Events
             WavesCounter.Add(0);
             WavesCounter.Add(0);
 
-
             for (int i = 0; i < 9; i++)
             {
                 Maps[i].Instance = true;
                 Maps[i].Curwave = 0;
+                mapWaveQuarterProgress[Maps[i].Id] = 0;
             }
-
-            //GameManager.SendChatSystemMessage("Invasion Started!");
-
 
             foreach (Portal gates in Portals)
-            {
                 GameManager.SendCommandToMap(gates.Spacemap.Id, gates.GetAssetCreateCommand());
-            }
-
 
             var sql = SqlDatabaseManager.GetClient();
             for (int i = 1; i <= 22; i++)
             {
-                //GameManager.SendChatSystemMessage($"Getting sql querry ID {i}");
                 var querySet = sql.ExecuteQueryRow($"SELECT * FROM server_instanceswaves WHERE GateID = {InvasionId} AND WaveID = {i}");
                 var wave = new Waves();
                 waves.Add(wave);
@@ -158,19 +270,18 @@ namespace Ow.Game.Events
                 wave.MinionsCount = Convert.ToInt32(querySet["MinionsCount"]);
                 wave.MinionsMultiplier = Convert.ToInt32(querySet["MinionsMultiplier"]);
             }
+
             for (int i = 5; i > 0; i--)
             {
                 foreach (Spacemap map in Maps)
-                {
                     GameManager.SendPacketToMap(map.Id, $"0|A|STD|Level Invasion Gate Starting in {i} Seconds!");
-                }
+
                 Thread.Sleep(1000);
             }
+
             foreach (Spacemap map in Maps)
-            {
-                //GameManager.SendChatSystemMessage("Starting wave 1");
                 StartWave(map, waves[0]);
-            }
+
             Running();
         }
 
@@ -180,57 +291,126 @@ namespace Ow.Game.Events
             {
                 if (Started)
                 {
-                    //GameManager.SendChatSystemMessage("Tick Tock");
                     foreach (Spacemap map in Maps)
                     {
-                        int Count = 0;
+                        int count = 0;
                         for (int i = 0; i < map.InstanceNpcs.Count; i++)
                         {
                             if (map.InstanceNpcs[i].Destroyed)
-                            {
-                                Count++;
-                            }
+                                count++;
                         }
-                        CheckWaveFinished(map, Count, waves[map.Curwave]);
+
+                        CheckWaveFinished(map, count, waves[map.Curwave]);
                     }
                 }
                 Thread.Sleep(5000);
             }
         }
 
-        public void CheckWaveFinished(Spacemap map, int NpcCount, Waves wave)
+        private void UpdateQuarterProgress(Spacemap map, int npcCount, Waves wave)
         {
-            if (NpcCount >= wave.NpcCount)
-            {
-                //GameManager.SendChatSystemMessage("Cheking Wave");
-                if (map.Curwave <= 21)
-                    map.Curwave++;
-                else
-                    map.Curwave = 1;
-                WavesCounter[map.FactionId-1]++;
-                map.InstanceNpcs.Clear();
-                StartWave(map, waves[map.Curwave]);
+            if (map == null || wave == null || wave.NpcCount <= 0) return;
+            if (!mapWaveQuarterProgress.ContainsKey(map.Id)) mapWaveQuarterProgress[map.Id] = 0;
+
+            var quarter = Math.Min(4, npcCount * 4 / wave.NpcCount);
+            if (quarter <= mapWaveQuarterProgress[map.Id]) return;
+
+            mapWaveQuarterProgress[map.Id] = quarter;
+            var tier = GetPortalTierByMap(map);
+
+            if (tier > 0)
+                BroadcastTierState(tier);
+        }
+
+        public void CheckWaveFinished(Spacemap map, int npcCount, Waves wave)
+        {
+            UpdateQuarterProgress(map, npcCount, wave);
+
+            if (npcCount < wave.NpcCount)
                 return;
+
+            var tier = GetPortalTierByMap(map);
+
+            if (map.Curwave < waves.Count - 1)
+                map.Curwave++;
+            else
+                map.Curwave = 0;
+
+            if (map.FactionId >= 1 && map.FactionId <= 3)
+                WavesCounter[map.FactionId - 1]++;
+
+            map.InstanceNpcs.Clear();
+            mapWaveQuarterProgress[map.Id] = 0;
+
+            if (tier > 0)
+            {
+                lock (stateLock)
+                {
+                    tierCurrentWave[tier] = map.Curwave + 1;
+                    SyncLegacyFieldsForTier(tier);
+                }
+                BroadcastTierState(tier);
             }
-            else return;
+
+            StartWave(map, waves[map.Curwave]);
         }
 
         public void StartWave(Spacemap map, Waves wave)
         {
-            for(int i = 0; i < wave.NpcCount; i++)
+            var forceMultiplier = GetPortalForceMultiplier(map);
+            var dropMultiplier = GetPortalDropMultiplier(map);
+
+            for (int i = 0; i < wave.NpcCount; i++)
             {
-                if(wave.KeyNpc == 0)
-                    map.InstanceNpcs.Add(new InstanceNpc(Randoms.CreateRandomID(), GameManager.GetShip(wave.NpcId), map,Position.GetPosOnCircle(Position.InvasionGatePosition, 4000), 0, wave.Multiplier, $" ~ {map.Curwave + 1}", false));
+                var currentWaveLabel = $" ~ {map.Curwave + 1}";
+
+                if (wave.KeyNpc == 0)
+                {
+                    var npc = new InstanceNpc(
+                        Randoms.CreateRandomID(),
+                        GameManager.GetShip(wave.NpcId),
+                        map,
+                        Position.GetPosOnCircle(Position.InvasionGatePosition, 4000),
+                        0,
+                        wave.Multiplier * forceMultiplier,
+                        currentWaveLabel,
+                        false);
+
+                    ApplyDropMultiplier(npc, dropMultiplier, forceMultiplier);
+                    map.InstanceNpcs.Add(npc);
+                }
+
                 if (wave.KeyNpc == 1)
                 {
-                    map.InstanceNpcs.Add(new InstanceNpc(Randoms.CreateRandomID(), GameManager.GetShip(wave.NpcId), map, Position.GetPosOnCircle(Position.InvasionGatePosition, 4000), 0, wave.Multiplier, $" ~ {map.Curwave + 1}", true));
+                    var npc = new InstanceNpc(
+                        Randoms.CreateRandomID(),
+                        GameManager.GetShip(wave.NpcId),
+                        map,
+                        Position.GetPosOnCircle(Position.InvasionGatePosition, 4000),
+                        0,
+                        wave.Multiplier * forceMultiplier,
+                        currentWaveLabel,
+                        true);
+
+                    ApplyDropMultiplier(npc, dropMultiplier, forceMultiplier);
+                    map.InstanceNpcs.Add(npc);
+
                     for (int y = 0; y < wave.MinionsCount; y++)
                     {
-                        map.InstanceNpcs[i].Minions.Add(new Escort(Randoms.CreateRandomID(), GameManager.GetShip(wave.MinionsID), map, map.InstanceNpcs[i].Position, wave.MinionsMultiplier, $" ~ {map.Curwave + 1}", map.InstanceNpcs[i]));
-                        map.InstanceNpcs[i].Check();
+                        var escort = new Escort(
+                            Randoms.CreateRandomID(),
+                            GameManager.GetShip(wave.MinionsID),
+                            map,
+                            npc.Position,
+                            wave.MinionsMultiplier * forceMultiplier,
+                            currentWaveLabel,
+                            npc);
+
+                        ApplyDropMultiplier(escort, dropMultiplier, forceMultiplier);
+                        npc.Minions.Add(escort);
+                        npc.Check();
                     }
                 }
-                //GameManager.SendChatSystemMessage($"Spawning wave {i} Invasion Gate Wave ID {wave.Id} NPC ID {wave.NpcId} Wave: {map.Curwave}");
             }
         }
     }

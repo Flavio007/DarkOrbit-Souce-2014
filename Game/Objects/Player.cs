@@ -1479,7 +1479,6 @@ namespace Ow.Game.Objects
             //SendPacket("0|UI|SET|CAM|LTC|0|0");
             //SendPacket("0|B|50|50|50|2000|5000|50|50|50|50|50|50");
             //SendPacket("0|UI|CAM|LTC|0|0|5000");
-            SendPacket($"0|n|isi|500|5000|50000");
             if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV && Spacemap.Id < 12)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);

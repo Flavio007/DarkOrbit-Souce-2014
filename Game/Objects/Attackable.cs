@@ -178,6 +178,88 @@ namespace Ow.Game.Objects
                     player.SendCommand(command);
         }
 
+        private bool DistributeRewardsEvenly(IEnumerable<Player> players, int credits, int experience, int honor, int uridium, ChangeType changeType)
+        {
+            var validPlayers = players?.Where(x => x != null).Distinct().ToList();
+            if (validPlayers == null || validPlayers.Count == 0) return false;
+
+            var creditsShare = credits / validPlayers.Count;
+            var experienceShare = experience / validPlayers.Count;
+            var honorShare = honor / validPlayers.Count;
+            var uridiumShare = uridium / validPlayers.Count;
+
+            foreach (var player in validPlayers)
+            {
+                player.ChangeData(DataType.CREDITS, creditsShare);
+                player.ChangeData(DataType.EXPERIENCE, experienceShare);
+                player.ChangeData(DataType.HONOR, honorShare, changeType);
+                player.ChangeData(DataType.URIDIUM, uridiumShare, changeType);
+
+                if (changeType == ChangeType.INCREASE)
+                    EventManager.InvasionGate?.AddHonorContribution(player, Spacemap, honorShare);
+            }
+
+            return true;
+        }
+
+        private bool DistributeRewardsByDamage(System.Collections.Concurrent.ConcurrentDictionary<int, long> contributors, int credits, int experience, int honor, int uridium, ChangeType changeType)
+        {
+            if (contributors == null || contributors.Count == 0) return false;
+
+            var validContributors = contributors
+                .Where(x => x.Value > 0)
+                .Select(x => new KeyValuePair<Player, long>(GameManager.GetPlayerById(x.Key), x.Value))
+                .Where(x => x.Key != null && x.Value > 0)
+                .OrderByDescending(x => x.Value)
+                .ToList();
+
+            if (validContributors.Count == 0) return false;
+
+            long totalDamage = validContributors.Sum(x => x.Value);
+            if (totalDamage <= 0) return false;
+
+            int distributedCredits = 0;
+            int distributedExperience = 0;
+            int distributedHonor = 0;
+            int distributedUridium = 0;
+
+            var rewardsByPlayer = new Dictionary<Player, int[]>();
+
+            foreach (var contributor in validContributors)
+            {
+                var creditShare = (int)((long)credits * contributor.Value / totalDamage);
+                var expShare = (int)((long)experience * contributor.Value / totalDamage);
+                var honorShare = (int)((long)honor * contributor.Value / totalDamage);
+                var uriShare = (int)((long)uridium * contributor.Value / totalDamage);
+
+                rewardsByPlayer[contributor.Key] = new[] { creditShare, expShare, honorShare, uriShare };
+
+                distributedCredits += creditShare;
+                distributedExperience += expShare;
+                distributedHonor += honorShare;
+                distributedUridium += uriShare;
+            }
+
+            var topContributor = validContributors[0].Key;
+            rewardsByPlayer[topContributor][0] += credits - distributedCredits;
+            rewardsByPlayer[topContributor][1] += experience - distributedExperience;
+            rewardsByPlayer[topContributor][2] += honor - distributedHonor;
+            rewardsByPlayer[topContributor][3] += uridium - distributedUridium;
+
+            foreach (var reward in rewardsByPlayer)
+            {
+                reward.Key.ChangeData(DataType.CREDITS, reward.Value[0]);
+                reward.Key.ChangeData(DataType.EXPERIENCE, reward.Value[1]);
+                reward.Key.ChangeData(DataType.HONOR, reward.Value[2], changeType);
+                reward.Key.ChangeData(DataType.URIDIUM, reward.Value[3], changeType);
+
+                if (changeType == ChangeType.INCREASE)
+                    EventManager.InvasionGate?.AddHonorContribution(reward.Key, Spacemap, reward.Value[2]);
+            }
+
+            return true;
+        }
+
         public void Destroy(Attackable destroyer, DestructionType destructionType)
         {
             if (this is Spaceball || Destroyed) return;
@@ -347,60 +429,36 @@ namespace Ow.Game.Objects
                         destroyerPlayer.DroneManager?.AddNpcKillExperience(100);
 
                     var groupMembers = destroyerPlayer.Group?.Members.Values.Where(x => x.AttackingOrUnderAttack());
+                    var customDistributionApplied = false;
 
                     if (this is SolarLordakium Lord && Lord.challengers != null)
                     {
-                        credits = credits / Lord.challengers.Count();
-                        experience = experience / Lord.challengers.Count();
-                        honor = honor / Lord.challengers.Count();
-                        uridium = uridium / Lord.challengers.Count();
-
-                        foreach (var PlayerInstance in Lord.challengers)
-                        {
-                            PlayerInstance.ChangeData(DataType.CREDITS, credits);
-                            PlayerInstance.ChangeData(DataType.EXPERIENCE, experience);
-                            PlayerInstance.ChangeData(DataType.HONOR, honor, changeType);
-                            PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
-                        }
+                        customDistributionApplied = DistributeRewardsEvenly(Lord.challengers, credits, experience, honor, uridium, changeType);
                     }
-                    if (this is InstanceNpc InstNPC && InstNPC.challengers != null)
+                    else if (this is InstanceNpc instNpc)
                     {
-                        credits = InstNPC.Credits / InstNPC.challengers.Count();
-                        experience = InstNPC.Experience / InstNPC.challengers.Count();
-                        honor = InstNPC.Honor / InstNPC.challengers.Count();
-                        uridium = InstNPC.Uridium / InstNPC.challengers.Count();
-
-                        foreach (var PlayerInstance in InstNPC.challengers)
-                        {
-                            PlayerInstance.ChangeData(DataType.CREDITS, credits);
-                            PlayerInstance.ChangeData(DataType.EXPERIENCE, experience);
-                            PlayerInstance.ChangeData(DataType.HONOR, honor, changeType);
-                            PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
-                        }
+                        customDistributionApplied = DistributeRewardsByDamage(instNpc.DamageContributors, instNpc.Credits, instNpc.Experience, instNpc.Honor, instNpc.Uridium, changeType);
+                        if (!customDistributionApplied && instNpc.challengers != null)
+                            customDistributionApplied = DistributeRewardsEvenly(instNpc.challengers, instNpc.Credits, instNpc.Experience, instNpc.Honor, instNpc.Uridium, changeType);
                     }
-                    if (this is Escort escolt && escolt.challengers != null)
+                    else if (this is Escort escortNpc)
                     {
-                        credits = escolt.Credits / escolt.challengers.Count();
-                        experience = escolt.Experience / escolt.challengers.Count();
-                        honor = escolt.Honor / escolt.challengers.Count();
-                        uridium = escolt.Uridium / escolt.challengers.Count();
-
-                        foreach (var PlayerInstance in escolt.challengers)
-                        {
-                            PlayerInstance.ChangeData(DataType.CREDITS, credits);
-                            PlayerInstance.ChangeData(DataType.EXPERIENCE, experience);
-                            PlayerInstance.ChangeData(DataType.HONOR, honor, changeType);
-                            PlayerInstance.ChangeData(DataType.URIDIUM, uridium, changeType);
-                        }
+                        customDistributionApplied = DistributeRewardsByDamage(escortNpc.DamageContributors, escortNpc.Credits, escortNpc.Experience, escortNpc.Honor, escortNpc.Uridium, changeType);
+                        if (!customDistributionApplied && escortNpc.challengers != null)
+                            customDistributionApplied = DistributeRewardsEvenly(escortNpc.challengers, escortNpc.Credits, escortNpc.Experience, escortNpc.Honor, escortNpc.Uridium, changeType);
                     }
-                    else if (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0))
+
+                    if (!customDistributionApplied && (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0)))
                     {
                         destroyerPlayer.ChangeData(DataType.CREDITS, credits);
                         destroyerPlayer.ChangeData(DataType.EXPERIENCE, experience);
                         destroyerPlayer.ChangeData(DataType.HONOR, honor, changeType);
                         destroyerPlayer.ChangeData(DataType.URIDIUM, uridium, changeType);
+
+                        if (changeType == ChangeType.INCREASE)
+                            EventManager.InvasionGate?.AddHonorContribution(destroyerPlayer, Spacemap, honor);
                     }
-                    else if (this is Npc && destroyerPlayer.Group != null)
+                    else if (!customDistributionApplied && this is Npc && destroyerPlayer.Group != null)
                     {
                         credits = credits / groupMembers.Count();
                         experience = experience / groupMembers.Count();
@@ -413,6 +471,9 @@ namespace Ow.Game.Objects
                             member.ChangeData(DataType.EXPERIENCE, experience);
                             member.ChangeData(DataType.HONOR, honor, changeType);
                             member.ChangeData(DataType.URIDIUM, uridium, changeType);
+
+                            if (changeType == ChangeType.INCREASE)
+                                EventManager.InvasionGate?.AddHonorContribution(member, Spacemap, honor);
                         }
                     }
                 }
