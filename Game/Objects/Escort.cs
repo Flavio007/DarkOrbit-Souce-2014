@@ -36,8 +36,8 @@ namespace Ow.Game.Objects
             NpcAI.AIOption = NpcAIOption.ESCORT;
             NpcAI.VIP = VIP;
             Owner = VIP;
-            Ship.Respawnable = false;
-            Ship.Aggressive = true;
+            Respawnable = false;
+            Aggressive = true;
 
             Damage = Convert.ToInt32(ship.Damage * multiplier);
             MaxHitPoints = Convert.ToInt32(ship.BaseHitpoints * multiplier);

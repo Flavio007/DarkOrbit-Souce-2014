@@ -69,7 +69,7 @@ namespace Ow.Game.Objects.AI
                                 }
                                 else if(Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
                                 {
-                                    if (Npc.Ship.Aggressive && !player.Storage.IsInSafeZone)
+                                    if (Npc.Aggressive && !player.Storage.IsInSafeZone)
                                         Npc.Attacking = true;
 
                                     Npc.Selected = player;
@@ -137,7 +137,7 @@ namespace Ow.Game.Objects.AI
                                 else
                                 {
                                     Npc.Selected = player;
-                                    if (Npc.Ship.Aggressive)
+                                    if (Npc.Aggressive)
                                         Npc.Attacking = true;
                                     break;
                                 }
@@ -161,7 +161,7 @@ namespace Ow.Game.Objects.AI
                                 else
                                 {
                                     Npc.Selected = player;
-                                    if (Npc.Ship.Aggressive)
+                                    if (Npc.Aggressive)
                                         Npc.Attacking = true;
                                     break;
                                 }

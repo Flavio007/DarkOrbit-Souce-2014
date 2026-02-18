@@ -26,10 +26,10 @@ namespace Ow.Game.Objects
 
             ShieldAbsorption = 0.5;
 
-            Ship.Respawnable = false;
+            Respawnable = false;
             Suffix = suffix;
             AllMapRange = true;
-            Ship.Aggressive = true;
+            Aggressive = true;
             KeyNpc = Key;
 
             Damage = Convert.ToInt32(ship.Damage * multiplier);

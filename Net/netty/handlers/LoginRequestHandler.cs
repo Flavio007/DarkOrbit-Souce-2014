@@ -136,6 +136,9 @@ namespace Ow.Net.netty.handlers
                     player.SendPacket($"0|n|ssi|{spaceball.Mmo}|{spaceball.Eic}|{spaceball.Vru}");
                 else
                     player.SendPacket($"0|n|ssi|0|0|0");
+
+                if (EventManager.InvasionGate.Started)
+                    EventManager.InvasionGate.SendWindowState(player);
                 /*
                 var priceList = new List<JumpCPUPriceMappingModule>();
                 var price = new List<int>();

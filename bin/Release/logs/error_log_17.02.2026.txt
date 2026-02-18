@@ -1,0 +1,11 @@
+[17.02.2026 21: 20:18] - [QueryManager.cs] GetPlayer(6) exception: Newtonsoft.Json.JsonSerializationException: Unexpected end when deserializing object. Path 'windows', line 1, position 1832.
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.ThrowUnexpectedEndException(JsonReader reader, JsonContract contract, Object currentObject, String message)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.PopulateObject(Object newObject, JsonReader reader, JsonObjectContract contract, JsonProperty member, String id)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   em Newtonsoft.Json.JsonSerializer.DeserializeInternal(JsonReader reader, Type objectType)
+   em Newtonsoft.Json.JsonConvert.DeserializeObject(String value, Type type, JsonSerializerSettings settings)
+   em Newtonsoft.Json.JsonConvert.DeserializeObject[T](String value, JsonSerializerSettings settings)
+   em Newtonsoft.Json.JsonConvert.DeserializeObject[T](String value)
+   em Ow.Managers.QueryManager.GetPlayer(Int32 playerId) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Managers\QueryManager.cs:linha 224

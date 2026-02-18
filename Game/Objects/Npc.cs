@@ -18,6 +18,8 @@ namespace Ow.Game.Objects
     {
         public NpcAI NpcAI { get; set; }
         public bool Attacking = false;
+        public bool Aggressive = false;
+        public bool Respawnable = true;
         //public bool Minion = false;
         public int MotherShipId = 0;
         public int minioncount = 0;
@@ -34,6 +36,8 @@ namespace Ow.Game.Objects
             CurrentHitPoints = MaxHitPoints;
             MaxShieldPoints = ship.BaseShieldPoints;
             CurrentShieldPoints = MaxShieldPoints;
+            Aggressive = ship.Aggressive;
+            Respawnable = ship.Respawnable;
 
             NpcAI = new NpcAI(this);
             NpcAI.RespawnX = Position.X;

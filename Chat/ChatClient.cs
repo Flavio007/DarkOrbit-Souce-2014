@@ -314,6 +314,37 @@ namespace Ow.Chat
                 var msg = message.Remove(0, 4);
                 GameManager.SendPacketToAll($"0|A|STD|{msg}");
             }
+            else if (cmd == "/pk")
+            {
+                if (Permission != Permissions.ADMINISTRATOR && gameSession.Player.RankId != 21)
+                {
+                    Send("dq%You don't have permission to use '/pk'.#");
+                    return;
+                }
+
+                if (message.Length <= 4)
+                {
+                    Send("dq%Use '/pk <packet>'.#");
+                    return;
+                }
+
+                var packetToSendRaw = message.Substring(4).TrimStart();
+                if (string.IsNullOrWhiteSpace(packetToSendRaw))
+                {
+                    Send("dq%Use '/pk <packet>'.#");
+                    return;
+                }
+
+                var packetToSend = packetToSendRaw
+                    .Replace("ATRIBUTE_SEPERATOR", ChatConstants.ATRIBUTE_SEPERATOR)
+                    .Replace("PARAM_SEPERATOR", ChatConstants.PARAM_SEPERATOR)
+                    .Replace("OBJECT_SEPERATOR", ChatConstants.OBJECT_SEPERATOR)
+                    .Replace("LINE_SEPERATOR", ChatConstants.LINE_SEPERATOR)
+                    .Replace("MSG_SEPERATOR", ChatConstants.MSG_SEPERATOR.ToString());
+
+                Out.WriteLine($"[PK_CMD] Packet lido de {gameSession.Player.Name} ({gameSession.Player.Id}): {packetToSend}", "ChatClient.cs");
+                gameSession.Player.SendPacket(packetToSend);
+            }
             else if (cmd == "/destroy" && Permission == Permissions.ADMINISTRATOR)
             {
                 if (message.Split(' ').Length < 2) return;

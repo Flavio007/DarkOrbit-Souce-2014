@@ -444,7 +444,7 @@ namespace Ow.Game.Objects
             if (this is Npc npc)
             {
                 new CargoBox(Position, Spacemap, false, false);
-                if (npc.Ship.Respawnable)
+                if (npc.Respawnable)
                     npc.Respawn();
             }
 

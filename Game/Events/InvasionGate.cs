@@ -28,6 +28,10 @@ namespace Ow.Game.Events
     class InvasionGate
     {
         public bool Started = false;
+        public int MmoScore = 0;
+        public int EicScore = 0;
+        public int VruScore = 0;
+        public int CurrentWave = 1;
         public List<Waves> waves = new List<Waves>();
         public static Spacemap SpacemapMMO1 = GameManager.GetSpacemap(61);
         public static Spacemap SpacemapEIC1 = GameManager.GetSpacemap(62);
@@ -44,18 +48,57 @@ namespace Ow.Game.Events
         public List<Portal> Portals = new List<Portal>();
         public List<int> PointsCounter = new List<int>();
         public List<int> WavesCounter = new List<int>();
+
+        private void BroadcastInvasionInit(int mmoScore, int eicScore, int vruScore, int wave)
+        {
+            MmoScore = mmoScore;
+            EicScore = eicScore;
+            VruScore = vruScore;
+            CurrentWave = wave;
+            GameManager.SendPacketToAll($"0|n|{Ow.Net.netty.ServerCommands.INIT_INVASION_SCOREBOARD}|{mmoScore}|{eicScore}|{vruScore}|{wave}");
+        }
+
+        private void BroadcastInvasionScore(int factionId, int score)
+        {
+            if (factionId == 1) MmoScore = score;
+            else if (factionId == 2) EicScore = score;
+            else if (factionId == 3) VruScore = score;
+            GameManager.SendPacketToAll($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|{factionId}|{score}");
+        }
+
+        private void BroadcastInvasionWave(int wave)
+        {
+            CurrentWave = wave;
+            GameManager.SendPacketToAll($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_WAVE}|{wave}");
+        }
+
+        public void SendWindowState(Player player)
+        {
+            if (player == null) return;
+
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.INIT_INVASION_SCOREBOARD}|{MmoScore}|{EicScore}|{VruScore}|{CurrentWave}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|1|{MmoScore}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|2|{EicScore}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|3|{VruScore}");
+            player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_WAVE}|{CurrentWave}");
+        }
+
         public void Startup()
         {
             if (Started) return;
             Started = true;
 
+            BroadcastInvasionInit(0, 0, 0, 1);
+            BroadcastInvasionScore(1, 0);
+            BroadcastInvasionScore(2, 0);
+            BroadcastInvasionScore(3, 0);
+            BroadcastInvasionWave(1);
+
             foreach (var sesion in GameManager.GameSessions.Values)
             {
-                GameManager.SendPacketToAll($"0|n|isi"); // Initialize ig window
-                GameManager.SendPacketToAll($"0|n|isc|1|1|1"); // Update the Rankings
-                GameManager.SendPacketToAll($"0|n|isw|1"); // Current WAVE
                 var player = sesion.Player;
                 player.SettingsManager.SendMenuBarsCommand();
+                SendWindowState(player);
             }
 
 
