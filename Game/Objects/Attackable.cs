@@ -311,6 +311,7 @@ namespace Ow.Game.Objects
                 player.DisableAttack(player.Settings.InGameSettings.selectedLaser);
                 player.CurrentInRangePortalId = -1;
                 player.Storage.InRangeAssets.Clear();
+                EventManager.GalaxyGate?.HandlePlayerDestroyed(player);
                 player.KillScreen(destroyer, destructionType);
                 /*
                 if (EventManager.Scoremageddon.Active && destroyer is Player) 
@@ -427,6 +428,12 @@ namespace Ow.Game.Objects
                 {
                     if (this is Npc)
                         destroyerPlayer.DroneManager?.AddNpcKillExperience(100);
+                    /*
+                    if (this is Npc killedNpc && killedNpc.Ship.Id == 84)
+                    {
+                        destroyerPlayer.Achievements?.Set(2, true, 1, true);
+                        destroyerPlayer.AddVisualModifier(VisualModifierCommand.RED_GLOW, 0, "", 0, true);
+                    }*/
 
                     var groupMembers = destroyerPlayer.Group?.Members.Values.Where(x => x.AttackingOrUnderAttack());
                     var customDistributionApplied = false;
@@ -505,6 +512,8 @@ namespace Ow.Game.Objects
             if (this is Npc npc)
             {
                 new CargoBox(Position, Spacemap, false, false);
+                if (npc is InstanceNpc instanceNpc)
+                    EventManager.GalaxyGate?.HandleNpcDestroyed(instanceNpc);
                 if (npc.Respawnable)
                     npc.Respawn();
             }

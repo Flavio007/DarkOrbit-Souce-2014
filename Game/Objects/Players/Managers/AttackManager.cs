@@ -156,16 +156,6 @@ namespace Ow.Game.Objects.Players.Managers
                     if (Player.Storage.AutoRocket)
                         RocketAttack();
 
-                    if (Player.Storage.AutoRocketLauncher && RocketLauncher.CooldownTime < DateTime.Now)
-                        if (RocketLauncher.CurrentLoad != RocketLauncher.MaxLoad)
-                            RocketLauncher.Reload();
-                        else 
-                        {
-                            LaunchRocketLauncher();
-                            RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
-                        }
-                    RocketLauncher.Reload();
-
                     UpdateAttacker(target, Player);
 
                     if (Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.RSB_75)
@@ -313,28 +303,40 @@ namespace Ow.Game.Objects.Players.Managers
             var enemy = Player.Selected;
             if (enemy == null) return;
             if (!Player.TargetDefinition(enemy, false)) return;
+            if (RocketLauncher.CooldownTime > DateTime.Now) return;
+            if (RocketLauncher.CurrentLoad <= 0) return;
 
-            Player.SendPacket("0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + RocketLauncher.CurrentLoad + "|" + GetSelectedLauncherId());
-            Player.SendPacketToInRangePlayers("0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + RocketLauncher.CurrentLoad + "|" + GetSelectedLauncherId());
-
-            Player.SendCooldown(AmmunitionManager.ROCKET_LAUNCHER, TimeManager.HELLSTROM);
-            Player.SubAmmo(Player.Settings.InGameSettings.selectedRocketLauncher, RocketLauncher.CurrentLoad);
-
-            Player.SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
-            RocketLauncher.LastReloadTime = DateTime.Now;
+            var loadedRockets = RocketLauncher.CurrentLoad;
+            var availableAmmo = Player.GetAmmoCount(Player.Settings.InGameSettings.selectedRocketLauncher);
+            if (availableAmmo <= 0) return;
+            if (loadedRockets > availableAmmo)
+            {
+                loadedRockets = availableAmmo;
+                RocketLauncher.CurrentLoad = loadedRockets;
+                RocketLauncher.SendStatus();
+                Player.SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
+            }
 
             var damage = 0;
             DamageType damageType = GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM ? DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM : DamageType.ROCKET;
 
-            for (var i = 0; i < RocketLauncher.CurrentLoad; i++)
+            for (var i = 0; i < loadedRockets; i++)
             {
                 damage += RandomizeDamage(GetRocketLauncherRocketDamage(), Player.RocketMissProbability);
             }
 
-            RocketLauncher.CurrentLoad = 0;
-
             if (enemy.Invincible || (enemy is Satellite satellite && satellite.BattleStation.Invincible) || (enemy is Player && !(enemy as Player).Attackable()))
                 damage = 0;
+
+            var rocketLauncherPacket = "0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + loadedRockets + "|" + GetSelectedLauncherId() + (damage == 0 ? "|M" : "");
+            Player.SendPacket(rocketLauncherPacket);
+            Player.SendPacketToInRangePlayers(rocketLauncherPacket);
+
+            Player.SendCooldown(AmmunitionManager.ROCKET_LAUNCHER, TimeManager.HELLSTROM);
+            RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
+            Player.SubAmmo(Player.Settings.InGameSettings.selectedRocketLauncher, loadedRockets);
+
+            RocketLauncher.ResetLoadAfterFire();
 
             await Task.Delay(1000);
 
@@ -345,8 +347,10 @@ namespace Ow.Game.Objects.Players.Managers
                 else if (GetSelectedLauncherId() != 14)
                     Damage(Player, enemy, damageType, damage, 0);
                 else
+                {
                     Damage(Player, enemy, damageType, damage, 0);
                     Absorbation(Player, enemy, damageType, damage);
+                }
             }
 
             UpdateAttacker(enemy, Player);

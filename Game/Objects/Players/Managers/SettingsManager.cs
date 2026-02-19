@@ -378,8 +378,10 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.AUTO_HELLSTROM_CPU))
             {
-                Player.Storage.AutoRocketLauncher = true;
-                Player.AttackManager.RocketLauncher.ReloadingActive = true;
+                // Temporary behavior: launcher manual only.
+                Player.Settings.InGameSettings.selectedCpus.Remove(CpuManager.AUTO_HELLSTROM_CPU);
+                Player.Storage.AutoRocketLauncher = false;
+                Player.AttackManager.RocketLauncher.ReloadingActive = false;
             }
 
             if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.CLK_XL))
@@ -1929,13 +1931,14 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 if (pItemId == CpuManager.ROCKET_LAUNCHER && Player.AttackManager.RocketLauncher.CooldownTime < DateTime.Now)
                 {
-                    if (Player.AttackManager.RocketLauncher.CurrentLoad >= 1) {
+                    if (Player.AttackManager.RocketLauncher.CurrentLoad >= 1)
+                    {
                         Player.AttackManager.LaunchRocketLauncher();
-                        Player.AttackManager.RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
-                        Player.AttackManager.RocketLauncher.CurrentLoad = 0;
                     }
-                else
-                    Player.AttackManager.RocketLauncher.ReloadingActive = Player.Storage.AutoRocketLauncher || Player.AttackManager.RocketLauncher.CurrentLoad == 0 ? true : false;
+                    else
+                    {
+                        Player.AttackManager.RocketLauncher.ReloadingActive = true;
+                    }
                 }
                 else
                 {
@@ -2088,9 +2091,7 @@ namespace Ow.Game.Objects.Players.Managers
                     SendNewItemStatus(pSelectedRocketLauncherItem);
 
                     Player.AttackManager.RocketLauncher.ChangeLoad(Player.Settings.InGameSettings.selectedRocketLauncher);
-
-                    if (Player.Storage.AutoRocketLauncher)
-                        Player.AttackManager.RocketLauncher.ReloadingActive = true;
+                    Player.AttackManager.RocketLauncher.ReloadingActive = false;
                 }
             }
         }
@@ -2120,6 +2121,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             ClientUITooltipsCommand itemBarStatusTootip = new ClientUITooltipsCommand(GetItemBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled, doubleClickToFire));
             ClientUITooltipsCommand slotBarStatusTooltip = new ClientUITooltipsCommand(GetSlotBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled));
+            var maxLoad = Player.AttackManager.RocketLauncher.MaxLoad > 0 ? Player.AttackManager.RocketLauncher.MaxLoad : 3;
 
             var counterColor = Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.HSTRM_01 ? ClientUISlotBarCategoryItemStatusModule.YELLOW :
                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.UBR_100 ? ClientUISlotBarCategoryItemStatusModule.RED :
@@ -2129,7 +2131,7 @@ namespace Ow.Game.Objects.Players.Managers
                                                                counterColor, pItemId,
                                                                count, false, true,
                                                                slotBarStatusTooltip, buyEnable ? true : false, RocketLauncherCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocketLauncher.Equals(pItemId) : false,
-                                                               5).writeCommand();
+                                                               maxLoad).writeCommand();
         }
     }
 }

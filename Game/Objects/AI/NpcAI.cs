@@ -1,4 +1,5 @@
-﻿using Ow.Game.Movements;
+using Ow.Game.Movements;
+using Ow.Managers;
 using Ow.Utils;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,7 @@ namespace Ow.Game.Objects.AI
         public void TickAI()
         {
             var now = DateTime.Now;
+            var ignoreDistanceForGalaxyGate = IsGalaxyGateNpc();
             if (nextDecisionTime == DateTime.MinValue)
             {
                 decisionIntervalMs = Randoms.random.Next(850, 1350);
@@ -49,6 +51,15 @@ namespace Ow.Game.Objects.AI
                     Npc.Selected = null;
                     Npc.Attacking = false;
                 }
+
+            if (TryFleeToGalaxyGateCorner())
+            {
+                lastMovement = now;
+                decisionIntervalMs = Randoms.random.Next(850, 1350);
+                nextDecisionTime = now.AddMilliseconds(decisionIntervalMs);
+                return;
+            }
+
             if (lastMovement.AddSeconds(1) < now)
             {
                 switch (AIOption)
@@ -60,14 +71,14 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
+                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForGalaxyGate && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
                                     if (Npc.Ship.Id != 80 && Npc.Ship.Id != 481 && Npc.Ship.Id != 881)
                                         AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
                                 }
-                                else if(Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
+                                else if (ignoreDistanceForGalaxyGate || Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
                                 {
                                     if (Npc.Aggressive && !player.Storage.IsInSafeZone)
                                         Npc.Attacking = true;
@@ -89,7 +100,7 @@ namespace Ow.Game.Objects.AI
                         }
                         break;
                     case NpcAIOption.FLY_TO_ENEMY:
-                        if (Npc.Selected != null && Npc.Selected is Player && !(Npc.Selected as Player).Storage.IsInDemilitarizedZone && Npc.Position.DistanceTo((Npc.Selected as Player).Position) < Npc.RenderRange)
+                        if (Npc.Selected != null && Npc.Selected is Player && !(Npc.Selected as Player).Storage.IsInDemilitarizedZone && (ignoreDistanceForGalaxyGate || Npc.Position.DistanceTo((Npc.Selected as Player).Position) < Npc.RenderRange))
                         {
                             var player = Npc.Selected as Player;
 
@@ -129,7 +140,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForGalaxyGate && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -153,7 +164,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || Npc.Position.DistanceTo(player.Position) > Npc.RenderRange)
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForGalaxyGate && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -192,5 +203,39 @@ namespace Ow.Game.Objects.AI
         {
             return Math.PI * angle / 180.0;
         }
+
+        private bool TryFleeToGalaxyGateCorner()
+        {
+            if (!IsGalaxyGateNpc() || Npc.Spacemap == null)
+                return false;
+
+            if (Npc.MaxHitPoints <= 0)
+                return false;
+
+            var hpRatio = (double)Npc.CurrentHitPoints / Npc.MaxHitPoints;
+            if (hpRatio > 0.20)
+                return false;
+
+            var upperLeft = new Position(0, 0);
+            var lowerRight = new Position(Npc.Spacemap.Limits[1].X, Npc.Spacemap.Limits[1].Y);
+            var distanceToUpperLeft = Npc.Position.DistanceTo(upperLeft);
+            var distanceToLowerRight = Npc.Position.DistanceTo(lowerRight);
+            var fleeTarget = distanceToUpperLeft <= distanceToLowerRight ? upperLeft : lowerRight;
+
+            Npc.Attacking = false;
+            Npc.Selected = null;
+            AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
+
+            if (!Npc.Moving || Npc.Destination == null || Npc.Destination.DistanceTo(fleeTarget) > 250)
+                Movement.Move(Npc, fleeTarget);
+
+            return true;
+        }
+
+        private bool IsGalaxyGateNpc()
+        {
+            return Npc?.Spacemap != null && EventManager.GalaxyGate != null && EventManager.GalaxyGate.IsGalaxyGateMap(Npc.Spacemap.Id);
+        }
     }
 }
+

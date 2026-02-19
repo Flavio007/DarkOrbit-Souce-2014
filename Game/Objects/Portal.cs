@@ -48,6 +48,16 @@ namespace Ow.Game.Objects
             Random = random;
         }
 
+        public virtual bool IsVisibleTo(Player player)
+        {
+            return player != null;
+        }
+
+        public virtual bool CanInteract(Player player)
+        {
+            return IsVisibleTo(player);
+        }
+
 
         public override async void Click(GameSession gameSession)
         {
@@ -55,6 +65,7 @@ namespace Ow.Game.Objects
             {
                 var player = gameSession.Player;
 
+                if (!CanInteract(player)) return;
                 if (!Working || GameManager.GetSpacemap(TargetSpaceMapId) == null || TargetPosition == null) return;
                 if (player.Storage.Jumping) return;
 

@@ -279,6 +279,12 @@ namespace Ow.Game
 
             foreach (var entity in Activatables.Values)
             {
+                if (entity is Portal hiddenPortal && !hiddenPortal.IsVisibleTo(Player))
+                {
+                    Player.UpdateActivatable(entity, false);
+                    continue;
+                }
+
                 bool inRange = Player.Position.DistanceTo(entity.Position) <= (entity is HomeStation ? HomeStation.SECURE_ZONE_RANGE : 700);
                 short status = inRange ? MapAssetActionAvailableCommand.ON : MapAssetActionAvailableCommand.OFF;
 
@@ -410,6 +416,9 @@ namespace Ow.Game
         {
             foreach (var activatable in Activatables.Values)
             {
+                if (activatable is Portal portal && !portal.IsVisibleTo(player))
+                    continue;
+
                 short relationType = player.Clan.Id != 0 && activatable.Clan.Id != 0 ? activatable.Clan.GetRelation(player.Clan) : (short)0;
                 player.SendCommand(activatable.GetAssetCreateCommand(relationType));
             }

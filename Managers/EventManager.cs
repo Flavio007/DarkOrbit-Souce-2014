@@ -1,4 +1,5 @@
-﻿using Ow.Game.Events;
+using Ow.Game.Events;
+using Ow.Game.GalaxyGates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace Ow.Managers
         public static UltimateBattleArena UltimateBattleArena { get; set; }
         public static Scoremageddon Scoremageddon { get; set; }
         public static InvasionGate InvasionGate { get; set; }
+        public static GalaxyGateManager GalaxyGate { get; set; }
 
         public static void InitiateEvents()
         {
@@ -22,6 +24,8 @@ namespace Ow.Managers
             UltimateBattleArena = new UltimateBattleArena();
             Scoremageddon = new Scoremageddon();
             InvasionGate = new InvasionGate();
+            GalaxyGate = new GalaxyGateManager();
+            GalaxyGate.Initialize();
         }
     }
 }

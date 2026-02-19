@@ -107,8 +107,11 @@ namespace Ow.Game.Objects.Players.Managers
 
         public void EnableRllbX()
         {
-            AddSelectedCpu(AUTO_HELLSTROM_CPU);
-            Player.Storage.AutoRocketLauncher = true;
+            // Temporary behavior: keep rocket launcher manual only.
+            RemoveSelectedCpu(AUTO_HELLSTROM_CPU);
+            Player.Storage.AutoRocketLauncher = false;
+            Player.AttackManager.RocketLauncher.ReloadingActive = false;
+            Player.SendPacket("0|A|STM|RLLB-X temporarily disabled: rocket launcher is manual only.");
             Player.SettingsManager.SendNewItemStatus(AUTO_HELLSTROM_CPU);
         }
 
@@ -116,6 +119,7 @@ namespace Ow.Game.Objects.Players.Managers
         {
             RemoveSelectedCpu(AUTO_HELLSTROM_CPU);
             Player.Storage.AutoRocketLauncher = false;
+            Player.AttackManager.RocketLauncher.ReloadingActive = false;
             Player.SettingsManager.SendNewItemStatus(AUTO_HELLSTROM_CPU);
         }
 

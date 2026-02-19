@@ -495,6 +495,7 @@ namespace Ow.Managers
             var shieldabsorption = new int[] { 0, 0 };
             var leonovlaser = new int[] { 0, 0 };
             var leonovshield = new int[] { 0, 0 };
+            var rocketLauncherLoad = new int[] { 0, 0 };
 
             player.equipedlasercount = 0;
             player.fulllf3 = true;
@@ -541,10 +542,10 @@ namespace Ow.Managers
                         player.equipedlasercount++;
                         break;
                     case LoadoutItemKind.Hst1:
-                        player.AttackManager.RocketLauncher.MaxLoad += 3;
+                        rocketLauncherLoad[configIndex] += 3;
                         break;
                     case LoadoutItemKind.Hst2:
-                        player.AttackManager.RocketLauncher.MaxLoad += 5;
+                        rocketLauncherLoad[configIndex] += 5;
                         break;
                     case LoadoutItemKind.Bo2:
                         shield[configIndex] += bo2Shield;
@@ -613,6 +614,7 @@ namespace Ow.Managers
             speed[1] += Maths.GetPercentage(speed[1], 20);
             player.CurrentShieldAbsConfig1 = shieldabsorption[0] / (equipedshieldcount[0] == 0 ? 1 : equipedshieldcount[0]);
             player.CurrentShieldAbsConfig2 = shieldabsorption[1] / (equipedshieldcount[1] == 0 ? 1 : equipedshieldcount[1]);
+            player.AttackManager.RocketLauncher.MaxLoad = rocketLauncherLoad[player.CurrentConfig == 2 ? 1 : 0];
 
             var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
             var itemsBase = new ItemsBase(0);
@@ -620,6 +622,12 @@ namespace Ow.Managers
 
             if (player.AttackManager.RocketLauncher.CurrentLoad > player.AttackManager.RocketLauncher.MaxLoad)
                 player.AttackManager.RocketLauncher.CurrentLoad = player.AttackManager.RocketLauncher.MaxLoad;
+
+            if (player.GameSession != null)
+            {
+                player.SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
+                player.AttackManager.RocketLauncher.SendStatus();
+            }
 
             return true;
         }

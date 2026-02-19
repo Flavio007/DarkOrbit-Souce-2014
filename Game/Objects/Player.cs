@@ -646,7 +646,18 @@ namespace Ow.Game.Objects
                 if (!pInRange)
                 {
                     if (pEntity is Portal portal && portal.Working)
-                        CurrentInRangePortalId = -1;
+                    {
+                        if (CurrentInRangePortalId == pEntity.Id)
+                        {
+                            var nearest = Storage.InRangeAssets.Values
+                                .OfType<Portal>()
+                                .Where(x => x.Working && x.Id != pEntity.Id)
+                                .OrderBy(x => Position.DistanceTo(x.Position))
+                                .FirstOrDefault();
+
+                            CurrentInRangePortalId = nearest?.Id ?? -1;
+                        }
+                    }
                     Storage.InRangeAssets.TryRemove(pEntity.Id, out pEntity);
                     return true;
                 }
@@ -656,7 +667,18 @@ namespace Ow.Game.Objects
                 if (pInRange)
                 {
                     if (pEntity is Portal portal && portal.Working)
-                        CurrentInRangePortalId = pEntity.Id;
+                    {
+                        if (CurrentInRangePortalId <= 0)
+                        {
+                            CurrentInRangePortalId = pEntity.Id;
+                        }
+                        else
+                        {
+                            var currentPortal = Spacemap.GetActivatableMapEntity(CurrentInRangePortalId) as Portal;
+                            if (currentPortal == null || !currentPortal.Working || Position.DistanceTo(portal.Position) < Position.DistanceTo(currentPortal.Position))
+                                CurrentInRangePortalId = pEntity.Id;
+                        }
+                    }
                     Storage.InRangeAssets.TryAdd(pEntity.Id, pEntity);
                     return true;
                 }
@@ -748,7 +770,7 @@ namespace Ow.Game.Objects
                 MaxNanoHull,
                 Position.X,
                 Position.Y,
-                Spacemap.Id,
+                EventManager.GalaxyGate != null ? EventManager.GalaxyGate.GetClientMapId(Spacemap.Id) : Spacemap.Id,
                 FactionId,
                 Clan.Id,
                 3,

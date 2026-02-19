@@ -19,10 +19,15 @@ namespace Ow.Net.netty.handlers
             read.readCommand(bytes);
 
             var player = gameSession.Player;
+            if (player == null || player.Spacemap == null)
+                return;
+
             var activatable = player.Spacemap.GetActivatableMapEntity(read.AssetId);
 
-            if (activatable != null && !(activatable is Portal))
-                activatable.Click(gameSession);
+            if (activatable == null)
+                return;
+
+            activatable.Click(gameSession);
         }
     }
 }

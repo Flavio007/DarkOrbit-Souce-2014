@@ -1,0 +1,4 @@
+[19.02.2026 15: 01:08] - [SocketServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em SocketServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\SocketServer.cs:linha 43

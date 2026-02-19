@@ -116,6 +116,7 @@ namespace Ow.Game.Objects
         public DateTime lastChangeShipTime = new DateTime();
 
         public bool GroupCombatSituation = false;
+        public int ActiveGalaxyGateInstanceId = 0;
 
         public Storage(Character character) { Character = character; }
 
