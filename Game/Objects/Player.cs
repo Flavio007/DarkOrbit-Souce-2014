@@ -706,6 +706,14 @@ namespace Ow.Game.Objects
         {
             CurrentConfig = Convert.ToInt32(pCurrentConfiguration);
             Settings.InGameSettings.currentConfig = CurrentConfig;
+
+            QueryManager.SetEquipment(this);
+            AttackManager.RocketLauncher.CurrentLoad = 0;
+            AttackManager.RocketLauncher.ReloadingActive = false;
+            AttackManager.RocketLauncher.LastReloadTime = DateTime.Now;
+            SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
+            AttackManager.RocketLauncher.SendStatus();
+
             DroneManager.UpdateDrones();
             UpdateStatus();
         }

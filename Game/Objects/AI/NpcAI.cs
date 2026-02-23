@@ -222,8 +222,6 @@ namespace Ow.Game.Objects.AI
             var distanceToLowerRight = Npc.Position.DistanceTo(lowerRight);
             var fleeTarget = distanceToUpperLeft <= distanceToLowerRight ? upperLeft : lowerRight;
 
-            Npc.Attacking = false;
-            Npc.Selected = null;
             AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
 
             if (!Npc.Moving || Npc.Destination == null || Npc.Destination.DistanceTo(fleeTarget) > 250)

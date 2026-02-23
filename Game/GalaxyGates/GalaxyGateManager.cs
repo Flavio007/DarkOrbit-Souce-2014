@@ -298,6 +298,9 @@ namespace Ow.Game.GalaxyGates
             if (!IsCurrentWaveCompleted(instance))
                 return;
 
+            var jumpTarget = ResolveDecisionPortalTargetPosition(instance, sourcePortalId) ?? GetGateCenterByFaction(instance.Template, instance.OwnerFactionId);
+            await JumpPlayer(player, instance.MapId, jumpTarget, sourcePortalId);
+
             RemoveDecisionPortals(instance);
             instance.CurrentWave++;
 
@@ -767,6 +770,15 @@ namespace Ow.Game.GalaxyGates
             foreach (var portal in instance.TemporaryPortals.ToList())
                 portal.Remove();
             instance.TemporaryPortals.Clear();
+        }
+
+        private Position ResolveDecisionPortalTargetPosition(GalaxyGateInstance instance, int portalId)
+        {
+            if (instance == null || portalId <= 0 || instance.TemporaryPortals == null)
+                return null;
+
+            var portal = instance.TemporaryPortals.FirstOrDefault(x => x != null && x.Id == portalId);
+            return portal?.TargetPosition;
         }
 
         private void ClearWaveNpcs(GalaxyGateInstance instance)
