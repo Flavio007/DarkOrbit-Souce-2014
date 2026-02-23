@@ -423,6 +423,11 @@ namespace Ow.Game.Objects
                 experience += Maths.GetPercentage(experience, destroyerPlayer.BoosterManager.GetPercentage(BoostedAttributeType.EP));
                 honor += Maths.GetPercentage(honor, destroyerPlayer.BoosterManager.GetPercentage(BoostedAttributeType.HONOUR));
                 honor += Maths.GetPercentage(honor, destroyerPlayer.GetSkillPercentage("Cruelty"));
+                if (this is Npc)
+                {
+                    experience += Maths.GetPercentage(experience, destroyerPlayer.GetSkillPercentage("Tactics"));
+                    credits += Maths.GetPercentage(credits, destroyerPlayer.GetSkillPercentage("Greed"));
+                }
 
                 if (reward)
                 {
@@ -444,15 +449,15 @@ namespace Ow.Game.Objects
                     }
                     else if (this is InstanceNpc instNpc)
                     {
-                        customDistributionApplied = DistributeRewardsByDamage(instNpc.DamageContributors, instNpc.Credits, instNpc.Experience, instNpc.Honor, instNpc.Uridium, changeType);
+                        customDistributionApplied = DistributeRewardsByDamage(instNpc.DamageContributors, credits, experience, honor, uridium, changeType);
                         if (!customDistributionApplied && instNpc.challengers != null)
-                            customDistributionApplied = DistributeRewardsEvenly(instNpc.challengers, instNpc.Credits, instNpc.Experience, instNpc.Honor, instNpc.Uridium, changeType);
+                            customDistributionApplied = DistributeRewardsEvenly(instNpc.challengers, credits, experience, honor, uridium, changeType);
                     }
                     else if (this is Escort escortNpc)
                     {
-                        customDistributionApplied = DistributeRewardsByDamage(escortNpc.DamageContributors, escortNpc.Credits, escortNpc.Experience, escortNpc.Honor, escortNpc.Uridium, changeType);
+                        customDistributionApplied = DistributeRewardsByDamage(escortNpc.DamageContributors, credits, experience, honor, uridium, changeType);
                         if (!customDistributionApplied && escortNpc.challengers != null)
-                            customDistributionApplied = DistributeRewardsEvenly(escortNpc.challengers, escortNpc.Credits, escortNpc.Experience, escortNpc.Honor, escortNpc.Uridium, changeType);
+                            customDistributionApplied = DistributeRewardsEvenly(escortNpc.challengers, credits, experience, honor, uridium, changeType);
                     }
 
                     if (!customDistributionApplied && (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0)))

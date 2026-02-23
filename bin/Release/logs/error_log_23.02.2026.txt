@@ -1,0 +1,8 @@
+[23.02.2026 14: 37:25] - [ChatClient.cs] Execute void exception: System.NullReferenceException: Referência de objeto não definida para uma instância de um objeto.
+   em Ow.Game.Objects.Player.get_Speed() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Player.cs:linha 287
+   em Ow.Game.Movements.Movement.Move(Character character, Position destination) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Movements\Movement.cs:linha 17
+   em Ow.Game.Objects.Character.SetPosition(Position targetPosition) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Character.cs:linha 127
+   em Ow.Game.Objects.FakePlayer..ctor(Int32 id, String name, Ship ship, Spacemap spacemap, Position position, Int32 factionId) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\FakePlayer.cs:linha 20
+   em Ow.Game.Objects.AI.AIShips.CreateStationaryFakePlayer(Ship ship, Spacemap map, Position nearPosition, Int32 factionId) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\AI\AIShips.cs:linha 19
+   em Ow.Chat.ChatClient.SendMessage(String content) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Chat\ChatClient.cs:linha 496
+   em Ow.Chat.ChatClient.Execute(String message) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Chat\ChatClient.cs:linha 143

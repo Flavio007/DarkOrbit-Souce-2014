@@ -447,9 +447,33 @@ class SocketServer
             else if (skill == "luck2")
                 player.SkillTree.luck2++;
             else if (skill == "bountyhunter1")
-                player.SkillTree.luck2++;
+                player.SkillTree.bountyhunter1++;
             else if (skill == "bountyhunter2")
-                player.SkillTree.luck2++;
+                player.SkillTree.bountyhunter2++;
+            else if (skill == "electroOptics")
+                player.SkillTree.electroOptics++;
+            else if (skill == "shieldMechanics")
+                player.SkillTree.shieldMechanics++;
+            else if (skill == "shiphull1")
+                player.SkillTree.shiphull1++;
+            else if (skill == "shiphull2")
+                player.SkillTree.shiphull2++;
+            else if (skill == "greed")
+                player.SkillTree.greed++;
+            else if (skill == "evasiveManeuvers1")
+                player.SkillTree.evasiveManeuvers1++;
+            else if (skill == "evasiveManeuvers2")
+                player.SkillTree.evasiveManeuvers2++;
+            else if (skill == "logistics")
+                player.SkillTree.logistics++;
+            else if (skill == "tactics")
+                player.SkillTree.tactics++;
+            else if (skill == "tractorBeam1")
+                player.SkillTree.tractorBeam1++;
+            else if (skill == "tractorBeam2")
+                player.SkillTree.tractorBeam2++;
+            else if (skill == "alienHunter")
+                player.SkillTree.alienHunter++;
         }
     }
 
@@ -468,6 +492,20 @@ class SocketServer
             player.SkillTree.explosives = 0;
             player.SkillTree.luck1 = 0;
             player.SkillTree.luck2 = 0;
+            player.SkillTree.bountyhunter1 = 0;
+            player.SkillTree.bountyhunter2 = 0;
+            player.SkillTree.electroOptics = 0;
+            player.SkillTree.shieldMechanics = 0;
+            player.SkillTree.shiphull1 = 0;
+            player.SkillTree.shiphull2 = 0;
+            player.SkillTree.greed = 0;
+            player.SkillTree.evasiveManeuvers1 = 0;
+            player.SkillTree.evasiveManeuvers2 = 0;
+            player.SkillTree.logistics = 0;
+            player.SkillTree.tactics = 0;
+            player.SkillTree.tractorBeam1 = 0;
+            player.SkillTree.tractorBeam2 = 0;
+            player.SkillTree.alienHunter = 0;
         }
     }
 

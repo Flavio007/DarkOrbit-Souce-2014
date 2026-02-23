@@ -30,6 +30,8 @@ namespace Ow.Game.Objects.Players.Managers
         public long honor = 0;
         public long experience = 0;
         public long jackpot = 0;
+        public long extraEnergy = 0;
+        public long repairCredits = 0;
     }
 
     public class SkillTreeBase
@@ -51,6 +53,65 @@ namespace Ow.Game.Objects.Players.Managers
         public int shieldMechanics = 0;
         public int shiphull1 = 0;
         public int shiphull2 = 0;
+        public int greed = 0;
+        public int evasiveManeuvers1 = 0;
+        public int evasiveManeuvers2 = 0;
+        public int logistics = 0;
+        public int tactics = 0;
+        public int tractorBeam1 = 0;
+        public int tractorBeam2 = 0;
+        public int alienHunter = 0;
+
+        public static readonly Dictionary<string, SkillTreeEntry> Skills = new Dictionary<string, SkillTreeEntry>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "explosives", new SkillTreeEntry("explosives", "Explosives", "Explosives", 1, "Increases the radius of mine explosions.", new[] { 4, 8, 12, 18, 25 }, new[] { "skill 1" }) },
+            { "tactics", new SkillTreeEntry("tactics", "Tactics", "Tactics", 1, "Increases experience gained from NPC kills.", new[] { 2, 4, 6, 8, 12 }, new[] { "skill 2" }) },
+            { "logistics", new SkillTreeEntry("logistics", "Logistics", "Logistics", 1, "Expands cargo capacity.", new[] { 4, 8, 12, 18, 25 }, new[] { "skill 4" }) },
+            { "detonation1", new SkillTreeEntry("detonation1", "Detonation I", "Detonation", 1, "Increases mine damage.", new[] { 7, 14 }, new[] { "skill 5a" }) },
+            { "detonation2", new SkillTreeEntry("detonation2", "Detonation II", "Detonation", 3, "Further increases mine damage.", new[] { 21, 28, 50 }, new[] { "skill 5b" }) },
+            { "rocketFusion", new SkillTreeEntry("rocketFusion", "Rocket Fusion", "Rocket Fusion", 2, "Increases rocket damage.", new[] { 2, 4, 6, 8, 15 }, new[] { "skill 6" }) },
+            { "shieldMechanics", new SkillTreeEntry("shieldMechanics", "Shield Mechanics", "Shield Mechanics", 3, "Increases shield absorption.", new[] { 2, 4 }, new[] { "skill 8" }) },
+            { "greed", new SkillTreeEntry("greed", "Greed", "Greed", 3, "Increases credits from NPC kills.", new[] { 4, 8, 12, 18, 25 }, new[] { "skill 9" }) },
+            { "alienHunter", new SkillTreeEntry("alienHunter", "Alien Hunter", "Alien Hunter", 2, "Increases laser damage vs aliens.", new[] { 2, 4, 6, 8, 12 }, new[] { "skill 11" }) },
+            { "engineering", new SkillTreeEntry("engineering", "Engineering", "Engineering", 1, "Increases repair bot speed.", new[] { 5, 10, 15, 20, 25 }, new[] { "skill 13" }) },
+            { "tractorBeam1", new SkillTreeEntry("tractorBeam1", "Tractor Beam I", "Tractor Beam I", 2, "Increases cargo from NPC drops.", new[] { 1, 2, 3, 4, 6 }, new[] { "skill 14" }) },
+            { "tractorBeam2", new SkillTreeEntry("tractorBeam2", "Tractor Beam II", "Tractor Beam II", 3, "Increases bonus box rewards.", new[] { 2, 6, 10, 15, 20 }, new[] { "skill 15" }) },
+            { "evasiveManeuvers1", new SkillTreeEntry("evasiveManeuvers1", "Evasive maneuvers I", "Evasive Maneuvers", 2, "Reduces hit chance.", new[] { 2, 4 }, new[] { "skill 16a" }) },
+            { "evasiveManeuvers2", new SkillTreeEntry("evasiveManeuvers2", "Evasive maneuvers II", "Evasive Maneuvers", 3, "Further reduces hit chance.", new[] { 6, 8, 12 }, new[] { "skill 16b" }) },
+            { "shieldEngineering", new SkillTreeEntry("shieldEngineering", "Shield Engineering", "Shield Engeneering", 1, "Increases shield strength.", new[] { 4, 8, 12, 18, 25 }, new[] { "skill 17", "Shield Engineering", "Shield Engeneering" }) },
+            { "shiphull1", new SkillTreeEntry("shiphull1", "Ship Hull I", "Ship Hull", 1, "Increases HP.", new[] { 5000, 10000 }, new[] { "skill 18a" }) },
+            { "shiphull2", new SkillTreeEntry("shiphull2", "Ship Hull II", "Ship Hull", 2, "Further increases HP.", new[] { 15000, 25000, 50000 }, new[] { "skill 18b" }) },
+            { "electroOptics", new SkillTreeEntry("electroOptics", "Electro-Optics", "Electro-optics", 3, "Increases laser accuracy.", new[] { 5, 10, 15, 20, 25 }, new[] { "skill 19", "Electro-optics", "Electro-Optics" }) },
+            { "heatseekingMissiles", new SkillTreeEntry("heatseekingMissiles", "Heat-seeking missiles", "Heat-seeking Missiles", 1, "Increases rocket hit probability.", new[] { 1, 2, 4, 6, 10 }, new[] { "skill 20", "Heat-seeking Missiles" }) },
+            { "cruelty1", new SkillTreeEntry("cruelty1", "Cruelty I", "Cruelty", 2, "Increases honor gain.", new[] { 4, 8 }, new[] { "skill 21a" }) },
+            { "cruelty2", new SkillTreeEntry("cruelty2", "Cruelty II", "Cruelty", 3, "Further increases honor.", new[] { 12, 18, 25 }, new[] { "skill 21b" }) },
+            { "bountyhunter1", new SkillTreeEntry("bountyhunter1", "Bounty Hunter I", "Bouty Hunter I", 2, "Increases PvP laser damage.", new[] { 2, 4 }, new[] { "skill 22a", "Bounty Hunter I", "Bouty Hunter I" }) },
+            { "bountyhunter2", new SkillTreeEntry("bountyhunter2", "Bounty Hunter II", "Bouty Hunter II", 3, "Further increases PvP damage.", new[] { 6, 8, 12 }, new[] { "skill 22b", "Bounty Hunter II", "Bouty Hunter II" }) },
+            { "luck1", new SkillTreeEntry("luck1", "Luck I", "Luck", 2, "Increases Uridium from bonus boxes.", new[] { 2, 4 }, new[] { "skill 23a" }) },
+            { "luck2", new SkillTreeEntry("luck2", "Luck II", "Luck", 3, "Further increases Uridium.", new[] { 6, 8, 12 }, new[] { "skill 23b" }) }
+        };
+    }
+
+    public class SkillTreeEntry
+    {
+        public string Key { get; private set; }
+        public string Name { get; private set; }
+        public string LegacyName { get; private set; }
+        public int Tier { get; private set; }
+        public string Description { get; private set; }
+        public int[] Levels { get; private set; }
+        public string[] Aliases { get; private set; }
+
+        public SkillTreeEntry(string key, string name, string legacyName, int tier, string description, int[] levels, string[] aliases)
+        {
+            Key = key;
+            Name = name;
+            LegacyName = legacyName;
+            Tier = tier;
+            Description = description;
+            Levels = levels;
+            Aliases = aliases;
+        }
     }
 
     public class ConfigsBase

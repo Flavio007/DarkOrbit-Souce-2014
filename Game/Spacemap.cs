@@ -157,9 +157,11 @@ namespace Ow.Game
                 new Portal(this, Position.SecretPortal, Position.SecretPortal, 1, -1, 0, false, true, true);
 
 
-            if (new int[] { 13, 14, 15 }.Contains(Id))
+            if (IsBonusBoxMap())
             {
-                for (int i = 1; i <= 125; i++)
+                var bonusBoxAmount = new[] { 13, 14, 15 }.Contains(Id) ? 125 : 50;
+
+                for (int i = 1; i <= bonusBoxAmount; i++)
                     new BonusBox(Position.Random(this, 0, 20800, 0, 12800), this, true);
                 //for (int i = 0; i <= 25; i++)
                 //    new GreenBooty(Position.Random(this, 0, 20800, 0, 12800), this, true);
@@ -181,6 +183,11 @@ namespace Ow.Game
                 POIs.TryAdd("uba_poi2", poi2);
                 POIs.TryAdd("uba_poi3", poi3);
             }
+        }
+
+        private bool IsBonusBoxMap()
+        {
+            return Id >= 1 && Id < 29 && Id != 16; // if it's lower than 4-5 and not 4-4
         }
 
         public void CharacterTicker()

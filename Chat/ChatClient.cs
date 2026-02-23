@@ -19,6 +19,7 @@ using static Ow.Game.GameSession;
 using System.Collections.Concurrent;
 using Ow.Managers.MySQLManager;
 using Ow.Game.Objects.Stations;
+using Ow.Game.Objects.AI;
 
 namespace Ow.Chat
 {
@@ -458,6 +459,45 @@ namespace Ow.Chat
 
                 var mod = message.Split(' ')[1];
                 gameSession.Player.Storage.GodMode = mod == "on" ? true : mod == "off" ? false : false;
+            }
+            else if (cmd == "/fake")
+            {
+                if (Permission != Permissions.ADMINISTRATOR)
+                {
+                    Send("dq%You don't have permission to use '/fake'.#");
+                    return;
+                }
+
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 3)
+                {
+                    Send("dq%Use '/fake <ShipId> <FactionId>'.#");
+                    return;
+                }
+
+                int shipId;
+                if (!int.TryParse(args[1], out shipId))
+                {
+                    Send("dq%Invalid ShipId.#");
+                    return;
+                }
+
+                int factionId;
+                if (!int.TryParse(args[2], out factionId) || factionId < 1 || factionId > 3)
+                {
+                    Send("dq%Invalid FactionId. Use 1, 2 or 3.#");
+                    return;
+                }
+
+                var ship = GameManager.GetShip(shipId);
+                if (ship == null)
+                {
+                    Send("dq%Ship not found.#");
+                    return;
+                }
+
+                var fake = AIShips.CreateStationaryFakePlayer(ship, gameSession.Player.Spacemap, gameSession.Player.Position, factionId);
+                Send($"dq%Fake ship created. Id={fake.Id}, Name={fake.Name}, Ship={shipId}, Faction={factionId}.#");
             }
             else if (cmd == "/test")
             {

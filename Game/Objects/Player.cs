@@ -333,6 +333,7 @@ namespace Ow.Game.Objects
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Hitpoints : Equipment.Configs.Config2Hitpoints;
                 value = (Ship.Id == Ship.LEONOV && FriendlyMap != true) ? value : value + 96000;
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.MAXHP));
+                value += GetSkillPercentage("Ship Hull");
 
 
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
@@ -454,24 +455,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? CurrentShieldAbsConfig1/100 : CurrentShieldAbsConfig2/100;
-                switch (SkillTree.shieldMechanics)
-                {
-                    case 1:
-                        value += 0.02;
-                    break;
-                    case 2:
-                        value += 0.04;
-                    break;
-                    case 3:
-                        value += 0.06;
-                    break;
-                    case 4:
-                        value += 0.08;
-                    break;
-                    case 5:
-                        value += 0.12;
-                    break;
-                }
+                value += GetSkillPercentage("Shield Mechanics") / 100.0;
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
                 {
                     case DroneManager.CRAB_FORMATION:
@@ -514,38 +498,14 @@ namespace Ow.Game.Objects
                 value += Maths.GetPercentage(value, 60); //seprom
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
 
-                if (Selected.FactionId != 0)
+                if (Selected != null && Selected.FactionId != 0)
                 {
-                    if ((SkillTree.bountyhunter1 > 0) && (SkillTree.bountyhunter2 < 1))
-                    {
-                        switch (SkillTree.bountyhunter1)
-                        {
-                            case 1:
-                                value += Maths.GetPercentage(value, 2);
-                                break;
-                            case 2:
-                                value += Maths.GetPercentage(value, 4);
-                                break;
-                        }
+                    value += Maths.GetPercentage(value, GetSkillPercentage("Bounty Hunter"));
+                }
 
-                    }
-
-                    else if ((SkillTree.bountyhunter2 > 0))
-                    {
-                        switch (SkillTree.bountyhunter2)
-                        {
-                            case 1:
-                                value += Maths.GetPercentage(value, 6);
-                                break;
-                            case 2:
-                                value += Maths.GetPercentage(value, 8);
-                                break;
-                            case 3:
-                                value += Maths.GetPercentage(value, 12);
-                                break;
-                        }
-
-                    }
+                if (Selected is Npc)
+                {
+                    value += Maths.GetPercentage(value, GetSkillPercentage("Alien Hunter"));
                 }
 
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
@@ -637,6 +597,22 @@ namespace Ow.Game.Objects
 
                 return value;
             }
+        }
+
+        public double LaserMissProbabilityAgainst(Attackable target)
+        {
+            var missProbability = Storage.underPLD8 ? 0.5 : 0.1;
+            missProbability -= Maths.GetDoublePercentage(missProbability, GetSkillPercentage("Electro-optics"));
+
+            if (target is Player player)
+                missProbability += Maths.GetDoublePercentage(missProbability, player.GetSkillPercentage("Evasive Maneuvers"));
+
+            if (missProbability < 0)
+                missProbability = 0;
+            else if (missProbability > 1)
+                missProbability = 1;
+
+            return missProbability;
         }
 
         public bool UpdateActivatable(Activatable pEntity, bool pInRange)
@@ -763,6 +739,7 @@ namespace Ow.Game.Objects
 
         public byte[] GetShipInitializationCommand()
         {
+            var cargoCapacity = 3000 + Maths.GetPercentage(3000, GetSkillPercentage("Logistics"));
             return ShipInitializationCommand.write(
                 Id,
                 Name,
@@ -772,8 +749,8 @@ namespace Ow.Game.Objects
                 MaxShieldPoints,
                 CurrentHitPoints,
                 MaxHitPoints,
-                3000,
-                3000,
+                cargoCapacity,
+                cargoCapacity,
                 CurrentNanoHull,
                 MaxNanoHull,
                 Position.X,
@@ -1388,78 +1365,59 @@ namespace Ow.Game.Objects
                 shieldeng = true;
         }
 
+        private int GetScaledSkillValue(int level, params int[] levelValues)
+        {
+            if (level <= 0 || levelValues == null || levelValues.Length == 0)
+                return 0;
+
+            if (level > levelValues.Length)
+                level = levelValues.Length;
+
+            return levelValues[level - 1];
+        }
+
         public int GetSkillPercentage(string skillName)
         {
-            int value = 0;
+            if (skillName == "Shield Engineering" || skillName == "Shield Engeneering")
+                return GetScaledSkillValue(SkillTree.shieldEngineering, 4, 8, 12, 18, 25);
+            if (skillName == "Engineering")
+                return GetScaledSkillValue(SkillTree.engineering, 5, 10, 15, 20, 25);
+            if (skillName == "Detonation" || skillName == "Detonation I" || skillName == "Detonation II")
+                return SkillTree.detonation2 >= 1 ? GetScaledSkillValue(SkillTree.detonation2, 21, 28, 50) : GetScaledSkillValue(SkillTree.detonation1, 7, 14);
+            if (skillName == "Heat-seeking Missiles" || skillName == "Heat-seeking missiles")
+                return GetScaledSkillValue(SkillTree.heatseekingMissiles, 1, 2, 4, 6, 10);
+            if (skillName == "Rocket Fusion")
+                return GetScaledSkillValue(SkillTree.rocketFusion, 2, 4, 6, 8, 15);
+            if (skillName == "Cruelty" || skillName == "Cruelty I" || skillName == "Cruelty II")
+                return SkillTree.cruelty2 >= 1 ? GetScaledSkillValue(SkillTree.cruelty2, 12, 18, 25) : GetScaledSkillValue(SkillTree.cruelty1, 4, 8);
+            if (skillName == "Explosives")
+                return GetScaledSkillValue(SkillTree.explosives, 4, 8, 12, 18, 25);
+            if (skillName == "Luck" || skillName == "Luck I" || skillName == "Luck II")
+                return SkillTree.luck2 >= 1 ? GetScaledSkillValue(SkillTree.luck2, 6, 8, 12) : GetScaledSkillValue(SkillTree.luck1, 2, 4);
+            if (skillName == "Bounty Hunter" || skillName == "Bounty Hunter I" || skillName == "Bounty Hunter II" || skillName == "Bouty Hunter I" || skillName == "Bouty Hunter II")
+                return SkillTree.bountyhunter2 >= 1 ? GetScaledSkillValue(SkillTree.bountyhunter2, 6, 8, 12) : GetScaledSkillValue(SkillTree.bountyhunter1, 2, 4);
+            if (skillName == "Shield Mechanics")
+                return GetScaledSkillValue(SkillTree.shieldMechanics, 2, 4);
+            if (skillName == "Electro-optics" || skillName == "Electro-Optics")
+                return GetScaledSkillValue(SkillTree.electroOptics, 5, 10, 15, 20, 25);
+            if (skillName == "Ship Hull" || skillName == "Ship Hull I" || skillName == "Ship Hull II")
+                return SkillTree.shiphull2 >= 1 ? GetScaledSkillValue(SkillTree.shiphull2, 15000, 25000, 50000) : GetScaledSkillValue(SkillTree.shiphull1, 5000, 10000);
+            if (skillName == "Tactics")
+                return GetScaledSkillValue(SkillTree.tactics, 2, 4, 6, 8, 12);
+            if (skillName == "Greed")
+                return GetScaledSkillValue(SkillTree.greed, 4, 8, 12, 18, 25);
+            if (skillName == "Alien Hunter")
+                return GetScaledSkillValue(SkillTree.alienHunter, 2, 4, 6, 8, 12);
+            if (skillName == "Tractor Beam I")
+                return GetScaledSkillValue(SkillTree.tractorBeam1, 1, 2, 3, 4, 6);
+            if (skillName == "Tractor Beam II")
+                return GetScaledSkillValue(SkillTree.tractorBeam2, 2, 6, 10, 15, 20);
+            if (skillName == "Evasive Maneuvers" || skillName == "Evasive maneuvers I" || skillName == "Evasive maneuvers II")
+                return SkillTree.evasiveManeuvers2 >= 1 ? GetScaledSkillValue(SkillTree.evasiveManeuvers2, 6, 8, 12) : GetScaledSkillValue(SkillTree.evasiveManeuvers1, 2, 4);
+            if (skillName == "Logistics")
+                return GetScaledSkillValue(SkillTree.logistics, 4, 8, 12, 18, 25);
 
-            var detonation1 = SkillTree.detonation1;
-            var detonation2 = SkillTree.detonation2;
-            var shieldEngineering = SkillTree.shieldEngineering;
-            var engineering = SkillTree.engineering;
-            var heatseekingMissiles = SkillTree.heatseekingMissiles;
-            var rocketFusion = SkillTree.rocketFusion;
-            var cruelty1 = SkillTree.cruelty1;
-            var cruelty2 = SkillTree.cruelty2;
-            var explosives = SkillTree.explosives;
-            var luck1 = SkillTree.luck1;
-            var luck2 = SkillTree.luck2;
-            var bountyhunter1 = SkillTree.bountyhunter1;
-            var bountyhunter2 = SkillTree.bountyhunter2;
-            var shieldMechanics = SkillTree.shieldMechanics;
-            var electroOptics = SkillTree.electroOptics;
-            var shiphull1 = SkillTree.shiphull1;
-            var shiphull2 = SkillTree.shiphull2;
-
-            if (skillName == "Shield Engineering")
-            {
-                value += shieldEngineering == 1 ? 4 : shieldEngineering == 2 ? 8 : shieldEngineering == 3 ? 12 : shieldEngineering == 4 ? 18 : shieldEngineering == 5 ? 25 : 0;
-            }
-            else if (skillName == "Engineering")
-            {
-                value += engineering == 1 ? 5 : engineering == 2 ? 10 : engineering == 3 ? 15 : engineering == 4 ? 20 : engineering == 5 ? 30 : 0;
-            }
-            else if (skillName == "Detonation")
-            {
-                value += detonation2 >= 1 ? (detonation2 == 1 ? 21 : detonation2 == 2 ? 28 : detonation2 == 3 ? 50 : 0) : (detonation1 == 1 ? 7 : detonation1 == 2 ? 14 : 0);
-            }
-            else if (skillName == "Heat-seeking Missiles")
-            {
-                value += heatseekingMissiles == 1 ? 1 : heatseekingMissiles == 2 ? 2 : heatseekingMissiles == 3 ? 4 : heatseekingMissiles == 4 ? 6 : heatseekingMissiles == 5 ? 10 : 0;
-            }
-            else if (skillName == "Rocket Fusion")
-            {
-                value += rocketFusion == 1 ? 2 : rocketFusion == 2 ? 4 : rocketFusion == 3 ? 6 : rocketFusion == 4 ? 8 : rocketFusion == 5 ? 15 : 0;
-            }
-            else if (skillName == "Cruelty")
-            {
-                value += cruelty2 >= 1 ? (cruelty2 == 1 ? 12 : cruelty2 == 2 ? 18 : cruelty2 == 3 ? 25 : 0) : (cruelty1 == 1 ? 4 : cruelty1 == 2 ? 8 : 0);
-            }
-            else if (skillName == "Explosives")
-            {
-                value += explosives == 1 ? 4 : explosives == 2 ? 8 : explosives == 3 ? 12 : explosives == 4 ? 18 : explosives == 5 ? 25 : 0;
-            }
-            else if (skillName == "Luck")
-            {
-                value += luck2 >= 1 ? (luck2 == 1 ? 6 : luck2 == 2 ? 8 : luck2 == 3 ? 12 : 0) : (luck1 == 1 ? 2 : luck1 == 2 ? 4 : 0);
-            }
-            else if (skillName == "Bounty Hunter")
-            {
-                value += bountyhunter2 >= 1 ? (bountyhunter2 == 1 ? 6 : bountyhunter2 == 2 ? 8 : bountyhunter2 == 3 ? 12 : 0) : (bountyhunter1 == 1 ? 2 : bountyhunter1 == 2 ? 4 : 0);
-            }
-            else if (skillName == "Shield Mechanics")
-            {
-                value += shieldMechanics >= 1 ? (shieldMechanics == 1 ? 6 : shieldMechanics == 2 ? 8 : shieldMechanics == 3 ? 12 : 0) : (shieldMechanics == 1 ? 2 : shieldMechanics == 2 ? 4 : 0);
-            }
-            else if (skillName == "Electro-optics")
-            {
-                value += electroOptics >= 1 ? (electroOptics == 1 ? 15 : electroOptics == 2 ? 20 : electroOptics == 3 ? 25 : 0) : (electroOptics == 1 ? 5 : electroOptics == 2 ? 10 : 0);
-            }
-            else if (skillName == "Ship Hull")
-            {
-                value += shiphull2 >= 1 ? (shiphull2 == 1 ? 15000 : shiphull2 == 2 ? 25000 : shiphull2 == 3 ? 50000 : 0) : (shiphull1 == 1 ? 5000 : shiphull1 == 2 ? 10000 : 0);
-            }
-
-            return value;
+            return 0;
         }
 
         public Boolean GetBountyHunter()
@@ -1476,7 +1434,7 @@ namespace Ow.Game.Objects
 
         public Boolean GetShieldMechanics()
         {
-            if (SkillTree.shieldMechanics == 5)
+            if (SkillTree.shieldMechanics >= 2)
             {
                 return true;
             }
@@ -1565,11 +1523,21 @@ namespace Ow.Game.Objects
 
         public void LoadAmmo()
         {
-
             using (var mySqlClient = SqlDatabaseManager.GetClient())
             {
                 var querySet = mySqlClient.ExecuteQueryRow($"SELECT * FROM player_accounts WHERE userId = {Id}");
+                if (querySet == null || querySet["ammo"] == null)
+                {
+                    Ammo = new Ammo();
+                    return;
+                }
+
                 dynamic ammo = JsonConvert.DeserializeObject(querySet["ammo"].ToString());
+                if (ammo == null)
+                {
+                    Ammo = new Ammo();
+                    return;
+                }
 
                 Ammo.cbo100 = ammo["cbo100"];
                 Ammo.job100 = ammo["job100"];

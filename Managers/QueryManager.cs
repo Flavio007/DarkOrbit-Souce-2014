@@ -34,7 +34,13 @@ namespace Ow.Managers
             public static void Information(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
-                    mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET data = '{JsonConvert.SerializeObject(player.Data)}', nanohull = {player.CurrentNanoHull}, destructions = '{JsonConvert.SerializeObject(player.Destructions)}'  WHERE userId = {player.Id}");
+                {
+                    var extraEnergy = Math.Max(0, player.Data?.extraEnergy ?? 0);
+                    var repairCredits = Math.Max(0, player.Data?.repairCredits ?? 0);
+                    mySqlClient.ExecuteNonQuery(
+                        $"UPDATE player_accounts SET data = '{JsonConvert.SerializeObject(player.Data)}', nanohull = {player.CurrentNanoHull}, destructions = '{JsonConvert.SerializeObject(player.Destructions)}', extraEnergy = {extraEnergy}, repairCredits = {repairCredits} WHERE userId = {player.Id}"
+                    );
+                }
             }
 
             public static bool Achievements(Player player)
@@ -233,10 +239,15 @@ namespace Ow.Managers
                         player.ShipStatus = shipstatus;
                         player.Premium = Convert.ToBoolean(row["premium"]);
                         player.Title = Convert.ToString(row["title"]);
-                        player.Data = JsonConvert.DeserializeObject<DataBase>(row["data"].ToString());
+                        player.Data = JsonConvert.DeserializeObject<DataBase>(row["data"].ToString()) ?? new DataBase();
                         player.Destructions = JsonConvert.DeserializeObject<DestructionsBase>(row["destructions"].ToString());
                         player.CurrentNanoHull = Convert.ToInt32(row["nanohull"]);
                         player.PetName = Convert.ToString(row["petName"]);
+
+                        if (row.Table.Columns.Contains("extraEnergy") && row["extraEnergy"] != DBNull.Value)
+                            player.Data.extraEnergy = Convert.ToUInt32(row["extraEnergy"]);
+                        if (row.Table.Columns.Contains("repairCredits") && row["repairCredits"] != DBNull.Value)
+                            player.Data.repairCredits = Convert.ToUInt32(row["repairCredits"]);
 
                         if (row.Table.Columns.Contains("achievements") && row["achievements"] != DBNull.Value)
                             achievementsJson = row["achievements"].ToString();

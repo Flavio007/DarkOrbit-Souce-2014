@@ -53,6 +53,17 @@ namespace Ow.Game.Objects.Collectables
                 Xenomit = 7;
                 Seprom = 8;
                 Palladium = 9;
+
+                var tractorBeam = player.GetSkillPercentage("Tractor Beam I");
+                Prometium += Maths.GetPercentage(Prometium, tractorBeam);
+                Endurium += Maths.GetPercentage(Endurium, tractorBeam);
+                Terbium += Maths.GetPercentage(Terbium, tractorBeam);
+                Prometid += Maths.GetPercentage(Prometid, tractorBeam);
+                Duranium += Maths.GetPercentage(Duranium, tractorBeam);
+                Promerium += Maths.GetPercentage(Promerium, tractorBeam);
+                Xenomit += Maths.GetPercentage(Xenomit, tractorBeam);
+                Seprom += Maths.GetPercentage(Seprom, tractorBeam);
+                Palladium += Maths.GetPercentage(Palladium, tractorBeam);
             }
 
             if(experience > 0)

@@ -138,7 +138,7 @@ namespace Ow.Game.Objects.Players.Managers
                         return;
                     }
 
-                    var damage = RandomizeDamage((GetDamageMultiplier() * Player.Damage), (Player.Storage.underPLD8 ? 0.5 : 0.1));
+                    var damage = RandomizeDamage((GetDamageMultiplier() * Player.Damage), Player.LaserMissProbabilityAgainst(target));
 
                     Player.SubAmmo(Player.Settings.InGameSettings.selectedLaser, Player.equipedlasercount);
 
