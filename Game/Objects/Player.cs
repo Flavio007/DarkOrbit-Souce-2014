@@ -1,4 +1,4 @@
-﻿using Ow.Game;
+using Ow.Game;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Game.Movements;
 using Ow.Managers;
@@ -100,9 +100,63 @@ namespace Ow.Game.Objects
         public int Seprom = 0;
         public int Palladium = 0;
 
+        public int CargoCapacity
+        {
+            get
+            {
+                var baseCargo = Ship != null && Ship.Cargo > 0 ? Ship.Cargo : 3000;
+                return baseCargo + Maths.GetPercentage(baseCargo, GetSkillPercentage("Logistics"));
+            }
+        }
+        public int CargoInUse => Math.Max(0, Prometium + Endurium + Terbium + Prometid + Duranium + Promerium + Xenomit + Seprom + Palladium);
+        public int FreeCargo => Math.Max(0, CargoCapacity - CargoInUse);
+
         public bool fulllf3 = true;
 
         public int equipedlasercount = 0;
+
+        public void LoadCargo(string cargoJson = null)
+        {
+            Cargo cargo = null;
+            if (!string.IsNullOrWhiteSpace(cargoJson))
+            {
+                try { cargo = JsonConvert.DeserializeObject<Cargo>(cargoJson); } catch { cargo = null; }
+            }
+
+            if (cargo == null && Data != null && Data.cargo != null)
+                cargo = Data.cargo;
+
+            if (cargo == null)
+                cargo = new Cargo();
+
+            Prometium = Math.Max(0, cargo.Prometium);
+            Endurium = Math.Max(0, cargo.Endurium);
+            Terbium = Math.Max(0, cargo.Terbium);
+            Prometid = Math.Max(0, cargo.Prometid);
+            Duranium = Math.Max(0, cargo.Duranium);
+            Promerium = Math.Max(0, cargo.Promerium);
+            Xenomit = Math.Max(0, cargo.Xenomit);
+            Seprom = Math.Max(0, cargo.Seprom);
+            Palladium = Math.Max(0, cargo.Palladium);
+        }
+
+        public string SerializeCargo()
+        {
+            var cargo = new Cargo
+            {
+                Prometium = Math.Max(0, Prometium),
+                Endurium = Math.Max(0, Endurium),
+                Terbium = Math.Max(0, Terbium),
+                Prometid = Math.Max(0, Prometid),
+                Duranium = Math.Max(0, Duranium),
+                Promerium = Math.Max(0, Promerium),
+                Xenomit = Math.Max(0, Xenomit),
+                Seprom = Math.Max(0, Seprom),
+                Palladium = Math.Max(0, Palladium)
+            };
+
+            return JsonConvert.SerializeObject(cargo);
+        }
 
 
 
@@ -739,7 +793,7 @@ namespace Ow.Game.Objects
 
         public byte[] GetShipInitializationCommand()
         {
-            var cargoCapacity = 3000 + Maths.GetPercentage(3000, GetSkillPercentage("Logistics"));
+            Console.WriteLine($"[CARGO_INIT] userId={Id} name={Name} shipId={Ship?.Id} shipBaseCargo={Ship?.Cargo ?? 0} current={CargoInUse} max={CargoCapacity}");
             return ShipInitializationCommand.write(
                 Id,
                 Name,
@@ -749,8 +803,8 @@ namespace Ow.Game.Objects
                 MaxShieldPoints,
                 CurrentHitPoints,
                 MaxHitPoints,
-                cargoCapacity,
-                cargoCapacity,
+                CargoInUse,
+                CargoCapacity,
                 CurrentNanoHull,
                 MaxNanoHull,
                 Position.X,
@@ -765,7 +819,7 @@ namespace Ow.Game.Objects
                 (short)Level,
                 Data.credits,
                 Data.uridium,
-                0,
+                (float)(Data.jackpot / 100.0),
                 RankId,
                 Clan.Tag,
                 GetRingsCount(),
@@ -1110,6 +1164,8 @@ namespace Ow.Game.Objects
                     pendingExperienceLevelCheck = true;
                     break;
                 case DataType.JACKPOT:
+                    Data.jackpot += signedAmount;
+                    if (Data.jackpot < 0) Data.jackpot = 0;
                     break;
             }
         }
@@ -1145,6 +1201,11 @@ namespace Ow.Game.Objects
                     case DataType.EXPERIENCE:
                         SendPacket($"0|LM|ST|EP|{prefix}{amount}|{Data.experience}|{Level}");
                         break;
+                    case DataType.JACKPOT:
+                        var jackpotDelta = (amount / 100.0).ToString("0.##", CultureInfo.InvariantCulture);
+                        var jackpotTotal = (Data.jackpot / 100.0).ToString("0.##", CultureInfo.InvariantCulture);
+                        SendPacket($"0|LM|ST|JPE|{prefix}{jackpotDelta}|{jackpotTotal}");
+                        break;
                 }
             }
 
@@ -1159,50 +1220,222 @@ namespace Ow.Game.Objects
             pendingDataTickId = -1;
         }
 
-        public void ChangeCargo(Ores oreType, int amount)
+        private static readonly Dictionary<Ores, int> OreBasePrices = new Dictionary<Ores, int>
         {
-            if (amount == 0) return;
-            amount = Convert.ToInt32(amount);
+            { Ores.Prometium, 10 },
+            { Ores.Endurium, 15 },
+            { Ores.Terbium, 25 },
+            { Ores.Prometid, 200 },
+            { Ores.Duranium, 200 },
+            { Ores.Promerium, 500 }
+        };
 
+        private int GetOreAmount(Ores oreType)
+        {
+            switch (oreType)
+            {
+                case Ores.Prometium: return Prometium;
+                case Ores.Endurium: return Endurium;
+                case Ores.Terbium: return Terbium;
+                case Ores.Prometid: return Prometid;
+                case Ores.Duranium: return Duranium;
+                case Ores.Promerium: return Promerium;
+                case Ores.Xenomit: return Xenomit;
+                case Ores.Seprom: return Seprom;
+                case Ores.Palladium: return Palladium;
+                default: return 0;
+            }
+        }
+
+        private void SetOreAmount(Ores oreType, int amount)
+        {
+            amount = Math.Max(0, amount);
             switch (oreType)
             {
                 case Ores.Prometium:
-                    Prometium += amount;
-                    SendPacket($"0|LM|STM|{amount} Prometium");
+                    Prometium = amount;
                     break;
                 case Ores.Endurium:
-                    Endurium += amount;
-                    SendPacket($"0|LM|STM|{amount} Endurium");
+                    Endurium = amount;
                     break;
                 case Ores.Terbium:
-                    Terbium += amount;
-                    SendPacket($"0|LM|STM|{amount} Terbium");
+                    Terbium = amount;
                     break;
                 case Ores.Prometid:
-                    Prometid += amount;
-                    SendPacket($"0|LM|STM|{amount} Prometid");
+                    Prometid = amount;
                     break;
                 case Ores.Duranium:
-                    Duranium += amount;
-                    SendPacket($"0|LM|STM|{amount} Duranium");
+                    Duranium = amount;
                     break;
                 case Ores.Promerium:
-                    Promerium += amount;
-                    SendPacket($"0|LM|STM|{amount} Promerium");
+                    Promerium = amount;
                     break;
                 case Ores.Xenomit:
-                    Xenomit += amount;
-                    SendPacket($"0|LM|STM|{amount} Xenomit");
+                    Xenomit = amount;
                     break;
                 case Ores.Seprom:
-                    Seprom += amount;
-                    SendPacket($"0|LM|STM|{amount} Seprom");
+                    Seprom = amount;
                     break;
-                case Ores.Palladium :
-                    Palladium += amount;
-                    SendPacket($"0|LM|STM|{amount} Palladium");
+                case Ores.Palladium:
+                    Palladium = amount;
                     break;
             }
+        }
+
+        public void SendCargoStatus()
+        {
+            Console.WriteLine($"[CARGO_UPDATE] userId={Id} name={Name} current={CargoInUse} max={CargoCapacity} packet={CargoCapacity}|{CargoInUse}");
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.CARGO_CHANGE}|{CargoCapacity}|{CargoInUse}");
+        }
+
+        public void SendCargoFullWarning()
+        {
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Cargo full ({CargoInUse}/{CargoCapacity})");
+        }
+
+        public void SendOreCount()
+        {
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SET_ORE_COUNT}|{Prometium}|{Endurium}|{Terbium}|{Prometid}|{Duranium}|{Promerium}|{Xenomit}|{Seprom}|{Palladium}");
+        }
+
+        public double GetHonorOreFactor()
+        {
+            var factor = 1 + (Data.honor / 500000.0);
+            if (factor > 2) factor = 2;
+            if (factor < 0) factor = 0;
+            return factor;
+        }
+
+        public int GetOreSellPrice(Ores oreType)
+        {
+            if (!OreBasePrices.TryGetValue(oreType, out var basePrice))
+                return 0;
+
+            return (int)Math.Round(basePrice * GetHonorOreFactor(), MidpointRounding.AwayFromZero);
+        }
+
+        public int ChangeCargo(Ores oreType, int amount, bool notify = true, bool persist = true, bool sync = true)
+        {
+            if (amount == 0) return 0;
+
+            var current = GetOreAmount(oreType);
+            var applied = amount;
+
+            if (amount > 0)
+            {
+                var space = FreeCargo;
+                if (space <= 0)
+                {
+                    if (notify) SendCargoFullWarning();
+                    return 0;
+                }
+
+                if (amount > space)
+                {
+                    applied = space;
+                    if (notify) SendCargoFullWarning();
+                }
+            }
+            else
+            {
+                var removable = Math.Min(current, -amount);
+                if (removable <= 0)
+                    return 0;
+                applied = -removable;
+            }
+
+            SetOreAmount(oreType, current + applied);
+
+            if (notify)
+            {
+                var oreName = oreType.ToString();
+                var prefix = applied >= 0 ? "+" : "";
+                SendPacket($"0|LM|STM|{prefix}{applied} {oreName}");
+            }
+
+            if (sync)
+            {
+                SendCargoStatus();
+                SendOreCount();
+            }
+
+            if (persist)
+            {
+                QueryManager.SavePlayer.Information(this);
+            }
+
+            return applied;
+        }
+
+        public bool TrySellOre(Ores oreType, int amount)
+        {
+            if (amount <= 0 || !OreBasePrices.ContainsKey(oreType))
+                return false;
+
+            var stock = GetOreAmount(oreType);
+            if (stock <= 0) return false;
+
+            var sellAmount = Math.Min(stock, amount);
+            var unitPrice = GetOreSellPrice(oreType);
+            if (unitPrice <= 0 || sellAmount <= 0) return false;
+
+            ChangeCargo(oreType, -sellAmount, false, false, false);
+            ChangeData(DataType.CREDITS, sellAmount * unitPrice);
+            SendCargoStatus();
+            SendOreCount();
+            QueryManager.SavePlayer.Information(this);
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Sold {sellAmount} {oreType} for {sellAmount * unitPrice} credits.");
+            return true;
+        }
+
+        public bool TryRefine(Ores targetOre, int amount = 1)
+        {
+            if (amount <= 0) amount = 1;
+
+            int batches;
+            switch (targetOre)
+            {
+                case Ores.Prometid:
+                    batches = amount;
+                    if (Prometium < batches * 200 || Endurium < batches * 100)
+                        return false;
+                    ChangeCargo(Ores.Prometium, -(batches * 200), false, false, false);
+                    ChangeCargo(Ores.Endurium, -(batches * 100), false, false, false);
+                    ChangeCargo(Ores.Prometid, batches * 10, false, false, false);
+                    break;
+                case Ores.Duranium:
+                    batches = amount;
+                    if (Terbium < batches * 200 || Endurium < batches * 100)
+                        return false;
+                    ChangeCargo(Ores.Terbium, -(batches * 200), false, false, false);
+                    ChangeCargo(Ores.Endurium, -(batches * 100), false, false, false);
+                    ChangeCargo(Ores.Duranium, batches * 10, false, false, false);
+                    break;
+                case Ores.Promerium:
+                    batches = amount;
+                    if (Prometid < batches * 10 || Duranium < batches * 10 || Xenomit < batches)
+                        return false;
+                    ChangeCargo(Ores.Prometid, -(batches * 10), false, false, false);
+                    ChangeCargo(Ores.Duranium, -(batches * 10), false, false, false);
+                    ChangeCargo(Ores.Xenomit, -batches, false, false, false);
+                    ChangeCargo(Ores.Promerium, batches, false, false, false);
+                    break;
+                default:
+                    return false;
+            }
+
+            SendCargoStatus();
+            SendOreCount();
+            QueryManager.SavePlayer.Information(this);
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Refinement complete: +{amount} {targetOre}.");
+            return true;
+        }
+
+        public void SendOreShopInfo()
+        {
+            SendCargoStatus();
+            SendOreCount();
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SET_ORE_PRICES}|{GetOreSellPrice(Ores.Prometium)}|{GetOreSellPrice(Ores.Endurium)}|{GetOreSellPrice(Ores.Terbium)}|{GetOreSellPrice(Ores.Prometid)}|{GetOreSellPrice(Ores.Duranium)}|{GetOreSellPrice(Ores.Promerium)}");
         }
 
         public void CheckNextLevel(long experience)
@@ -1617,15 +1850,15 @@ namespace Ow.Game.Objects
                     return Ammo.plt21;
                 case AmmunitionManager.PLT_3030:
                     return Ammo.plt3030;
-                case AmmunitionManager.HSTRM_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01:
                     return Ammo.hstrm01;
-                case AmmunitionManager.SAR_02:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_02:
                     return Ammo.sar02;
-                case AmmunitionManager.UBR_100:
+                case AmmunitionManager.ROCKET_LAUNCHER_UBR_100:
                     return Ammo.ubr100;
-                case AmmunitionManager.SAR_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_01:
                     return Ammo.sar01;
-                case AmmunitionManager.ECO_10:
+                case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
                     return Ammo.eco10;
                 default:
                     return 0;
@@ -1700,19 +1933,19 @@ namespace Ow.Game.Objects
                 case AmmunitionManager.PLT_3030:
                     Ammo.plt3030 -= amount;
                     break;
-                case AmmunitionManager.ECO_10:
+                case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
                     Ammo.eco10 -= amount;
                     break;
-                case AmmunitionManager.SAR_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_01:
                     Ammo.sar01 -= amount;
                     break;
-                case AmmunitionManager.HSTRM_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01:
                     Ammo.hstrm01 -= amount;
                     break;
-                case AmmunitionManager.SAR_02:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_02:
                     Ammo.sar02 -= amount;
                     break;
-                case AmmunitionManager.UBR_100:
+                case AmmunitionManager.ROCKET_LAUNCHER_UBR_100:
                     Ammo.ubr100 -= amount;
                     break;
             }
@@ -1808,23 +2041,23 @@ namespace Ow.Game.Objects
                     Ammo.plt3030 += amount;
                     name = "PLT-3030";
                     break;
-                case AmmunitionManager.ECO_10:
+                case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
                     Ammo.eco10 += amount;
                     name = "SAR-02";
                     break;
-                case AmmunitionManager.SAR_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_01:
                     Ammo.sar01 += amount;
                     name = "SAR-02";
                     break;
-                case AmmunitionManager.HSTRM_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01:
                     Ammo.hstrm01 += amount;
                     name = "HSTRM-01";
                     break;
-                case AmmunitionManager.SAR_02:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_02:
                     Ammo.sar02 += amount;
                     name = "SAR-02";
                     break;
-                case AmmunitionManager.UBR_100:
+                case AmmunitionManager.ROCKET_LAUNCHER_UBR_100:
                     Ammo.ubr100 += amount;
                     name = "SAR-02";
                     break;
@@ -1836,3 +2069,4 @@ namespace Ow.Game.Objects
         public override byte[] GetShipCreateCommand() { return null; }
     }
 }
+

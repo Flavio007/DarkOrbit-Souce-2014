@@ -37,8 +37,11 @@ namespace Ow.Managers
                 {
                     var extraEnergy = Math.Max(0, player.Data?.extraEnergy ?? 0);
                     var repairCredits = Math.Max(0, player.Data?.repairCredits ?? 0);
+                    var dataJson = JsonConvert.SerializeObject(player.Data).Replace("'", "''");
+                    var destrJson = JsonConvert.SerializeObject(player.Destructions).Replace("'", "''");
+                    var cargoJson = (player.SerializeCargo() ?? "{}").Replace("'", "''");
                     mySqlClient.ExecuteNonQuery(
-                        $"UPDATE player_accounts SET data = '{JsonConvert.SerializeObject(player.Data)}', nanohull = {player.CurrentNanoHull}, destructions = '{JsonConvert.SerializeObject(player.Destructions)}', extraEnergy = {extraEnergy}, repairCredits = {repairCredits} WHERE userId = {player.Id}"
+                        $"UPDATE player_accounts SET data = '{dataJson}', cargo = '{cargoJson}', nanohull = {player.CurrentNanoHull}, destructions = '{destrJson}', extraEnergy = {extraEnergy}, repairCredits = {repairCredits} WHERE userId = {player.Id}"
                     );
                 }
             }
@@ -240,6 +243,8 @@ namespace Ow.Managers
                         player.Premium = Convert.ToBoolean(row["premium"]);
                         player.Title = Convert.ToString(row["title"]);
                         player.Data = JsonConvert.DeserializeObject<DataBase>(row["data"].ToString()) ?? new DataBase();
+                        var cargoJson = row.Table.Columns.Contains("cargo") && row["cargo"] != DBNull.Value ? row["cargo"].ToString() : null;
+                        player.LoadCargo(cargoJson);
                         player.Destructions = JsonConvert.DeserializeObject<DestructionsBase>(row["destructions"].ToString());
                         player.CurrentNanoHull = Convert.ToInt32(row["nanohull"]);
                         player.PetName = Convert.ToString(row["petName"]);
@@ -1496,7 +1501,15 @@ namespace Ow.Managers
                     var portals = JsonConvert.DeserializeObject<List<PortalBase>>(row["portals"].ToString());
                     var stations = JsonConvert.DeserializeObject<List<StationBase>>(row["stations"].ToString());
                     var options = JsonConvert.DeserializeObject<OptionsBase>(row["options"].ToString());
-                    var spacemap = new Spacemap(mapId, name, factionId, npcs, portals, stations, options);
+                    List<CollectableBase> collectables = null;
+                    if (row.Table.Columns.Contains("collectables") && row["collectables"] != DBNull.Value)
+                    {
+                        var collectablesRaw = row["collectables"].ToString();
+                        if (!string.IsNullOrWhiteSpace(collectablesRaw))
+                            collectables = JsonConvert.DeserializeObject<List<CollectableBase>>(collectablesRaw);
+                    }
+
+                    var spacemap = new Spacemap(mapId, name, factionId, npcs, portals, stations, options, collectables);
                     GameManager.Spacemaps.TryAdd(spacemap.Id, spacemap);
                 }
             }
@@ -1592,6 +1605,7 @@ namespace Ow.Managers
                     int shields = Convert.ToInt32(row["shield"]);
                     int hitpoints = Convert.ToInt32(row["health"]);
                     int speed = Convert.ToInt32(row["speed"]);
+                    int cargo = row.Table.Columns.Contains("cargo") && row["cargo"] != DBNull.Value ? Convert.ToInt32(row["cargo"]) : 3000;
                     string lootID = Convert.ToString(row["lootID"]);
                     int displayId = 0;
                     if (row.Table.Columns.Contains("ShipDisplayID") && row["ShipDisplayID"] != DBNull.Value && row["ShipDisplayID"].ToString() != "")
@@ -1603,7 +1617,7 @@ namespace Ow.Managers
                     int type = Convert.ToInt32(row["type"]);
                     var ores = JsonConvert.DeserializeObject<Cargo>(row["ores"].ToString());
 
-                    var ship = new Ship(name, shipID, hitpoints, shields, speed, lootID, damage, aggressive, respawnable, rewards, waves, type, ores, displayId);
+                    var ship = new Ship(name, shipID, hitpoints, shields, speed, cargo, lootID, damage, aggressive, respawnable, rewards, waves, type, ores, displayId);
                     GameManager.Ships.TryAdd(ship.Id, ship);
                 }
             }

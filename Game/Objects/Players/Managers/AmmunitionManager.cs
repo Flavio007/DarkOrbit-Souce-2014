@@ -29,13 +29,28 @@ namespace Ow.Game.Objects.Players.Managers
         public const string BDR_1211 = "ammunition_rocket_bdr-1211";
         public const string BDR_1212 = "ammunition_rocket_bdr-1212";
         public const string R_IC3 = "ammunition_specialammo_r-ic3";
-        public const string HSTRM_01 = "ammunition_rocketlauncher_hstrm-01";
-        public const string UBR_100 = "ammunition_rocketlauncher_ubr-100";
-        public const string ECO_10 = "ammunition_rocketlauncher_eco-10";
-        public const string SAR_01 = "ammunition_rocketlauncher_sar-01";
-        public const string SAR_02 = "ammunition_rocketlauncher_sar-02";
-        public const string CBR = "ammunition_rocketlauncher_cbr";
-        public const string BDR1212 = "ammunition_rocketlauncher_bdr1212";
+        public const string ROCKET_LAUNCHER_HSTRM_01 = "ammunition_rocketlauncher_hstrm-01";
+        public const string ROCKET_LAUNCHER_UBR_100 = "ammunition_rocketlauncher_ubr-100";
+        public const string ROCKET_LAUNCHER_ECO_10 = "ammunition_rocketlauncher_eco-10";
+        public const string ROCKET_LAUNCHER_SAR_01 = "ammunition_rocketlauncher_sar-01";
+        public const string ROCKET_LAUNCHER_SAR_02 = "ammunition_rocketlauncher_sar-02";
+        public const string ROCKET_LAUNCHER_CBR = "ammunition_rocketlauncher_cbr";
+        public const string ROCKET_LAUNCHER_BDR_1212 = "ammunition_rocketlauncher_bdr1212";
+
+        [Obsolete("Use ROCKET_LAUNCHER_HSTRM_01")]
+        public const string HSTRM_01 = ROCKET_LAUNCHER_HSTRM_01;
+        [Obsolete("Use ROCKET_LAUNCHER_UBR_100")]
+        public const string UBR_100 = ROCKET_LAUNCHER_UBR_100;
+        [Obsolete("Use ROCKET_LAUNCHER_ECO_10")]
+        public const string ECO_10 = ROCKET_LAUNCHER_ECO_10;
+        [Obsolete("Use ROCKET_LAUNCHER_SAR_01")]
+        public const string SAR_01 = ROCKET_LAUNCHER_SAR_01;
+        [Obsolete("Use ROCKET_LAUNCHER_SAR_02")]
+        public const string SAR_02 = ROCKET_LAUNCHER_SAR_02;
+        [Obsolete("Use ROCKET_LAUNCHER_CBR")]
+        public const string CBR = ROCKET_LAUNCHER_CBR;
+        [Obsolete("Use ROCKET_LAUNCHER_BDR_1212")]
+        public const string BDR1212 = ROCKET_LAUNCHER_BDR_1212;
         public const string EMP_01 = "ammunition_specialammo_emp-01";
         public const string FWX_COM = "ammunition_firework_fwx-com";
         public const string FWX_L = "ammunition_firework_fwx-l";

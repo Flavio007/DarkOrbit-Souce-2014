@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Ow.Game.Events;
 using Ow.Game.Movements;
 using Ow.Game.Objects.Mines;
@@ -32,6 +32,7 @@ namespace Ow.Game.Objects.Players.Managers
         public long jackpot = 0;
         public long extraEnergy = 0;
         public long repairCredits = 0;
+        public Cargo cargo = new Cargo();
     }
 
     public class SkillTreeBase
@@ -334,7 +335,7 @@ namespace Ow.Game.Objects.Players.Managers
         public bool blockedGroupInvites = false;
         public string selectedLaser = AmmunitionManager.LCB_10;
         public string selectedRocket = AmmunitionManager.R_310;
-        public string selectedRocketLauncher = AmmunitionManager.ECO_10;
+        public string selectedRocketLauncher = AmmunitionManager.ROCKET_LAUNCHER_ECO_10;
         public string selectedFormation = DroneManager.WAVE_FORMATION; //DroneManager.DEFAULT_FORMATION;
         public int currentConfig = 1;
         public List<string> selectedCpus = new List<string> { }; //{ CpuManager.AUTO_ROCKET_CPU, CpuManager.AUTO_HELLSTROM_CPU };
@@ -466,10 +467,10 @@ namespace Ow.Game.Objects.Players.Managers
 
         public static string[] RocketLauncherCategory =
         {
-                CpuManager.ROCKET_LAUNCHER, AmmunitionManager.HSTRM_01,
+                CpuManager.ROCKET_LAUNCHER, AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01,
                 "ammunition_rocketlauncher_ubr-100",
                 "ammunition_rocketlauncher_eco-10" //"ammunition_rocketlauncher_sar-01",
-                //"AmmunitionManager.SAR_02"
+                //"AmmunitionManager.ROCKET_LAUNCHER_SAR_02"
             };
 
         public static string[] SpecialItemsCategory =
@@ -1517,15 +1518,16 @@ namespace Ow.Game.Objects.Players.Managers
 
             ClientUITooltipsCommand itemBarStatusTootip = new ClientUITooltipsCommand(GetItemBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled, doubleClickToFire));
             ClientUITooltipsCommand slotBarStatusTooltip = new ClientUITooltipsCommand(GetSlotBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled));
+            var iconLootId = GetRocketLauncherSlotIconLootId();
 
-            var counterColor = Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ECO_10 ? ClientUISlotBarCategoryItemStatusModule.BLUE :
-                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.HSTRM_01 ? ClientUISlotBarCategoryItemStatusModule.YELLOW :
-                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.UBR_100 ? ClientUISlotBarCategoryItemStatusModule.RED :
-                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.SAR_01 ? ClientUISlotBarCategoryItemStatusModule.short_1167 :
-                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.SAR_01 || Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.SAR_02 ? ClientUISlotBarCategoryItemStatusModule.short_1167 :
-                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.CBR ? ClientUISlotBarCategoryItemStatusModule.short_790 : ClientUISlotBarCategoryItemStatusModule.BLUE;
+            var counterColor = Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_ECO_10 ? ClientUISlotBarCategoryItemStatusModule.BLUE :
+                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01 ? ClientUISlotBarCategoryItemStatusModule.YELLOW :
+                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_UBR_100 ? ClientUISlotBarCategoryItemStatusModule.RED :
+                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_SAR_01 ? ClientUISlotBarCategoryItemStatusModule.short_1167 :
+                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_SAR_01 || Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_SAR_02 ? ClientUISlotBarCategoryItemStatusModule.short_1167 :
+                               Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_CBR ? ClientUISlotBarCategoryItemStatusModule.short_790 : ClientUISlotBarCategoryItemStatusModule.BLUE;
 
-            return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, pItemId, true,
+            return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, iconLootId, true,
                                                                counterColor, pItemId,
                                                                count, false, true,
                                                                slotBarStatusTooltip, false, false,
@@ -2183,16 +2185,29 @@ namespace Ow.Game.Objects.Players.Managers
             ClientUITooltipsCommand itemBarStatusTootip = new ClientUITooltipsCommand(GetItemBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled, doubleClickToFire));
             ClientUITooltipsCommand slotBarStatusTooltip = new ClientUITooltipsCommand(GetSlotBarStatusTooltip(pItemId, pTooltipId, false, 0, descriptionEnabled));
             var maxLoad = Player.AttackManager.RocketLauncher.MaxLoad > 0 ? Player.AttackManager.RocketLauncher.MaxLoad : 3;
+            var iconLootId = GetRocketLauncherSlotIconLootId();
 
-            var counterColor = Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.HSTRM_01 ? ClientUISlotBarCategoryItemStatusModule.YELLOW :
-                              Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.UBR_100 ? ClientUISlotBarCategoryItemStatusModule.RED :
+            var counterColor = Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01 ? ClientUISlotBarCategoryItemStatusModule.YELLOW :
+                              Player.Settings.InGameSettings.selectedRocketLauncher == AmmunitionManager.ROCKET_LAUNCHER_UBR_100 ? ClientUISlotBarCategoryItemStatusModule.RED :
                                                   ClientUISlotBarCategoryItemStatusModule.BLUE;
 
-            return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, pItemId, true,
+            return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, iconLootId, true,
                                                                counterColor, pItemId,
                                                                count, false, true,
                                                                slotBarStatusTooltip, buyEnable ? true : false, RocketLauncherCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocketLauncher.Equals(pItemId) : false,
                                                                maxLoad).writeCommand();
         }
+
+        private string GetRocketLauncherSlotIconLootId()
+        {
+            var selectedLauncherAmmo = Player.Settings.InGameSettings.selectedRocketLauncher;
+            if (!string.IsNullOrEmpty(selectedLauncherAmmo) &&
+                RocketLauncherCategory.Contains(selectedLauncherAmmo) &&
+                selectedLauncherAmmo != CpuManager.ROCKET_LAUNCHER)
+                return selectedLauncherAmmo;
+
+            return CpuManager.ROCKET_LAUNCHER;
+        }
     }
 }
+

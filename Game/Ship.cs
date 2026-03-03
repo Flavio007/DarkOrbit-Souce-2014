@@ -82,7 +82,7 @@ namespace Ow.Game
         public List
     } */
 
-    class Cargo
+    public class Cargo
     {
         public int Prometium { set; get; }
         public int Endurium { set; get; }
@@ -185,6 +185,7 @@ namespace Ow.Game
         public int BaseShieldPoints { get; set; }
         public int BaseShieldAbsorption { get; set; }
         public int BaseSpeed { get; set; }
+        public int Cargo { get; set; }
         public string LootId { get; set; }
         public int DisplayId { get; set; }
         public bool Aggressive { get; set; }
@@ -194,7 +195,7 @@ namespace Ow.Game
         public Cargo Drops { get; set; }
         public int Type { get; set; }
 
-        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves, int type, Cargo drops, int displayId)
+        public Ship(string name, int id, int baseHitpoints, int baseShieldPoints, int speed, int cargo, string lootID, int damage, bool aggressive, bool respawnable, ShipRewards rewards, MinionWaves waves, int type, Cargo drops, int displayId)
         {
             Name = name;
             Id = id;
@@ -202,6 +203,7 @@ namespace Ow.Game
             BaseShieldPoints = baseShieldPoints;
             BaseHitpoints = baseHitpoints;
             BaseSpeed = speed;
+            Cargo = cargo;
             LootId = lootID;
             DisplayId = displayId;
             Aggressive = aggressive;

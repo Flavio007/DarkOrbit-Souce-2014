@@ -1,4 +1,4 @@
-﻿using Ow.Game.Objects;
+using Ow.Game.Objects;
 using Ow.Game.Objects.Players.Techs;
 using Ow.Game.Objects.Stations;
 using Ow.Game.Ticks;
@@ -849,17 +849,17 @@ namespace Ow.Game.Objects.Players.Managers
         {
             switch (Player.Settings.InGameSettings.selectedRocketLauncher)
             {
-                case AmmunitionManager.HSTRM_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01:
                     return 7;
-                case AmmunitionManager.UBR_100:
+                case AmmunitionManager.ROCKET_LAUNCHER_UBR_100:
                     return 8;
-                case AmmunitionManager.ECO_10:
+                case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
                     return 9;
-                case AmmunitionManager.SAR_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_01:
                     return 12;
-                case AmmunitionManager.SAR_02:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_02:
                     return 13;
-                case AmmunitionManager.CBR:
+                case AmmunitionManager.ROCKET_LAUNCHER_CBR:
                     return 14;
                 default:
                     return 7;
@@ -887,17 +887,17 @@ namespace Ow.Game.Objects.Players.Managers
         {
             switch (Player.Settings.InGameSettings.selectedRocketLauncher)
             {
-                case AmmunitionManager.ECO_10:
+                case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
                     return 2000;
-                case AmmunitionManager.HSTRM_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01:
                     return 4000;
-                case AmmunitionManager.UBR_100:
+                case AmmunitionManager.ROCKET_LAUNCHER_UBR_100:
                     return Player.SelectedCharacter.FactionId == 0 ? 7200 : 4000;
-                case AmmunitionManager.SAR_01:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_01:
                     return 1200;
-                case AmmunitionManager.SAR_02:
+                case AmmunitionManager.ROCKET_LAUNCHER_SAR_02:
                     return 5000;
-                case AmmunitionManager.CBR:
+                case AmmunitionManager.ROCKET_LAUNCHER_CBR:
                     return 3000;
                 default:
                     return 0;
@@ -955,3 +955,4 @@ namespace Ow.Game.Objects.Players.Managers
         }
     }
 }
+

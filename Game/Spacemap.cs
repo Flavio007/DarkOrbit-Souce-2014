@@ -42,8 +42,19 @@ namespace Ow.Game
         public int Amount { get; set; }
     }
 
+    class CollectableBase
+    {
+        public int TypeId { get; set; }
+        public int Amount { get; set; }
+        public List<int> TopLeft { get; set; }
+        public List<int> BottomRight { get; set; }
+        public bool Respawnable { get; set; }
+    }
+
     class Spacemap : Tick
     {
+        private static readonly bool OresEnabled = false;
+
         public ConcurrentDictionary<int, Character> Characters = new ConcurrentDictionary<int, Character>();
         public ConcurrentDictionary<int, Activatable> Activatables = new ConcurrentDictionary<int, Activatable>();
         public ConcurrentDictionary<int, Object> Objects = new ConcurrentDictionary<int, Object>();
@@ -61,8 +72,9 @@ namespace Ow.Game
         private List<NpcsBase> NpcsBase { get; set; }
         private List<PortalBase> PortalBase { get; set; }
         private List<StationBase> StationBase { get; set; }
+        private List<CollectableBase> CollectablesBase { get; set; }
 
-        public Spacemap(int mapId, string name, int factionId, List<NpcsBase> npcs, List<PortalBase> portals, List<StationBase> stations, OptionsBase options)
+        public Spacemap(int mapId, string name, int factionId, List<NpcsBase> npcs, List<PortalBase> portals, List<StationBase> stations, OptionsBase options, List<CollectableBase> collectables = null)
         {
             Id = mapId;
             Name = name;
@@ -71,6 +83,7 @@ namespace Ow.Game
             PortalBase = portals;
             StationBase = stations;
             Options = options;
+            CollectablesBase = collectables;
             ParseLimits();
             LoadObjects();
 
@@ -167,6 +180,8 @@ namespace Ow.Game
                 //    new GreenBooty(Position.Random(this, 0, 20800, 0, 12800), this, true);
             }
 
+            LoadConfiguredCollectables();
+
             if (Id == 101)
             {
                 var poi = new POI("jackpot_poi", POITypes.RADIATION, POIDesigns.SIMPLE, POIShapes.CIRCLE, new List<Position> { new Position(5000, 3200), new Position(2250, 950) }, true, true);
@@ -188,6 +203,60 @@ namespace Ow.Game
         private bool IsBonusBoxMap()
         {
             return Id >= 1 && Id < 29 && Id != 16; // if it's lower than 4-5 and not 4-4
+        }
+
+        private void LoadConfiguredCollectables()
+        {
+            if (!OresEnabled) return;
+
+            if (CollectablesBase == null || CollectablesBase.Count < 1) return;
+
+            foreach (var collectable in CollectablesBase)
+            {
+                if (collectable == null || collectable.Amount <= 0) continue;
+                if (!Ore.TryResolveOre(collectable.TypeId, out var oreType, out _)) continue;
+
+                int minX;
+                int maxX;
+                int minY;
+                int maxY;
+                GetCollectableBounds(collectable.TopLeft, collectable.BottomRight, out minX, out maxX, out minY, out maxY);
+                for (int i = 0; i < collectable.Amount; i++)
+                {
+                    var spawnPosition = RandomPositionInBounds(minX, maxX, minY, maxY);
+                    new Ore(collectable.TypeId, oreType, spawnPosition, this, collectable.Respawnable, minX, maxX, minY, maxY);
+                }
+            }
+        }
+
+        private void GetCollectableBounds(List<int> topLeft, List<int> bottomRight, out int minX, out int maxX, out int minY, out int maxY)
+        {
+            var x1 = topLeft != null && topLeft.Count > 0 ? topLeft[0] : Limits[0].X;
+            var y1 = topLeft != null && topLeft.Count > 1 ? topLeft[1] : Limits[0].Y;
+            var x2 = bottomRight != null && bottomRight.Count > 0 ? bottomRight[0] : Limits[1].X;
+            var y2 = bottomRight != null && bottomRight.Count > 1 ? bottomRight[1] : Limits[1].Y;
+
+            minX = ClampToMap(Math.Min(x1, x2), true);
+            maxX = ClampToMap(Math.Max(x1, x2), true);
+            minY = ClampToMap(Math.Min(y1, y2), false);
+            maxY = ClampToMap(Math.Max(y1, y2), false);
+        }
+
+        private Position RandomPositionInBounds(int minX, int maxX, int minY, int maxY)
+        {
+            if (minX == maxX && minY == maxY)
+                return new Position(minX, minY);
+
+            var x = minX == maxX ? minX : Randoms.random.Next(minX, maxX);
+            var y = minY == maxY ? minY : Randoms.random.Next(minY, maxY);
+            return new Position(x, y);
+        }
+
+        private int ClampToMap(int value, bool xAxis)
+        {
+            var min = xAxis ? Limits[0].X : Limits[0].Y;
+            var max = xAxis ? Limits[1].X : Limits[1].Y;
+            return Math.Max(min, Math.Min(max, value));
         }
 
         public void CharacterTicker()

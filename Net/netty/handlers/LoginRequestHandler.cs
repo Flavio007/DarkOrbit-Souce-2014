@@ -115,6 +115,7 @@ namespace Ow.Net.netty.handlers
             try
             {
                 player.SendCommand(player.GetShipInitializationCommand());
+                player.SendOreShopInfo();
 
                 if (player.Title != "")
                     player.SendPacket($"0|n|t|{player.Id}|1|{player.Title}");

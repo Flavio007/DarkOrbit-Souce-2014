@@ -25,6 +25,9 @@ namespace Ow.Net.netty.handlers
                 case UIOpenRequest.ACTION_SHIP_WARP:
                     //gemi değiştirme ekranı gönder
                     break;
+                case UIOpenRequest.ACTION_REFINEMENT:
+                    player.SendOreShopInfo();
+                    break;
             }
         }
     }

@@ -148,9 +148,8 @@ namespace Ow.Game.Objects.Collectables
         {
             jackpotCents = ApplyBonusBoxScaling(player, jackpotCents);
             if (jackpotCents < 1) jackpotCents = 1;
-            player.Data.jackpot += jackpotCents;
-            QueryManager.SavePlayer.Information(player);
-            player.SendPacket($"0|A|STD| You received {jackpotCents / 100.0:0.##} jackpot dollars");
+            player.ChangeData(DataType.JACKPOT, jackpotCents);
+            //player.SendPacket($"0|A|STD| You received {jackpotCents / 100.0:0.##} jackpot dollars");
         }
 
         private void GiveExtraEnergy(Player player, int baseAmount)

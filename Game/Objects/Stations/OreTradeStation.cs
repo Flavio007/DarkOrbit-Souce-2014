@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Ow.Utils;
 using Ow.Game.Movements;
 using Ow.Game;
+using Ow.Net.netty;
 
 namespace Ow.Game.Objects.Stations
 {
@@ -14,7 +15,15 @@ namespace Ow.Game.Objects.Stations
     {
         public OreTradeStation(Spacemap spacemap, int factionId, Position position, Clan clan) : base(spacemap, factionId, position, clan, AssetTypeModule.ORE_TRADE_STATION) { }
 
-        public override void Click(GameSession gameSession) { }
+        public override void Click(GameSession gameSession)
+        {
+            var player = gameSession.Player;
+            if (player == null) return;
+            if (player.FactionId != FactionId) return;
+
+            player.SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.TRADE_WINDOW_ACTIVATION}|1");
+            player.SendOreShopInfo();
+        }
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {

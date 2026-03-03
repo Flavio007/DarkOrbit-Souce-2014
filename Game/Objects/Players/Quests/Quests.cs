@@ -1,4 +1,4 @@
-﻿using Ow.Game.Objects.Players.Managers;
+using Ow.Game.Objects.Players.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace Ow.Game.Objects.Players
 
         public bool ReloadingActive = false;
 
-        public Quests(Player player) { Player = player; LoadLootId = AmmunitionManager.ECO_10; }
+        public Quests(Player player) { Player = player; LoadLootId = AmmunitionManager.ROCKET_LAUNCHER_ECO_10; }
 
         public void Tick()
         {
@@ -70,3 +70,4 @@ namespace Ow.Game.Objects.Players
         }
     }
 }
+

@@ -113,6 +113,7 @@
     <Compile Include="Game\Objects\Collectables\GoldBooty.cs" />
     <Compile Include="Game\Objects\Collectables\RedBooty.cs" />
     <Compile Include="Game\Objects\Collectables\BonusBox.cs" />
+    <Compile Include="Game\Objects\Collectables\Ore.cs" />
     <Compile Include="Game\Objects\Collectable.cs" />
     <Compile Include="Game\Objects\Collectables\BlueBooty.cs" />
     <Compile Include="Game\Objects\Collectables\GreenBooty.cs" />
@@ -212,6 +213,7 @@
     <Compile Include="Net\netty\commands\Uba047Module.cs" />
     <Compile Include="Net\netty\commands\UpdateWindowItemCommand.cs" />
     <Compile Include="Net\netty\commands\Ubaz3QModule.cs" />
+    <Compile Include="Net\netty\commands\AddOreCommand.cs" />
     <Compile Include="Net\netty\commands\CreateBoxCommand.cs" />
     <Compile Include="Net\netty\commands\MineCreateCommand.cs" />
     <Compile Include="Net\netty\commands\command_e4W.cs" />
@@ -275,6 +277,7 @@
     <Compile Include="Net\netty\commands\POITypeModule.cs" />
     <Compile Include="Net\netty\commands\MapAddPOICommand.cs" />
     <Compile Include="Net\netty\commands\DisposeBoxCommand.cs" />
+    <Compile Include="Net\netty\commands\RemoveCollectableCommand.cs" />
     <Compile Include="Net\netty\commands\AttackMissedCommand.cs" />
     <Compile Include="Net\netty\commands\AttributeBoosterUpdateCommand.cs" />
     <Compile Include="Net\netty\commands\BoosterUpdateModule.cs" />

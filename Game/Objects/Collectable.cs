@@ -55,7 +55,15 @@ namespace Ow.Game.Objects
                         {
                             if (collectTime.AddSeconds(Seconds) < DateTime.Now)
                             {
-                                Reward(Character is Pet pet ? pet.Owner : Character as Player);
+                                var rewardPlayer = Character is Pet pet ? pet.Owner : Character as Player;
+                                if (this is Ore && rewardPlayer != null && rewardPlayer.FreeCargo <= 0)
+                                {
+                                    rewardPlayer.SendCargoFullWarning();
+                                    CancelCollection();
+                                    return;
+                                }
+
+                                Reward(rewardPlayer);
                                 Dispose();
                             }
                         }
@@ -133,7 +141,7 @@ namespace Ow.Game.Objects
 
         public void Respawn()
         {
-            Position = Position.Random(Spacemap, 0, 20800, 0, 12800);
+            Position = GetRespawnPosition();
             Spacemap.Objects.TryAdd(Id, this);
 
             if (this is CargoBox)
@@ -143,6 +151,11 @@ namespace Ow.Game.Objects
                 gameSession?.Player.Storage.InRangeObjects.TryRemove(Id, out var obj);
 
             Disposed = false;
+        }
+
+        protected virtual Position GetRespawnPosition()
+        {
+            return Position.Random(Spacemap, 0, 20800, 0, 12800);
         }
 
         public abstract void Reward(Player player);
