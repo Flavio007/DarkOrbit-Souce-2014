@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Ow.Game.Events;
 using Ow.Game.Movements;
 using Ow.Game.Objects.Mines;
@@ -434,20 +434,29 @@ namespace Ow.Game.Objects.Players.Managers
         public void SetCurrentItems()
         {
             Player.CurrentConfig = Player.Settings.InGameSettings.currentConfig;
+            Player.CpuManager.SyncFromInventoryLoadout();
 
-            if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.AUTO_ROCKET_CPU))
+            Player.Storage.AutoRocket = false;
+            Player.Storage.AutoRocketLauncher = false;
+            Player.AttackManager.RocketLauncher.ReloadingActive = false;
+
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.AUTO_ROCKET_CPU) && Player.CpuManager.IsCpuEquipped(CpuManager.AUTO_ROCKET_CPU))
                 Player.Storage.AutoRocket = true;
+            else
+                Player.Settings.InGameSettings.selectedCpus.Remove(CpuManager.AUTO_ROCKET_CPU);
 
-            if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.AUTO_HELLSTROM_CPU))
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.AUTO_HELLSTROM_CPU) && Player.CpuManager.IsCpuEquipped(CpuManager.AUTO_HELLSTROM_CPU))
             {
-                // Temporary behavior: launcher manual only.
-                Player.Settings.InGameSettings.selectedCpus.Remove(CpuManager.AUTO_HELLSTROM_CPU);
-                Player.Storage.AutoRocketLauncher = false;
-                Player.AttackManager.RocketLauncher.ReloadingActive = false;
+                Player.Storage.AutoRocketLauncher = true;
+                Player.AttackManager.RocketLauncher.ReloadingActive = true;
             }
+            else
+                Player.Settings.InGameSettings.selectedCpus.Remove(CpuManager.AUTO_HELLSTROM_CPU);
 
-            if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.CLK_XL))
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(CpuManager.CLK_XL) && Player.CpuManager.IsCpuEquipped(CpuManager.CLK_XL))
                 Player.Invisible = true;
+            else
+                Player.Settings.InGameSettings.selectedCpus.Remove(CpuManager.CLK_XL);
         }
 
         public static string[] LaserCategory =
@@ -492,22 +501,35 @@ namespace Ow.Game.Objects.Players.Managers
 
         public static string[] CpusCategory =
         {
-            "equipment_extra_cpu_cl04k-xl", "equipment_extra_cpu_arol-x", "equipment_extra_cpu_rllb-x"
-              /**  "equipment_extra_cpu_aim-01", /** "equipment_extra_cpu_aim-02", "equipment_extra_cpu_ajp-01",
-                "equipment_extra_cpu_alb-x", "equipment_extra_cpu_anti-z1", "equipment_extra_cpu_anti-z1-xl",
-                "equipment_extra_cpu_arol-x", "equipment_extra_cpu_cl04k-m", "equipment_extra_cpu_cl04k-xl",
-                "equipment_extra_cpu_cl04k-xs", "equipment_extra_cpu_dr-01", "equipment_extra_cpu_dr-02",
-                "equipment_extra_cpu_fb-x", "equipment_extra_cpu_jp-01",
-                "equipment_extra_cpu_jp-02", "equipment_extra_cpu_min-t01", "equipment_extra_cpu_min-t02",
-                "equipment_extra_cpu_nc-agb", "equipment_extra_cpu_nc-awb", "equipment_extra_cpu_nc-awl",
-                "equipment_extra_cpu_nc-awr", "equipment_extra_cpu_nc-rrb", "equipment_extra_cpu_rb-x",
-                "equipment_extra_cpu_rd-x", "equipment_extra_cpu_rllb-x", "equipment_extra_cpu_rok-t01",
-                "equipment_extra_cpu_sle-01", "equipment_extra_cpu_sle-02", "equipment_extra_cpu_sle-03",
-                "equipment_extra_cpu_sle-04", "equipment_extra_hmd-07", "equipment_extra_repbot_rep-1",
-                "equipment_extra_repbot_rep-2", "equipment_extra_repbot_rep-3", "equipment_extra_repbot_rep-4",
-                "equipment_extra_repbot_rep-s", "equipment_weapon_rocketlauncher_hst-1",
-                "equipment_weapon_rocketlauncher_hst-2", "equipment_weapon_rocketlauncher_not_present", "equipment_extra_cpu_nc-rrb-x"
-               */
+                        // Mirrors CpuManager comments: hide CPUs marked as not usable on the hotbar.
+                        CpuManager.CLOAK_XS_CPU,
+                        CpuManager.CLOAK_XL_CPU,
+                        CpuManager.AUTO_ROCKET_CPU,
+                        CpuManager.AUTO_HELLSTROM_CPU,
+                        CpuManager.REPBOT_REP_S,
+                        CpuManager.REPBOT_REP_1,
+                        CpuManager.REPBOT_REP_2,
+                        CpuManager.REPBOT_REP_3,
+                        CpuManager.REPBOT_REP_4,
+                        CpuManager.AIM_01_CPU,
+                        CpuManager.AIM_02_CPU,
+                        CpuManager.AJP_01_CPU,
+                        CpuManager.ALB_X_CPU,
+                        CpuManager.ANTI_Z1_XL_CPU,
+                        CpuManager.ISH_01_CPU,
+                        CpuManager.SMB_01_CPU,
+                        CpuManager.JP_01_CPU,
+                        CpuManager.JP_02_CPU,
+                        CpuManager.NC_AGB_CPU,
+                        CpuManager.NC_AWB_CPU,
+                        CpuManager.NC_AWL_CPU,
+                        CpuManager.NC_AWR_CPU,
+                        CpuManager.NC_RRB_CPU,
+                        CpuManager.GEMINEX_XI_CPU,
+                        CpuManager.AM_CPU,
+                        CpuManager.RB_X_CPU,
+                        CpuManager.RD_X_CPU,
+                        CpuManager.ROK_T01_CPU
         };
 
         public static string[] BuyCategory =
@@ -740,6 +762,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var pair in Player.Settings.SlotBarItems)
             {
+                if (CpusCategory.Contains(pair.Value) && !Player.CpuManager.IsCpuEquipped(pair.Value)) continue;
                 if (pair.Value == "") continue;
                 ClientUISlotBarItemModule item = new ClientUISlotBarItemModule(pair.Value, pair.Key);
                 standartItems.Add(item);
@@ -755,6 +778,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var pair in Player.Settings.PremiumSlotBarItems)
             {
+                if (CpusCategory.Contains(pair.Value) && !Player.CpuManager.IsCpuEquipped(pair.Value)) continue;
                 if (pair.Value == "") continue;
                 ClientUISlotBarItemModule item = new ClientUISlotBarItemModule(pair.Value, pair.Key);
                 premiumItems.Add(item);
@@ -770,6 +794,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var pair in Player.Settings.ProActionBarItems)
             {
+                if (CpusCategory.Contains(pair.Value) && !Player.CpuManager.IsCpuEquipped(pair.Value)) continue;
                 if (pair.Value == "") continue;
                 ClientUISlotBarItemModule item = new ClientUISlotBarItemModule(pair.Value, pair.Key);
                 proActionItems.Add(item);
@@ -950,7 +975,12 @@ namespace Ow.Game.Objects.Players.Managers
             var cpuItems = new List<ClientUISlotBarCategoryItemModule>();
             foreach (string itemLootId in CpusCategory)
             {
+                if (!Player.CpuManager.IsCpuEquipped(itemLootId))
+                    continue;
+
                 var maxTime = 0;
+                var count = Player.GetAmmoCount(itemLootId);
+                var hasCharges = Player.CpuManager.HasCpuCharges(itemLootId);
 
                 switch (itemLootId)
                 {
@@ -964,9 +994,9 @@ namespace Ow.Game.Objects.Players.Managers
                                                                    new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), maxTime, itemLootId,
                                                                    false);
 
-                cpuItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetCpuTtip(itemLootId), Player.GetAmmoCount(itemLootId), false),
+                cpuItems.Add(new ClientUISlotBarCategoryItemModule(1, GetItemStatus(itemLootId, GetCpuTtip(itemLootId), count, false),
                                                                       ClientUISlotBarCategoryItemModule.SELECTION,
-                                                                      ClientUISlotBarCategoryItemModule.NONE,
+                                                                      hasCharges ? ClientUISlotBarCategoryItemModule.NUMBER : ClientUISlotBarCategoryItemModule.NONE,
                                                                       GetCooldownType(itemLootId),
                                                                       categoryTimerModule));
             }
@@ -977,14 +1007,34 @@ namespace Ow.Game.Objects.Players.Managers
         {
             switch (itemId)
             {
+                case CpuManager.CLOAK_XS_CPU:
                 case CpuManager.CLK_XL:
                     return "ttip_cloak_cpu";
                 case CpuManager.AUTO_ROCKET_CPU:
                     return "ttip_arol_cpu";
                 case CpuManager.AUTO_HELLSTROM_CPU:
                     return "ttip_rllb_cpu";
+                case CpuManager.REPBOT_REP_S:
+                case CpuManager.REPBOT_REP_1:
+                case CpuManager.REPBOT_REP_2:
+                case CpuManager.REPBOT_REP_3:
+                case CpuManager.REPBOT_REP_4:
+                    return "ttip_robot_cpu";
+                case CpuManager.AIM_01_CPU:
+                case CpuManager.AIM_02_CPU:
+                case CpuManager.ALB_X_CPU:
+                    return "ttip_aim_cpu";
+                case CpuManager.AJP_01_CPU:
+                    return "ttip_advanced_jump_cpu";
+                case CpuManager.JP_01_CPU:
+                case CpuManager.JP_02_CPU:
+                    return "ttip_jump_cpu";
+                case CpuManager.ANTI_Z1_CPU:
+                    return "ttip_antiz1_cpu";
+                case CpuManager.ANTI_Z1_XL_CPU:
+                    return "ttip_antiz1-xl_cpu";
                 default:
-                    return "";
+                    return itemId;
             }
         }
 
@@ -1482,7 +1532,7 @@ namespace Ow.Game.Objects.Players.Managers
                                                                                                                RocketsCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocket.Equals(pItemId) :
                                                                                                                RocketLauncherCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedRocketLauncher.Equals(pItemId) :
                                                                                                                FormationsCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedFormation.Equals(pItemId) :
-                                                                                                               CpusCategory.Contains(pItemId) ? true :
+                                                                                                               CpusCategory.Contains(pItemId) ? Player.Settings.InGameSettings.selectedCpus.Contains(pItemId) :
                                                                                                                false,
                                                                99999);
         }
@@ -1946,7 +1996,8 @@ namespace Ow.Game.Objects.Players.Managers
             }
             else if (CpusCategory.Contains(itemId))
             {
-                Player.SendCommand(GetNewItemStatus(itemId, GetCpuTtip(itemId), Player.GetAmmoCount(itemId), false, false, false));
+                Player.SendCommand(GetNewItemStatus(itemId, GetCpuTtip(itemId), Player.GetAmmoCount(itemId), true, false, false));
+                SendSlotBarCommand();
             }
             else if (FormationsCategory.Contains(itemId))
             {

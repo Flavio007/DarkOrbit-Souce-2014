@@ -95,6 +95,11 @@ namespace Ow.Managers
                     mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET ammo = '{JsonConvert.SerializeObject(player.Ammo)}' WHERE userId = {player.Id}");
             }
 
+            public static void CpuCharges(Player player)
+            {
+                player?.CpuManager?.PersistCpuCharges();
+            }
+
             public static void Status(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
@@ -307,6 +312,8 @@ namespace Ow.Managers
                         if (items["pet"] == "true")
                             player.Pet = new Pet(player);
                     }
+
+                    player.SettingsManager.SetCurrentItems();
                 }
 
                 SetEquipment(player);

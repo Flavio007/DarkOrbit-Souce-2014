@@ -156,6 +156,14 @@ namespace Ow.Game.Objects.Players.Managers
                     if (Player.Storage.AutoRocket)
                         RocketAttack();
 
+                    if (Player.Storage.AutoRocketLauncher)
+                    {
+                        if (RocketLauncher.CooldownTime < DateTime.Now && RocketLauncher.CurrentLoad >= 1)
+                            LaunchRocketLauncher();
+                        else if (RocketLauncher.CurrentLoad <= 0)
+                            RocketLauncher.ReloadingActive = true;
+                    }
+
                     UpdateAttacker(target, Player);
 
                     if (Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.RSB_75)

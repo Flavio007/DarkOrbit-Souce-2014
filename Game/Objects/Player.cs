@@ -181,8 +181,8 @@ namespace Ow.Game.Objects
             AttackManager = new AttackManager(this);
             TechManager = new TechManager(this);
             SkillManager = new SkillManager(this);
-            SettingsManager = new SettingsManager(this);
             CpuManager = new CpuManager(this);
+            SettingsManager = new SettingsManager(this);
             BoosterManager = new BoosterManager(this);
         }
 
@@ -741,7 +741,9 @@ namespace Ow.Game.Objects
             AttackManager.RocketLauncher.CurrentLoad = 0;
             AttackManager.RocketLauncher.ReloadingActive = false;
             AttackManager.RocketLauncher.LastReloadTime = DateTime.Now;
+            SettingsManager.SetCurrentItems();
             SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
+            SettingsManager.SendSlotBarCommand();
             AttackManager.RocketLauncher.SendStatus();
 
             DroneManager.UpdateDrones();
@@ -1841,7 +1843,11 @@ namespace Ow.Game.Objects
                 case AmmunitionManager.RB_214:
                     return Ammo.rb214;
                 case AmmunitionManager.CLK_XL:
-                    return Ammo.cloacks;
+                    return CpuManager != null ? CpuManager.GetCpuCount(CpuManager.CLOAK_XL_CPU, Ammo.cloacks) : Ammo.cloacks;
+                case CpuManager.AUTO_ROCKET_CPU:
+                    return CpuManager != null ? CpuManager.GetCpuCount(CpuManager.AUTO_ROCKET_CPU) : 0;
+                case CpuManager.AUTO_HELLSTROM_CPU:
+                    return CpuManager != null ? CpuManager.GetCpuCount(CpuManager.AUTO_HELLSTROM_CPU) : 0;
                 case AmmunitionManager.R_310:
                     return Ammo.r310;
                 case AmmunitionManager.PLT_2026:
@@ -1861,6 +1867,11 @@ namespace Ow.Game.Objects
                 case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
                     return Ammo.eco10;
                 default:
+                    if (CpuManager != null && !string.IsNullOrEmpty(ammoId) &&
+                        (ammoId.StartsWith("equipment_extra_cpu_", StringComparison.OrdinalIgnoreCase) ||
+                         ammoId.StartsWith("equipment_extra_repbot_", StringComparison.OrdinalIgnoreCase)))
+                        return CpuManager.GetCpuCount(ammoId);
+
                     return 0;
 
             }
