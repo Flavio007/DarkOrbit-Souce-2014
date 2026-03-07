@@ -576,6 +576,7 @@ class SocketServer
         if (player?.GameSession != null && clan != null)
         {
             player.Clan = clan;
+            player.Quests?.TryCompleteClanQuest();
 
             var command = ClanChangedCommand.write(clan.Tag, clan.Id, player.Id);
             player.SendCommand(command);
@@ -660,6 +661,7 @@ class SocketServer
             if (player?.GameSession != null)
             {
                 player.Clan = clan;
+                player.Quests?.TryCompleteClanQuest();
 
                 var command = ClanChangedCommand.write(clan.Tag, clan.Id, player.Id);
                 player.SendCommand(command);

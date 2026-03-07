@@ -86,6 +86,7 @@ namespace Ow.Game.Objects
         public SkillManager SkillManager { get; set; }
         public BoosterManager BoosterManager { get; set; }
         public AchievementManager Achievements { get; set; }
+        public Quests Quests { get; set; }
         public LastPosition LastPosition { get; set; }
         public ShipStatus ShipStatus { get; set; }
         public Ammo Ammo = new Ammo();
@@ -172,6 +173,7 @@ namespace Ow.Game.Objects
             LoadAmmo();
             InitiateManagers();
             Achievements = new AchievementManager(this);
+            Quests = new Quests(this);
 
             MaxNanoHull = ship.BaseHitpoints;
         }
@@ -213,6 +215,7 @@ namespace Ow.Game.Objects
             TechManager.Tick();
             SkillManager.Tick();
             BoosterManager.Tick();
+            Quests?.Tick();
             AttackManager.FlushPendingDamageHits();
             FlushPendingDataChanges();
         }

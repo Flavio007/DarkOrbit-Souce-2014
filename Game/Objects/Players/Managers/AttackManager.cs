@@ -244,7 +244,8 @@ namespace Ow.Game.Objects.Players.Managers
 
             Player.CpuManager.DisableCloak();
 
-            var rocketRunPacket = $"0|v|{Player.Id}|{enemy.Id}|H|{GetSelectedRocket()}|{(Player.SkillTree.rocketFusion == 5 ? 1 : 0)}|{(Player.Storage.PrecisionTargeter || Player.SkillTree.heatseekingMissiles == 5 ? 1 : 0)}";
+            // Rocket package format: 0|v|[attackerId]|[targetId]|H|[rocketType]|[smoke type|[trajectory type]
+            var rocketRunPacket = $"0|v|{Player.Id}|{enemy.Id}|H|{GetSelectedRocket()}|{(Player.Storage.PrecisionTargeter ? 2 : (Player.SkillTree.rocketFusion == 5 ? 1 : 0))}|{(Player.SkillTree.heatseekingMissiles == 5 ? 1 : 0)}";
             Player.SendPacket(rocketRunPacket);
             Player.SendPacketToInRangePlayers(rocketRunPacket);
 
@@ -256,6 +257,7 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 case 5:
                 case 6:
+                case 10:
                 case 18:
                     if (Player.RocketMissProbability < Randoms.random.NextDouble() && (!(enemy is Player) || (enemy is Player && (enemy as Player).Attackable())))
                     {

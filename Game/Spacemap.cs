@@ -416,14 +416,30 @@ namespace Ow.Game
                         //TODO: Find close ui command end send it
                     }
 
-                    var portalTooltip = new List<ClientUITooltipModule>();
-                    portalTooltip.Add(new ClientUITooltipModule(new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), ClientUITooltipModule.STANDARD, "q2_condition_JUMP", new List<ClientUITextReplacementModule>()));
+                    var actionTooltip = new List<ClientUITooltipModule>();
+
+                    if (entity is Portal)
+                    {
+                        actionTooltip.Add(new ClientUITooltipModule(
+                            new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED),
+                            ClientUITooltipModule.STANDARD,
+                            "q2_condition_JUMP",
+                            new List<ClientUITextReplacementModule>()));
+                    }
+                    else if (entity is QuestGiverStation)
+                    {
+                        actionTooltip.Add(new ClientUITooltipModule(
+                            new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED),
+                            ClientUITooltipModule.STANDARD,
+                            "msg_accept_jobs_here",
+                            new List<ClientUITextReplacementModule>()));
+                    }
 
                     var assetAction =
                             MapAssetActionAvailableCommand.write(entity.Id,
                                                                status,
                                                                inRange,
-                                                               new ClientUITooltipsCommand(entity is Portal ? portalTooltip : new List<ClientUITooltipModule>()),
+                                                               new ClientUITooltipsCommand(actionTooltip),
                                                                new class_h45()
                             );
 

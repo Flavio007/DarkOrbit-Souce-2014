@@ -300,6 +300,8 @@ namespace Ow.Managers
                             player.Settings.ProActionBarItems = JsonConvert.DeserializeObject<Dictionary<short, string>>(row["proActionBarItems"].ToString());
                     }
 
+                    player.Settings.Window?.EnsureDefaults();
+
                     var equipment = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_equipment WHERE userId = {playerId}");
                     foreach (DataRow row in equipment.Rows)
                     {

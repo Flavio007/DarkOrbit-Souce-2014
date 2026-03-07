@@ -14,7 +14,10 @@ namespace Ow.Game.Objects.Stations
     {
         public QuestGiverStation(Spacemap spacemap, int factionId, Position position, Clan clan) : base(spacemap, factionId, position, clan, AssetTypeModule.QUESTGIVER) { }
 
-        public override void Click(GameSession gameSession) { }
+        public override void Click(GameSession gameSession)
+        {
+            gameSession?.Player?.Quests?.HandleQuestGiverClick();
+        }
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {

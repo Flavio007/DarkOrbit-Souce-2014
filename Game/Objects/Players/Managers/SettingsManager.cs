@@ -311,6 +311,45 @@ namespace Ow.Game.Objects.Players.Managers
             { "quests", new Window(50, 50, 200, 200, false) },
             { "cli", new Window(50, 50, 200, 200, false) }
         };
+
+        public void EnsureDefaults()
+        {
+            var defaults = new WindowBase();
+
+            if (windows == null)
+                windows = new Dictionary<string, Window>();
+
+            foreach (var entry in defaults.windows)
+                if (!windows.ContainsKey(entry.Key) || windows[entry.Key] == null)
+                    windows[entry.Key] = entry.Value;
+
+            if (string.IsNullOrWhiteSpace(barState))
+                barState = defaults.barState;
+            if (string.IsNullOrWhiteSpace(gameFeatureBarPosition))
+                gameFeatureBarPosition = defaults.gameFeatureBarPosition;
+            if (string.IsNullOrWhiteSpace(gameFeatureBarLayoutType))
+                gameFeatureBarLayoutType = defaults.gameFeatureBarLayoutType;
+            if (string.IsNullOrWhiteSpace(genericFeatureBarPosition))
+                genericFeatureBarPosition = defaults.genericFeatureBarPosition;
+            if (string.IsNullOrWhiteSpace(genericFeatureBarLayoutType))
+                genericFeatureBarLayoutType = defaults.genericFeatureBarLayoutType;
+            if (string.IsNullOrWhiteSpace(categoryBarPosition))
+                categoryBarPosition = defaults.categoryBarPosition;
+            if (string.IsNullOrWhiteSpace(standartSlotBarPosition))
+                standartSlotBarPosition = defaults.standartSlotBarPosition;
+            if (string.IsNullOrWhiteSpace(standartSlotBarLayoutType))
+                standartSlotBarLayoutType = defaults.standartSlotBarLayoutType;
+            if (string.IsNullOrWhiteSpace(premiumSlotBarPosition))
+                premiumSlotBarPosition = defaults.premiumSlotBarPosition;
+            if (string.IsNullOrWhiteSpace(premiumSlotBarLayoutType))
+                premiumSlotBarLayoutType = defaults.premiumSlotBarLayoutType;
+            if (string.IsNullOrWhiteSpace(proActionBarPosition))
+                proActionBarPosition = defaults.proActionBarPosition;
+            if (string.IsNullOrWhiteSpace(proActionBarLayoutType))
+                proActionBarLayoutType = defaults.proActionBarLayoutType;
+            if (scale <= 0)
+                scale = defaults.scale;
+        }
     }
 
     public class BoundKeysBase
@@ -590,6 +629,9 @@ namespace Ow.Game.Objects.Players.Managers
             var windowSettings = Player.Settings.Window;
             var gameplaySettings = Player.Settings.Gameplay;
             var y2tSettings = Player.Settings.ClassY2T;
+
+            windowSettings?.EnsureDefaults();
+
             Player.SendCommand(UserSettingsCommand.write(
                 new QualitySettingsModule(qualitySettings.notSet, qualitySettings.qualityAttack, qualitySettings.qualityBackground, qualitySettings.qualityPresetting, qualitySettings.qualityCustomized, qualitySettings.qualityPoizone, qualitySettings.qualityShip, qualitySettings.qualityEngine, qualitySettings.qualityExplosion, qualitySettings.qualityCollectable, qualitySettings.qualityEffect),
                 new DisplaySettingsModule(displaySettings.notSet, displaySettings.displayPlayerNames, displaySettings.displayResources, displaySettings.displayBonusBoxes, displaySettings.displayHitpointBubbles, displaySettings.displayChat, displaySettings.displayDrones, displaySettings.displayFreeCargoBoxes, displaySettings.displayNotFreeCargoBoxes, displaySettings.showNotOwnedItems, displaySettings.displayWindowsBackground, displaySettings.var12P, displaySettings.displayNotifications, displaySettings.preloadUserShips, displaySettings.dragWindowsAlways, displaySettings.hoverShips, displaySettings.showPremiumQuickslotBar, displaySettings.allowAutoQuality, displaySettings.varb3N, displaySettings.displaySetting3DqualityAntialias, displaySettings.varp3M, displaySettings.displaySetting3DqualityEffects, displaySettings.displaySetting3DqualityLights, displaySettings.displaySetting3DqualityTextures, displaySettings.var03r, displaySettings.displaySetting3DsizeTextures, displaySettings.displaySetting3DtextureFiltering, displaySettings.proActionBarEnabled, displaySettings.proActionBarKeyboardInputEnabled, displaySettings.proActionBarAutohideEnabled),
@@ -603,6 +645,7 @@ namespace Ow.Game.Objects.Players.Managers
         public void SendMenuBarsCommand()
         {
             var windowSettings = Player.Settings.Window;
+            windowSettings?.EnsureDefaults();
             var menuBarsCommand = new List<ClientUIMenuBarModule>();
             var leftItems = new Dictionary<string, string>();
 
@@ -627,8 +670,7 @@ namespace Ow.Game.Objects.Players.Managers
                 leftItems.Add("booster", "title_booster");
             /*if (Player.RankId == 21)
                 leftItems.Add("traininggrounds", "title_traininggrounds");*/
-            if (Player.RankId == 21)
-                leftItems.Add("cli", "title_cli");
+            // Keep CLI out of the main feature bar so it does not collide with the quests entry.
             if (EventManager.InvasionGate.Started)
                 leftItems.Add("invasion", "title_invasion");
 
@@ -2005,7 +2047,6 @@ namespace Ow.Game.Objects.Players.Managers
             else if (CpusCategory.Contains(itemId))
             {
                 Player.SendCommand(GetNewItemStatus(itemId, GetCpuTtip(itemId), Player.GetAmmoCount(itemId), true, false, false));
-                SendSlotBarCommand();
             }
             else if (FormationsCategory.Contains(itemId))
             {
