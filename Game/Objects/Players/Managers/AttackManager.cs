@@ -141,6 +141,7 @@ namespace Ow.Game.Objects.Players.Managers
                     var damage = RandomizeDamage((GetDamageMultiplier() * Player.Damage), Player.LaserMissProbabilityAgainst(target));
 
                     Player.SubAmmo(Player.Settings.InGameSettings.selectedLaser, Player.equipedlasercount);
+                    Player.CpuManager?.ConsumeAimCpuXenomit();
 
                     if (Player.Storage.Spectrum)
                         damage -= Maths.GetPercentage(damage, 50);
@@ -231,9 +232,10 @@ namespace Ow.Game.Objects.Players.Managers
                     } else return;
                     break;
                 default:
-                    if (lastRocketAttack.AddSeconds(Player.RocketSpeed) < DateTime.Now)
+                    if (lastRocketAttack.AddSeconds(Player.RocketSpeed * (Player.CpuManager?.GetRocketCooldownMultiplier() ?? 1.0)) < DateTime.Now)
                     {
-                        Player.SendCooldown(AmmunitionManager.R_310, Player.Premium ? 1000 : 3000);
+                        var rocketCooldown = (int)((Player.Premium ? 1000 : 3000) * (Player.CpuManager?.GetRocketCooldownMultiplier() ?? 1.0));
+                        Player.SendCooldown(AmmunitionManager.R_310, rocketCooldown);
                         lastRocketAttack = DateTime.Now;
                         Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
                     } else return;

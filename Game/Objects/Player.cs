@@ -105,7 +105,8 @@ namespace Ow.Game.Objects
             get
             {
                 var baseCargo = Ship != null && Ship.Cargo > 0 ? Ship.Cargo : 3000;
-                return baseCargo + Maths.GetPercentage(baseCargo, GetSkillPercentage("Logistics"));
+                var logisticsCargo = baseCargo + Maths.GetPercentage(baseCargo, GetSkillPercentage("Logistics"));
+                return logisticsCargo + (CpuManager?.GetCargoCapacityBonus(baseCargo) ?? 0);
             }
         }
         public int CargoInUse => Math.Max(0, Prometium + Endurium + Terbium + Prometid + Duranium + Promerium + Xenomit + Seprom + Palladium);
@@ -219,7 +220,7 @@ namespace Ow.Game.Objects
         public DateTime lastHpRepairTime = new DateTime();
         private void CheckHitpointsRepair()
         {
-            if (CurrentHitPoints >= MaxHitPoints || AttackingOrUnderAttack() || Moving)
+            if (CurrentHitPoints >= MaxHitPoints || AttackingOrUnderAttack() || Moving || CpuManager == null || !CpuManager.CanUseRepairBot())
             {
                 if (Storage.RepairBotActivated)
                     RepairBot(false);
@@ -660,6 +661,10 @@ namespace Ow.Game.Objects
 
             if (target is Player player)
                 missProbability += Maths.GetDoublePercentage(missProbability, player.GetSkillPercentage("Evasive Maneuvers"));
+
+            var aimReductionPercent = CpuManager?.GetAimCpuMissReductionPercent() ?? 0;
+            if (aimReductionPercent > 0 && Xenomit >= 10)
+                missProbability -= Maths.GetDoublePercentage(missProbability, aimReductionPercent);
 
             if (missProbability < 0)
                 missProbability = 0;

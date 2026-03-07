@@ -102,7 +102,7 @@ namespace Ow.Game.Objects.Players.Managers
         public const String RB_X_CPU = "equipment_extra_cpu_rb-x";
         // Radar CPU. (Shows diplomacy status of nearby players on the minimap)
         public const String RD_X_CPU = "equipment_extra_cpu_rd-x";
-        // Rocket Turbo CPU.
+        // Rocket Turbo CPU. {Do not apear in the hotbar}
         public const String ROK_T01_CPU = "equipment_extra_cpu_rok-t01";
         // Extra Slots CPU (+2). {Do not apear in the hotbar}
         public const String SLE_01_CPU = "equipment_extra_cpu_sle-01";
@@ -125,8 +125,7 @@ namespace Ow.Game.Objects.Players.Managers
         // Repair Bot REP-S.
         public const String REPBOT_REP_S = "equipment_extra_repbot_rep-s";
 
-        public int CloakCooldownTime => Player.Premium ? 10000 : 20000;
-        private const int CLOAK_PRICE = 256;
+        private const int AIM_XENOMIT_COST = 10;
 
         public CpuManager(Player player) : base(player) { }
 
@@ -197,6 +196,15 @@ namespace Ow.Game.Objects.Players.Managers
                 return true;
 
             return equippedCpus.Contains(cpu);
+        }
+
+        public bool HasAnyCpuEquipped(params string[] cpus)
+        {
+            foreach (var cpu in cpus)
+                if (!string.IsNullOrWhiteSpace(cpu) && IsCpuEquipped(cpu))
+                    return true;
+
+            return false;
         }
 
         public int GetCpuCount(string cpu, int legacyFallback = 0)
@@ -728,39 +736,254 @@ namespace Ow.Game.Objects.Players.Managers
             return false;
         }
 
+        private string GetCpuDisplayName(string cpu)
+        {
+            switch (cpu)
+            {
+                case REPBOT_REP_S: return "REP-S";
+                case REPBOT_REP_1: return "REP-1";
+                case REPBOT_REP_2: return "REP-2";
+                case REPBOT_REP_3: return "REP-3";
+                case REPBOT_REP_4: return "REP-4";
+                case AIM_01_CPU: return "AIM-01";
+                case AIM_02_CPU: return "AIM-02";
+                case JP_01_CPU: return "JP-01";
+                case JP_02_CPU: return "JP-02";
+                case AJP_01_CPU: return "AJP-01";
+                default: return cpu;
+            }
+        }
+
+        public bool IsRepairBotCpu(string cpu)
+        {
+            switch (cpu)
+            {
+                case REPBOT_REP_S:
+                case REPBOT_REP_1:
+                case REPBOT_REP_2:
+                case REPBOT_REP_3:
+                case REPBOT_REP_4:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public bool IsAimCpu(string cpu)
+        {
+            return cpu == AIM_01_CPU || cpu == AIM_02_CPU;
+        }
+
+        public bool HasActiveRepairBot()
+        {
+            return IsCpuEquipped(REPBOT_REP_S) || IsCpuEquipped(REPBOT_REP_1) || IsCpuEquipped(REPBOT_REP_2) ||
+                   IsCpuEquipped(REPBOT_REP_3) || IsCpuEquipped(REPBOT_REP_4);
+        }
+
+        public bool CanUseRepairBot()
+        {
+            return HasActiveRepairBot() || IsCpuEquipped(NC_RRB_CPU);
+        }
+
+        public int GetSelectedRepairBotId()
+        {
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(REPBOT_REP_4))
+                return 4;
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(REPBOT_REP_3))
+                return 3;
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(REPBOT_REP_2))
+                return 2;
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(REPBOT_REP_1))
+                return 1;
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(REPBOT_REP_S))
+                return 5;
+
+            if (IsCpuEquipped(REPBOT_REP_4))
+                return 4;
+            if (IsCpuEquipped(REPBOT_REP_3))
+                return 3;
+            if (IsCpuEquipped(REPBOT_REP_2))
+                return 2;
+            if (IsCpuEquipped(REPBOT_REP_1))
+                return 1;
+            if (IsCpuEquipped(REPBOT_REP_S))
+                return 5;
+
+            return 0;
+        }
+
+        public void SyncSelectedCpus()
+        {
+            var selected = Player.Settings.InGameSettings.selectedCpus.ToList();
+            foreach (var cpu in selected)
+            {
+                if (!IsCpuEquipped(cpu) || IsRepairBotCpu(cpu))
+                    Player.Settings.InGameSettings.selectedCpus.Remove(cpu);
+            }
+
+            Player.Storage.AutoRocket = Player.Settings.InGameSettings.selectedCpus.Contains(AUTO_ROCKET_CPU) && IsCpuEquipped(AUTO_ROCKET_CPU);
+            Player.Storage.AutoRocketLauncher = Player.Settings.InGameSettings.selectedCpus.Contains(AUTO_HELLSTROM_CPU) && IsCpuEquipped(AUTO_HELLSTROM_CPU);
+            Player.AttackManager.RocketLauncher.ReloadingActive = Player.Storage.AutoRocketLauncher;
+
+            Player.Invisible = Player.Settings.InGameSettings.selectedCpus.Contains(CLK_XL) && IsCpuEquipped(CLK_XL);
+
+            var repairBotId = GetSelectedRepairBotId();
+            Player.RepairBotId = repairBotId > 0 ? (byte)repairBotId : (byte)0;
+
+            if (repairBotId <= 0 && Player.Storage.RepairBotActivated)
+                Player.RepairBot(false);
+        }
+
+        public int GetCargoCapacityBonus(int baseCargo)
+        {
+            if (baseCargo <= 0 || !IsCpuEquipped(GEMINEX_XI_CPU))
+                return 0;
+
+            return baseCargo;
+        }
+
+        public int GetAimCpuMissReductionPercent()
+        {
+            if (IsCpuEquipped(AIM_02_CPU))
+                return 50;
+            if (IsCpuEquipped(AIM_01_CPU))
+                return 25;
+
+            return 0;
+        }
+
+        public void ConsumeAimCpuXenomit()
+        {
+            if (GetAimCpuMissReductionPercent() <= 0 || Player.Xenomit < AIM_XENOMIT_COST)
+                return;
+
+            Player.ChangeCargo(Ow.Game.Ores.Xenomit, -AIM_XENOMIT_COST, false, true, true);
+        }
+
+        public double GetRocketCooldownMultiplier()
+        {
+            return IsCpuEquipped(ROK_T01_CPU) ? 0.5 : 1.0;
+        }
+
+        public double GetMineCooldownMultiplier()
+        {
+            if (IsCpuEquipped(MIN_T02_CPU))
+                return 0.5;
+            if (IsCpuEquipped(MIN_T01_CPU))
+                return 0.75;
+
+            return 1.0;
+        }
+
+        public void UseRepairBot(string cpu)
+        {
+            if (!IsRepairBotCpu(cpu))
+                return;
+
+            if (!EnsureCpuEquipped(cpu, GetCpuDisplayName(cpu)))
+                return;
+
+            switch (cpu)
+            {
+                case REPBOT_REP_1:
+                    Player.RepairBotId = 1;
+                    break;
+                case REPBOT_REP_2:
+                    Player.RepairBotId = 2;
+                    break;
+                case REPBOT_REP_3:
+                    Player.RepairBotId = 3;
+                    break;
+                case REPBOT_REP_4:
+                    Player.RepairBotId = 4;
+                    break;
+                case REPBOT_REP_S:
+                    Player.RepairBotId = 5;
+                    break;
+            }
+
+            if (Player.CurrentHitPoints < Player.MaxHitPoints && !Player.AttackingOrUnderAttack() && !Player.Moving)
+                Player.RepairBot(true);
+            else if (Player.Storage.RepairBotActivated)
+                Player.RepairBot(false);
+
+            Player.SettingsManager.SendNewItemStatus(REPBOT_REP_S);
+            Player.SettingsManager.SendNewItemStatus(REPBOT_REP_1);
+            Player.SettingsManager.SendNewItemStatus(REPBOT_REP_2);
+            Player.SettingsManager.SendNewItemStatus(REPBOT_REP_3);
+            Player.SettingsManager.SendNewItemStatus(REPBOT_REP_4);
+        }
+
+        public void ToggleAimCpu(string cpu)
+        {
+            if (!IsAimCpu(cpu))
+                return;
+
+            if (!EnsureCpuEquipped(cpu, GetCpuDisplayName(cpu)))
+                return;
+
+            if (Player.Settings.InGameSettings.selectedCpus.Contains(cpu))
+                RemoveSelectedCpu(cpu);
+            else
+                AddSelectedCpu(cpu);
+
+            Player.SettingsManager.SendNewItemStatus(cpu);
+        }
+
+        public void JumpCpu(string cpu)
+        {
+            var displayName = GetCpuDisplayName(cpu);
+            if (!EnsureCpuEquipped(cpu, displayName))
+                return;
+
+            if (Player.Storage.Jumping || Player.Spacemap == null)
+                return;
+
+            var mapId = Player.Spacemap.Id;
+            var maxMapId = cpu == JP_01_CPU ? 11 : 28;
+
+            if (mapId < 1 || mapId > maxMapId)
+            {
+                Player.SendPacket($"0|A|STM|{displayName} cannot be used on this map.");
+                return;
+            }
+
+            if (!TryConsumeCpuCharge(cpu))
+            {
+                Player.SendPacket($"0|A|STM|{displayName} has no jumps remaining.");
+                Player.SettingsManager.SendNewItemStatus(cpu);
+                return;
+            }
+
+            Player.SettingsManager.SendNewItemStatus(cpu);
+            Player.Jump(Player.GetBaseMapId(), Player.GetBasePosition());
+        }
+
+        public void AdvancedJumpCpu()
+        {
+            if (!EnsureCpuEquipped(AJP_01_CPU, "AJP-01"))
+                return;
+
+            Player.SendPacket("0|A|STM|AJP-01 requires the advanced jump starmap flow, which is not wired on this server yet.");
+        }
+
         public void Cloak()
         {
             if (!EnsureCpuEquipped(CLOAK_XL_CPU, "CL04K-XL"))
                 return;
 
             if (Player.Spacemap.Options.CloakBlocked || Player.Invisible) return;
-            if (Player.Data.uridium >= CLOAK_PRICE)
+            var consumedCharge = TryConsumeCpuCharge(CLOAK_XL_CPU);
+
+            if (!consumedCharge)
             {
-                if (cloakCooldown.AddMilliseconds(CloakCooldownTime) < DateTime.Now || Player.Storage.GodMode)
-                {
-                    var consumedCharge = TryConsumeCpuCharge(CLOAK_XL_CPU);
-
-                    if (!consumedCharge && Player.Ammo != null && Player.Ammo.cloacks > 0)
-                    {
-                        Player.SubAmmo(AmmunitionManager.CLK_XL, 1);
-                        consumedCharge = true;
-                    }
-
-                    if (!consumedCharge)
-                    {
-                        Player.SendPacket("0|A|STM|CL04K-XL has no charges remaining.");
-                        Player.SettingsManager.SendNewItemStatus(CLK_XL);
-                        return;
-                    }
-
-                    Player.ChangeData(DataType.URIDIUM, CLOAK_PRICE, ChangeType.DECREASE);
-                    EnableCloak();
-
-                    Player.SendCooldown(CLK_XL, CloakCooldownTime);
-                    cloakCooldown = DateTime.Now;
-                }
+                Player.SendPacket("0|A|STM|CL04K-XL has no charges remaining.");
+                Player.SettingsManager.SendNewItemStatus(CLK_XL);
+                return;
             }
-            else Player.SendPacket("0|A|STD|You don't have enough uridium for buy a cloak.");
+
+            EnableCloak();
+            Player.SettingsManager.SendNewItemStatus(CLK_XL);
         }
 
         public void ArolX()
