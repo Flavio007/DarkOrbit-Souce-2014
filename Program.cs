@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Ow.Chat;
 using Ow.Game;
+using Ow.Game.Objects.AI;
 using Ow.Game.Ticks;
 using Ow.Managers;
 using Ow.Managers.MySQLManager;
@@ -92,6 +93,7 @@ namespace Ow
             Handler.AddCommands();
             Room.AddRooms();
             EventManager.InitiateEvents();
+            //AIShips.LoadConfiguredFakeShips();
             StartListening();
         }
 

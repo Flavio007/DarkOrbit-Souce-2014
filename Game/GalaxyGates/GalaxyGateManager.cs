@@ -603,7 +603,7 @@ namespace Ow.Game.GalaxyGates
 
             var center = GetGateCenterByFaction(instance.Template, instance.OwnerFactionId);
             var map = instance.Spacemap;
-            var suffixPrefix = string.IsNullOrWhiteSpace(instance.Template.NpcSuffix) ? instance.Template.Name : instance.Template.NpcSuffix;
+            var suffixPrefix = ResolveNpcSuffixPrefix(instance.Template);
             var subWaveNumber = ((wave.Id - 1) * 4) + (quarter + 1);
 
             for (var i = 0; i < amount; i++)
@@ -673,6 +673,83 @@ namespace Ow.Game.GalaxyGates
             owner.SendPacket($"0|A|STD|{gateName} - Wave {subWaveNumber} starting");
         }
 
+        private static string NormalizeGateDisplayName(string value)
+        {
+            var normalized = (value ?? "").Trim();
+            if (normalized.Length == 0)
+                return "";
+
+            switch (normalized.ToUpperInvariant())
+            {
+                case "\u0391":
+                case "A":
+                case "ALPHA":
+                case "Î±":
+                case "ÃŽÂ±":
+                    return "ALPHA";
+                case "\u0392":
+                case "B":
+                case "BETA":
+                case "Î²":
+                case "ÃŽÂ²":
+                    return "BETA";
+                case "\u0393":
+                case "G":
+                case "GAMMA":
+                case "Î³":
+                case "ÃŽÂ³":
+                    return "GAMMA";
+                case "\u0394":
+                case "D":
+                case "DELTA":
+                case "Î´":
+                case "ÃŽÂ´":
+                    return "DELTA";
+                default:
+                    return normalized.ToUpperInvariant();
+            }
+        }
+
+        private static string GetDisplayGateName(string value)
+        {
+            switch (NormalizeGateDisplayName(value))
+            {
+                case "ALPHA":
+                    return "\u03B1";
+                case "BETA":
+                    return "\u03B2";
+                case "GAMMA":
+                    return "\u03B3";
+                case "DELTA":
+                    return "\u03B4";
+                default:
+                    return (value ?? "").Trim();
+            }
+        }
+
+        private static string ResolveNpcSuffixPrefix(GalaxyGateTemplate template)
+        {
+            if (template == null)
+                return "GG";
+
+            var configuredSuffix = (template.NpcSuffix ?? "").Trim();
+            var normalizedConfiguredSuffix = NormalizeGateDisplayName(configuredSuffix);
+            var normalizedTemplateCode = NormalizeGateDisplayName(template.CodeName);
+
+            if (normalizedTemplateCode == "ALPHA" || normalizedTemplateCode == "BETA" || normalizedTemplateCode == "GAMMA" || normalizedTemplateCode == "DELTA")
+            {
+                if (configuredSuffix.Length == 0 ||
+                    normalizedConfiguredSuffix == "ALPHA" ||
+                    normalizedConfiguredSuffix == "BETA" ||
+                    normalizedConfiguredSuffix == "GAMMA" ||
+                    normalizedConfiguredSuffix == "DELTA")
+                    return GetDisplayGateName(template.CodeName);
+            }
+
+            var fallback = configuredSuffix.Length > 0 ? configuredSuffix : template.Name;
+            return GetDisplayGateName(fallback);
+        }
+
         private async Task<bool> RunWaveStartCountdown(GalaxyGateInstance instance, GalaxyGateWaveTemplate wave, int seconds)
         {
             if (instance == null || wave == null || seconds <= 0)
@@ -697,7 +774,6 @@ namespace Ow.Game.GalaxyGates
             owner.SendPacket($"0|A|STD|Lives remaining: {instance.LivesLeft}");
 
             var firstSubwave = ((wave.Id - 1) * 4) + 1;
-            owner.SendPacket($"0|A|STD|Upcoming subwaves: {firstSubwave}, {firstSubwave + 1}, {firstSubwave + 2}, {firstSubwave + 3}");
             return true;
         }
 
@@ -1012,7 +1088,7 @@ namespace Ow.Game.GalaxyGates
                     var template = new GalaxyGateTemplate
                     {
                         Id = Convert.ToInt32(row["id"]),
-                        Name = Convert.ToString(row["name"]),
+                        Name = (Convert.ToString(row["name"]) == "ALPHA") ? "α" : Convert.ToString(row["name"]) == "BETA" ? "β" : Convert.ToString(row["name"]) == "GAMMA" ? "γ" : Convert.ToString(row["name"]) == "DELTA" ? "δ" : Convert.ToString(row["name"]),
                         EntryMapId = Convert.ToInt32(row["entry_map_id"]),
                         VisualMapId = GetInt(row, "visual_map_id", GetInt(row, "gate_map_id", 0)),
                         EntryPortalPosition = new Position(Convert.ToInt32(row["entry_x"]), Convert.ToInt32(row["entry_y"])),
@@ -1035,10 +1111,13 @@ namespace Ow.Game.GalaxyGates
                         MaxLives = Convert.ToInt32(row["max_lives"])
                     };
 
+                    template.CodeName = NormalizeGateTemplateName(Convert.ToString(row["name"]));
+                    template.Name = GetDisplayGateName(Convert.ToString(row["name"]));
+
                     DataTable waves = null;
                     if (hasInstanceWavesTable)
                     {
-                        var preferredGateId = ResolveLegacyGateId(template.Name);
+                        var preferredGateId = ResolveLegacyGateId(template.CodeName);
                         var candidateGateIds = new List<int>();
 
                         if (preferredGateId > 0)
@@ -1186,7 +1265,7 @@ namespace Ow.Game.GalaxyGates
 
         private static int ResolveLegacyGateId(string templateName)
         {
-            var normalized = (templateName ?? "").Trim().ToUpperInvariant();
+            var normalized = NormalizeGateTemplateName(templateName);
             if (normalized == "ALPHA") return 2;
             if (normalized == "BETA") return 3;
             if (normalized == "GAMMA") return 4;
@@ -1197,6 +1276,56 @@ namespace Ow.Game.GalaxyGates
             if (normalized == "LAMBDA") return 9;
             if (normalized == "KRONOS") return 10;
             return 0;
+        }
+
+        private static string NormalizeGateTemplateName(string value)
+        {
+            var normalized = (value ?? "").Trim();
+            if (normalized.Length == 0)
+                return "";
+
+            switch (normalized.ToUpperInvariant())
+            {
+                case "Α":
+                case "A":
+                case "ALPHA":
+                case "Î±":
+                    return "ALPHA";
+                case "Β":
+                case "B":
+                case "BETA":
+                case "Î²":
+                    return "BETA";
+                case "Γ":
+                case "G":
+                case "GAMMA":
+                case "Î³":
+                    return "GAMMA";
+                case "Δ":
+                case "D":
+                case "DELTA":
+                case "Î´":
+                    return "DELTA";
+                default:
+                    return normalized.ToUpperInvariant();
+            }
+        }
+
+        private static string GetDisplayGateName(string value)
+        {
+            switch (NormalizeGateTemplateName(value))
+            {
+                case "ALPHA":
+                    return "\u03B1";
+                case "BETA":
+                    return "\u03B2";
+                case "GAMMA":
+                    return "\u03B3";
+                case "DELTA":
+                    return "\u03B4";
+                default:
+                    return (value ?? "").Trim();
+            }
         }
 
         private static GalaxyGateWaveTemplate ReadWaveTemplate(DataRow waveRow)

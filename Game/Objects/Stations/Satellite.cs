@@ -226,17 +226,26 @@ namespace Ow.Game.Objects.Stations
                     }
                     else
                     {
+                        var attackHitDamage = damage > damageShd ? damage : damageShd;
                         var attackHitCommand =
                                 AttackHitCommand.write(new AttackTypeModule((short)damageType), Id,
                                                      target.Id, target.CurrentHitPoints,
                                                      target.CurrentShieldPoints, target.CurrentNanoHull,
-                                                     damage > damageShd ? damage : damageShd, false);
+                                                     attackHitDamage, false);
 
-                        SendCommandToInRangeCharacters(attackHitCommand);
+                        SendCommandToInRangeCharacters(attackHitCommand, target);
+
+                        if (target is Player playerTarget)
+                            playerTarget.AttackManager.QueueIncomingDamageHit(Id, damageType, attackHitDamage, false);
                     }
 
                     if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+                    {
+                        if (target is Player playerTarget)
+                            playerTarget.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);
+
                         target.Destroy(this, DestructionType.MISC);
+                    }
                     else
                     {
                         if (target.CurrentNanoHull > 0)

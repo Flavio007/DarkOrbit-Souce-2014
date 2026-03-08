@@ -122,22 +122,31 @@ namespace Ow.Game.Objects
 
                 if (damage == 0)
                 {
-                    var attackMissedCommandToInRange = AttackMissedCommand.write(new AttackTypeModule(AttackTypeModule.LASER), target.Id, 1);
-                    SendCommandToInRangePlayers(attackMissedCommandToInRange);
                 }
                 else
                 {
+                    var attackHitDamage = damage > damageShd ? damage : damageShd;
                     var attackHitCommand =
                         AttackHitCommand.write(new AttackTypeModule(AttackTypeModule.LASER), Id,
                              target.Id, target.CurrentHitPoints,
                              target.CurrentShieldPoints, target.CurrentNanoHull,
-                             damage > damageShd ? damage : damageShd, false);
+                             attackHitDamage, false);
 
-                    SendCommandToInRangePlayers(attackHitCommand);
+                    foreach (var character in InRangeCharacters.Values)
+                        if (character is Player inRangePlayer && (!(target is Player targetPlayer) || inRangePlayer.Id != targetPlayer.Id))
+                            inRangePlayer.SendCommand(attackHitCommand);
+
+                    if (target is Player playerTarget)
+                        playerTarget.AttackManager.QueueIncomingDamageHit(Id, DamageType.LASER, attackHitDamage);
                 }
 
                 if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+                {
+                    if (target is Player playerTarget)
+                        playerTarget.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);
+
                     target.Destroy(this, DestructionType.NPC);
+                }
                 else
                     target.CurrentHitPoints -= damageHp;
 

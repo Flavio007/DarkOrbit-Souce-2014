@@ -1,0 +1,14 @@
+[07.03.2026 13: 46:44] - [QueryManager.cs] GetPlayer(6) exception: Newtonsoft.Json.JsonReaderException: After parsing a value an unexpected character was encountered: \. Path 'repSCount', line 1, position 515.
+   em Newtonsoft.Json.JsonTextReader.ParsePostValue(Boolean ignoreComments)
+   em Newtonsoft.Json.JsonTextReader.Read()
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateJObject(JsonReader reader)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateObject(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.CreateValueInternal(JsonReader reader, Type objectType, JsonContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerMember, Object existingValue)
+   em Newtonsoft.Json.Serialization.JsonSerializerInternalReader.Deserialize(JsonReader reader, Type objectType, Boolean checkAdditionalContent)
+   em Newtonsoft.Json.JsonSerializer.DeserializeInternal(JsonReader reader, Type objectType)
+   em Newtonsoft.Json.JsonConvert.DeserializeObject(String value, Type type, JsonSerializerSettings settings)
+   em Ow.Game.Objects.Players.Managers.DroneManager.SetDroneDesigns() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Managers\DroneManager.cs:linha 90
+   em Ow.Game.Objects.Players.Managers.DroneManager..ctor(Player player) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Managers\DroneManager.cs:linha 30
+   em Ow.Game.Objects.Player.InitiateManagers() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Player.cs:linha 183
+   em Ow.Game.Objects.Player..ctor(Int32 id, String name, Clan clan, Int32 factionId, Int32 rankId, Int32 warRank, Ship ship) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Player.cs:linha 174
+   em Ow.Managers.QueryManager.GetPlayer(Int32 playerId) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Managers\QueryManager.cs:linha 245

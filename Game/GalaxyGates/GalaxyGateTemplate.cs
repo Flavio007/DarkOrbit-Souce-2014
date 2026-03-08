@@ -18,6 +18,7 @@ namespace Ow.Game.GalaxyGates
     class GalaxyGateTemplate
     {
         public int Id { get; set; }
+        public string CodeName { get; set; }
         public string Name { get; set; }
         public int EntryMapId { get; set; }
         public int VisualMapId { get; set; }
@@ -43,6 +44,7 @@ namespace Ow.Game.GalaxyGates
 
         public GalaxyGateTemplate()
         {
+            CodeName = "";
             Name = "";
             NpcSuffix = "";
             EntryPortalPosition = new Position(0, 0);
