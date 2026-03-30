@@ -764,6 +764,84 @@ namespace Ow.Chat
                 Out.WriteLine($"[TEST_CMD] Success user={gameSession.Player.Id} typeId={typeId} visualAsset={(string.IsNullOrEmpty(visualAssetName) ? "<default>" : visualAssetName)} requestedFaction={(factionId.HasValue ? factionId.Value.ToString() : "unchanged")} stations={homeStations.Count} finalFaction={finalFaction}", "ChatClient.cs");
             }
 
+            else if (cmd == "/testasset")
+            {
+                if (Permission != Permissions.ADMINISTRATOR)
+                {
+                    Send("dq%You don't have permission to use '/testasset'.#");
+                    return;
+                }
+
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/testasset --type <TypeId|TYPE_NAME|ASSET_ID> [--id <ObjectId>] [--faction <FactionId>] [--name <VisualName>] [--design <DesignId>] [--ext <ExpansionStage>] [--clan-tag <Tag>] [--clan-id <ClanId>] [--invisible <true|false>] [--warn-radar <true|false>] [--detected <true|false>] [--bubble <true|false>] [--x <X>] [--y <Y>]'.#");
+                    return;
+                }
+
+                var flags = ParseFlags(args, 1, out var flagError);
+                if (flags == null)
+                {
+                    Send($"dq%{flagError}#");
+                    return;
+                }
+
+                if (!flags.TryGetValue("type", out var typeValue))
+                {
+                    Send("dq%Missing --type. Use a numeric ID, an AssetTypeModule constant, or an XML asset id like boosterstation_1.#");
+                    return;
+                }
+
+                if (!TryResolveTestAssetType(typeValue, out var typeId, out var resolvedVisualName))
+                {
+                    Send("dq%Invalid asset type. Use a numeric ID, an AssetTypeModule constant name, or an XML asset id like boosterstation_1.#");
+                    return;
+                }
+
+                if (!TryParseOptionalIntFlag(flags, "id", out var objectId, out flagError, minValue: 1)
+                    || !TryParseOptionalIntFlag(flags, "faction", out var factionId, out flagError, minValue: 0)
+                    || !TryParseOptionalIntFlag(flags, "design", out var designId, out flagError, minValue: 0)
+                    || !TryParseOptionalIntFlag(flags, "expansion", out var expansionStage, out flagError, minValue: 0)
+                    || !TryParseOptionalIntFlag(flags, "clanId", out var clanId, out flagError, minValue: 0)
+                    || !TryParseOptionalIntFlag(flags, "x", out var x, out flagError)
+                    || !TryParseOptionalIntFlag(flags, "y", out var y, out flagError)
+                    || !TryParseOptionalBoolFlag(flags, "invisible", out var invisible, out flagError)
+                    || !TryParseOptionalBoolFlag(flags, "warnRadar", out var warnRadar, out flagError)
+                    || !TryParseOptionalBoolFlag(flags, "detectedByWarnRadar", out var detectedByWarnRadar, out flagError)
+                    || !TryParseOptionalBoolFlag(flags, "showBubble", out var showBubble, out flagError))
+                {
+                    Send($"dq%{flagError}#");
+                    return;
+                }
+
+                var spawnPosition = new Position(x ?? gameSession.Player.Position.X, y ?? gameSession.Player.Position.Y);
+
+                if (objectId.HasValue && HasEntityIdCollision(gameSession.Player.Spacemap, objectId.Value))
+                {
+                    Send($"dq%Object ID {objectId.Value} is already in use on this map.#");
+                    return;
+                }
+
+                var asset = objectId.HasValue
+                    ? new Asset(objectId.Value, gameSession.Player.Spacemap, spawnPosition, typeId)
+                    : new Asset(gameSession.Player.Spacemap, spawnPosition, typeId);
+
+                asset.VisualName = flags.TryGetValue("name", out var visualNameOverride) ? visualNameOverride : resolvedVisualName;
+                asset.FactionId = factionId ?? 0;
+                asset.DesignId = designId ?? 0;
+                asset.ExpansionStage = expansionStage ?? 0;
+                asset.ClanTag = flags.TryGetValue("clanTag", out var clanTag) ? clanTag : "";
+                asset.ClanId = clanId ?? 0;
+                asset.Invisible = invisible ?? false;
+                asset.VisibleOnWarnRadar = warnRadar ?? false;
+                asset.DetectedByWarnRadar = detectedByWarnRadar ?? false;
+                asset.ShowBubble = showBubble ?? false;
+
+                var visualName = string.IsNullOrEmpty(asset.VisualName) ? "<default>" : asset.VisualName;
+                Send($"dq%Test asset created. ObjectId={asset.Id}, TypeId={asset.AssetTypeId}, Name={visualName}, Faction={asset.FactionId}, Design={asset.DesignId}, Expansion={asset.ExpansionStage}, X={asset.Position.X}, Y={asset.Position.Y}.#");
+                Out.WriteLine($"[TESTASSET_CMD] Success user={gameSession.Player.Id} objectId={asset.Id} typeId={asset.AssetTypeId} visualName={visualName} faction={asset.FactionId} design={asset.DesignId} expansion={asset.ExpansionStage} x={asset.Position.X} y={asset.Position.Y}", "ChatClient.cs");
+            }
+
             else if (cmd == "/testbox")
             {
                 if (Permission != Permissions.ADMINISTRATOR)
@@ -1094,6 +1172,197 @@ namespace Ow.Chat
             }
 
             return false;
+        }
+
+        private static Dictionary<string, string> ParseFlags(string[] args, int startIndex, out string error)
+        {
+            error = null;
+            var flags = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            for (var index = startIndex; index < args.Length; index++)
+            {
+                var token = args[index];
+                if (!IsFlagToken(token))
+                {
+                    error = $"Unexpected token '{token}'. Use flags like --type boosterstation_1.";
+                    return null;
+                }
+
+                var normalizedToken = token.StartsWith("--") ? token.Substring(2) : token.Substring(1);
+                var separatorIndex = normalizedToken.IndexOf('=');
+                var rawFlagName = separatorIndex >= 0 ? normalizedToken.Substring(0, separatorIndex) : normalizedToken;
+                var inlineValue = separatorIndex >= 0 ? normalizedToken.Substring(separatorIndex + 1) : null;
+
+                var flagName = NormalizeFlagName(rawFlagName);
+                if (flagName == null)
+                {
+                    error = $"Unknown flag '{token}'.";
+                    return null;
+                }
+
+                if (IsBooleanFlag(flagName))
+                {
+                    var boolValue = inlineValue;
+                    if (string.IsNullOrEmpty(boolValue) && index + 1 < args.Length && !IsFlagToken(args[index + 1]))
+                        boolValue = args[++index];
+
+                    if (string.IsNullOrEmpty(boolValue))
+                        boolValue = "true";
+
+                    if (!bool.TryParse(boolValue, out var parsedBool))
+                    {
+                        error = $"Invalid boolean value '{boolValue}' for flag '{token}'. Use true or false.";
+                        return null;
+                    }
+
+                    flags[flagName] = parsedBool ? "true" : "false";
+                    continue;
+                }
+
+                var value = inlineValue;
+                if (string.IsNullOrEmpty(value))
+                {
+                    if (index + 1 >= args.Length || IsFlagToken(args[index + 1]))
+                    {
+                        error = $"Flag '{token}' requires a value.";
+                        return null;
+                    }
+
+                    value = args[++index];
+                }
+
+                flags[flagName] = value;
+            }
+
+            return flags;
+        }
+
+        private static bool TryParseOptionalIntFlag(Dictionary<string, string> flags, string key, out int? value, out string error, int? minValue = null)
+        {
+            error = null;
+            value = null;
+
+            if (!flags.TryGetValue(key, out var rawValue))
+                return true;
+
+            if (!int.TryParse(rawValue, out var parsedValue))
+            {
+                error = $"Invalid value '{rawValue}' for --{key}.";
+                return false;
+            }
+
+            if (minValue.HasValue && parsedValue < minValue.Value)
+            {
+                error = $"Flag --{key} must be >= {minValue.Value}.";
+                return false;
+            }
+
+            value = parsedValue;
+            return true;
+        }
+
+        private static bool TryParseOptionalBoolFlag(Dictionary<string, string> flags, string key, out bool? value, out string error)
+        {
+            error = null;
+            value = null;
+
+            if (!flags.TryGetValue(key, out var rawValue))
+                return true;
+
+            if (!bool.TryParse(rawValue, out var parsedValue))
+            {
+                error = $"Invalid value '{rawValue}' for --{key}. Use true or false.";
+                return false;
+            }
+
+            value = parsedValue;
+            return true;
+        }
+
+        private static bool HasEntityIdCollision(Spacemap spacemap, int id)
+        {
+            return spacemap.Objects.ContainsKey(id)
+                || spacemap.Activatables.ContainsKey(id)
+                || spacemap.Characters.ContainsKey(id);
+        }
+
+        private static bool IsFlagToken(string token)
+        {
+            return !string.IsNullOrEmpty(token) && token.StartsWith("-") && token.Length > 1;
+        }
+
+        private static bool IsBooleanFlag(string flagName)
+        {
+            return flagName == "invisible"
+                || flagName == "warnRadar"
+                || flagName == "detectedByWarnRadar"
+                || flagName == "showBubble";
+        }
+
+        private static string NormalizeFlagName(string flagName)
+        {
+            switch (flagName.Trim().ToLowerInvariant())
+            {
+                case "t":
+                case "type":
+                case "asset":
+                case "asset-type":
+                case "type-id":
+                case "typeid":
+                    return "type";
+                case "id":
+                case "asset-id":
+                case "object-id":
+                case "uid":
+                    return "id";
+                case "f":
+                case "faction":
+                case "faction-id":
+                    return "faction";
+                case "n":
+                case "name":
+                case "asset-name":
+                case "xml":
+                case "xml-id":
+                    return "name";
+                case "d":
+                case "design":
+                case "design-id":
+                    return "design";
+                case "e":
+                case "ext":
+                case "extension":
+                case "expansion":
+                case "expansion-stage":
+                    return "expansion";
+                case "ct":
+                case "tag":
+                case "clan-tag":
+                    return "clanTag";
+                case "cid":
+                case "clan-id":
+                    return "clanId";
+                case "x":
+                    return "x";
+                case "y":
+                    return "y";
+                case "inv":
+                case "invisible":
+                    return "invisible";
+                case "warn":
+                case "warn-radar":
+                case "radar":
+                case "visible-on-warn-radar":
+                    return "warnRadar";
+                case "detected":
+                case "detected-by-warn-radar":
+                    return "detectedByWarnRadar";
+                case "bubble":
+                case "show-bubble":
+                    return "showBubble";
+                default:
+                    return null;
+            }
         }
 
         private static bool TryResolveVisualModifier(string value, out short modifier)

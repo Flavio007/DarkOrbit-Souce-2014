@@ -154,8 +154,8 @@ namespace Ow.Game.Objects
                         otherPlayer.SendCommand(AssetInfoCommand.write(
                             activatable.Id,
                             activatable.GetAssetType(),
-                            activatable is Satellite ? (activatable as Satellite).DesignId : 0,
-                            0,
+                            activatable.GetVisualDesignId(),
+                            activatable.GetVisualExpansionStage(),
                             activatable.CurrentHitPoints,
                             activatable.MaxHitPoints,
                             activatable.MaxShieldPoints > 0 ? true : false,

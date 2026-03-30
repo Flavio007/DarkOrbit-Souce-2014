@@ -18,6 +18,16 @@ namespace Ow.Game.Objects
 
         public abstract void Click(GameSession gameSession);
 
+        public virtual int GetVisualDesignId()
+        {
+            return 0;
+        }
+
+        public virtual int GetVisualExpansionStage()
+        {
+            return 0;
+        }
+
         public short AssetTypeId { get; set; }
 
         public override string Name { get; set; }

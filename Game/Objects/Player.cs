@@ -966,8 +966,8 @@ namespace Ow.Game.Objects
                         SendCommand(AssetInfoCommand.write(
                             asset.Id,
                             asset.GetAssetType(),
-                            asset is Satellite satellite ? satellite.DesignId : 0,
-                            3,
+                            asset.GetVisualDesignId(),
+                            asset.GetVisualExpansionStage(),
                             asset.CurrentHitPoints,
                             asset.MaxHitPoints,
                             asset.MaxShieldPoints > 0 ? true : false,

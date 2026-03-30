@@ -128,7 +128,7 @@ namespace Ow.Game.Objects.Stations
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
             return AssetCreateCommand.write(GetAssetType(), Name,
-                FactionId, "", Id, GetCurrentDesignId(), GetCurrentExpansionStage(),
+                    FactionId, "", Id, GetVisualDesignId(), GetVisualExpansionStage(),
                 Position.X, Position.Y, 0, true, true, true, true,
                 new ClanRelationModule(ClanRelationModule.NONE),
                 VisualModifiers.Values.ToList());
@@ -253,9 +253,10 @@ namespace Ow.Game.Objects.Stations
 
         private void HandleVulnerabilitySurvived()
         {
-            if (UpgradeLevel < Definition.GetMaxLevel())
+            var nextLevel = Definition.GetNextLevel(UpgradeLevel);
+            if (nextLevel > UpgradeLevel)
             {
-                SetUpgradeLevel(UpgradeLevel + 1, true);
+                SetUpgradeLevel(nextLevel, true);
                 TriggerLevelUpVisualEffect();
                 GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} survived the vulnerability window and reached level {GetEffectiveLevel()}.");
             }
@@ -374,7 +375,7 @@ namespace Ow.Game.Objects.Stations
 
         public int GetEffectiveLevel()
         {
-            return UpgradeLevel <= 0 ? 1 : UpgradeLevel;
+            return UpgradeLevel > 0 ? UpgradeLevel : Definition.GetMinLevel();
         }
 
         public bool SetUpgradeLevel(int level, bool restoreCurrent = true)
@@ -383,13 +384,7 @@ namespace Ow.Game.Objects.Stations
                 return false;
 
             var previousLevel = Level;
-            var maxLevel = Definition.GetMaxLevel();
-            if (level < 1)
-                level = 1;
-            else if (level > maxLevel)
-                level = maxLevel;
-
-            Level = level;
+            Level = Definition.NormalizeUpgradeLevel(level);
             ApplyLevelStats(restoreCurrent);
 
             foreach (var tower in DefenseTowers.Where(x => x != null && !x.Destroyed))
@@ -405,15 +400,35 @@ namespace Ow.Game.Objects.Stations
             return true;
         }
 
-        private int GetCurrentDesignId()
+        public override int GetVisualDesignId()
         {
             return Definition.GetCenterLevelDefinition(GetEffectiveLevel()).DesignId;
         }
 
-        private int GetCurrentExpansionStage()
+        private static int GetClientExpansionStage(int level)
         {
-            var stats = Definition.GetCenterLevelDefinition(GetEffectiveLevel());
-            return stats.ExpansionStage > 0 ? stats.ExpansionStage : Math.Max(0, GetEffectiveLevel() - 1);
+            switch (level)
+            {
+                case 1:
+                    return 1;
+                case 2:
+                    return 10;
+                case 3:
+                    return 16;
+                default:
+                    return Math.Max(1, level);
+            }
+        }
+
+        public override int GetVisualExpansionStage()
+        {
+            var effectiveLevel = GetEffectiveLevel();
+            var stats = Definition.GetCenterLevelDefinition(effectiveLevel);
+
+            if (stats.ExpansionStage > 0)
+                return stats.ExpansionStage;
+
+            return GetClientExpansionStage(effectiveLevel);
         }
 
         private void RefreshVisual()

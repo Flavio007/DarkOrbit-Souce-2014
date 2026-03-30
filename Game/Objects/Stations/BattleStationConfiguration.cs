@@ -120,9 +120,53 @@ namespace Ow.Game.Objects.Stations
                 .LastOrDefault(x => x.Level <= level) ?? CenterLevels.OrderBy(x => x.Level).First();
         }
 
+        public int GetMinLevel()
+        {
+            return CenterLevels != null && CenterLevels.Count > 0 ? CenterLevels.Min(x => x.Level) : 1;
+        }
+
         public int GetMaxLevel()
         {
             return CenterLevels != null && CenterLevels.Count > 0 ? CenterLevels.Max(x => x.Level) : 1;
+        }
+
+        public int NormalizeUpgradeLevel(int requestedLevel)
+        {
+            var orderedLevels = GetOrderedLevels();
+            if (orderedLevels.Count == 0)
+                return 1;
+
+            if (orderedLevels.Contains(requestedLevel))
+                return requestedLevel;
+
+            if (requestedLevel >= 1 && requestedLevel <= orderedLevels.Count)
+                return orderedLevels[requestedLevel - 1];
+
+            if (requestedLevel < orderedLevels[0])
+                return orderedLevels[0];
+
+            if (requestedLevel > orderedLevels[orderedLevels.Count - 1])
+                return orderedLevels[orderedLevels.Count - 1];
+
+            return requestedLevel;
+        }
+
+        public int GetNextLevel(int currentLevel)
+        {
+            foreach (var level in GetOrderedLevels())
+            {
+                if (level > currentLevel)
+                    return level;
+            }
+
+            return currentLevel;
+        }
+
+        private List<int> GetOrderedLevels()
+        {
+            return CenterLevels != null && CenterLevels.Count > 0
+                ? CenterLevels.Select(x => x.Level).Distinct().OrderBy(x => x).ToList()
+                : new List<int> { 1 };
         }
 
         public bool IsVulnerableAt(DateTime timestamp)
@@ -151,6 +195,12 @@ namespace Ow.Game.Objects.Stations
     static class BattleStationConfiguration
     {
         private const string DefaultConfigRelativePath = "config\\battle_stations.xml";
+        private static readonly Dictionary<int, int> LegacyUpgradeLevelMap = new Dictionary<int, int>
+        {
+            { 1, 1 },
+            { 2, 10 },
+            { 3, 16 }
+        };
 
         private static readonly object SyncRoot = new object();
         private static List<BattleStationDefinition> cachedDefinitions;
@@ -216,22 +266,22 @@ namespace Ow.Game.Objects.Stations
 <BattleStations>
     <Defaults stationAssetTypeId=""36"" asteroidAssetTypeId=""35"" captureRadius=""450"" captureSeconds=""10"" minPlayersToCapture=""1"" maxHitPoints=""250000"" maxShieldPoints=""250000"" towerAssetTypeId=""37"">
         <CenterLevels>
-            <Level level=""1"" hitPoints=""250000"" shieldPoints=""250000"" expansionStage=""0"" />
-            <Level level=""2"" hitPoints=""325000"" shieldPoints=""325000"" expansionStage=""1"" />
-            <Level level=""3"" hitPoints=""400000"" shieldPoints=""400000"" expansionStage=""2"" />
+            <Level level=""1"" hitPoints=""250000"" shieldPoints=""250000"" expansionStage=""1"" />
+                        <Level level=""10"" hitPoints=""325000"" shieldPoints=""325000"" expansionStage=""10"" />
+                        <Level level=""16"" hitPoints=""400000"" shieldPoints=""400000"" expansionStage=""16"" />
         </CenterLevels>
     </Defaults>
   <BattleStation mapId=""16"" name=""4-4 Battle Station"" x=""20900"" y=""13000"">
     <Vulnerability start=""12:00"" end=""12:30"" />
     <Vulnerability start=""20:00"" end=""20:30"" />
-        <Tower slotId=""2"" type=""LASER_LOW_RANGE"" designId=""6"" name=""North-East Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
-        <Tower slotId=""3"" type=""HONOR_BOOSTER"" designId=""9"" name=""East Honour Booster""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" boostPercent=""5"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" boostPercent=""10"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" boostPercent=""15"" /></Tower>
-        <Tower slotId=""4"" type=""LASER_LOW_RANGE"" designId=""6"" name=""South-East Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
-        <Tower slotId=""5"" type=""EXPERIENCE_BOOSTER"" designId=""11"" name=""South Experience Booster""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" boostPercent=""5"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" boostPercent=""10"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" boostPercent=""15"" /></Tower>
-        <Tower slotId=""6"" type=""LASER_LOW_RANGE"" designId=""6"" name=""South-West Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
-          <Tower slotId=""7"" type=""REPAIR"" designId=""3"" name=""West Repair Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" repairAmount=""5000"" repairIntervalSeconds=""10"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" repairAmount=""7500"" repairIntervalSeconds=""10"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" repairAmount=""10000"" repairIntervalSeconds=""10"" /></Tower>
-        <Tower slotId=""8"" type=""LASER_LOW_RANGE"" designId=""6"" name=""North-West Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
-        <Tower slotId=""9"" type=""ROCKET_MID_ACCURACY"" designId=""7"" name=""North Missile Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1400"" range=""780"" cooldownSeconds=""2.0"" missProbability=""0.30"" /><Level level=""2"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1900"" range=""820"" cooldownSeconds=""1.8"" missProbability=""0.24"" /><Level level=""3"" hitPoints=""150000"" shieldPoints=""150000"" damage=""2400"" range=""860"" cooldownSeconds=""1.6"" missProbability=""0.18"" /></Tower>
+                <Tower slotId=""2"" type=""LASER_LOW_RANGE"" designId=""6"" name=""North-East Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
+                <Tower slotId=""3"" type=""HONOR_BOOSTER"" designId=""9"" name=""East Honour Booster""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" boostPercent=""5"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" boostPercent=""10"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" boostPercent=""15"" /></Tower>
+                <Tower slotId=""4"" type=""LASER_LOW_RANGE"" designId=""6"" name=""South-East Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
+                <Tower slotId=""5"" type=""EXPERIENCE_BOOSTER"" designId=""11"" name=""South Experience Booster""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" boostPercent=""5"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" boostPercent=""10"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" boostPercent=""15"" /></Tower>
+                <Tower slotId=""6"" type=""LASER_LOW_RANGE"" designId=""6"" name=""South-West Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
+                    <Tower slotId=""7"" type=""REPAIR"" designId=""3"" name=""West Repair Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" repairAmount=""5000"" repairIntervalSeconds=""10"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" repairAmount=""7500"" repairIntervalSeconds=""10"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" repairAmount=""10000"" repairIntervalSeconds=""10"" /></Tower>
+                <Tower slotId=""8"" type=""LASER_LOW_RANGE"" designId=""6"" name=""North-West Laser Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1000"" range=""590"" cooldownSeconds=""1.0"" missProbability=""0.10"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1400"" range=""610"" cooldownSeconds=""0.9"" missProbability=""0.08"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" damage=""1800"" range=""630"" cooldownSeconds=""0.8"" missProbability=""0.06"" /></Tower>
+                <Tower slotId=""9"" type=""ROCKET_MID_ACCURACY"" designId=""7"" name=""North Missile Tower""><Level level=""1"" hitPoints=""90000"" shieldPoints=""90000"" damage=""1400"" range=""780"" cooldownSeconds=""2.0"" missProbability=""0.30"" /><Level level=""10"" hitPoints=""120000"" shieldPoints=""120000"" damage=""1900"" range=""820"" cooldownSeconds=""1.8"" missProbability=""0.24"" /><Level level=""16"" hitPoints=""150000"" shieldPoints=""150000"" damage=""2400"" range=""860"" cooldownSeconds=""1.6"" missProbability=""0.18"" /></Tower>
   </BattleStation>
 </BattleStations>");
         }
@@ -324,7 +374,7 @@ namespace Ow.Game.Objects.Stations
                 });
             }
 
-            return centerLevels.OrderBy(x => x.Level).ToList();
+            return NormalizeLegacyUpgradeLevels(centerLevels);
         }
 
         private static List<BattleStationTowerDefinition> ParseTowers(XElement stationElement, XElement defaults)
@@ -381,7 +431,26 @@ namespace Ow.Game.Objects.Stations
                 });
             }
 
-            return levels.OrderBy(x => x.Level).ToList();
+            return NormalizeLegacyUpgradeLevels(levels);
+        }
+
+        private static List<BattleStationLevelDefinition> NormalizeLegacyUpgradeLevels(List<BattleStationLevelDefinition> levels)
+        {
+            var orderedLevels = levels.OrderBy(x => x.Level).ToList();
+            if (orderedLevels.Count != 3 || orderedLevels[0].Level != 1 || orderedLevels[1].Level != 2 || orderedLevels[2].Level != 3)
+                return orderedLevels;
+
+            foreach (var levelDefinition in orderedLevels)
+            {
+                var legacyLevel = levelDefinition.Level;
+                var mappedLevel = LegacyUpgradeLevelMap[legacyLevel];
+                levelDefinition.Level = mappedLevel;
+
+                if (levelDefinition.ExpansionStage <= 0 || levelDefinition.ExpansionStage == legacyLevel || levelDefinition.ExpansionStage == legacyLevel - 1)
+                    levelDefinition.ExpansionStage = mappedLevel;
+            }
+
+            return orderedLevels.OrderBy(x => x.Level).ToList();
         }
 
         private static BattleStationLevelDefinition ParseLevelDefinition(XElement levelElement)

@@ -45,7 +45,14 @@ namespace Ow.Game.Objects.Stations
     class Satellite : Activatable
     {
         private const int AlliedRepairRange = 700;
-        private const int RepairEffectDurationMilliseconds = 2000;
+
+        private class RepairEffectState
+        {
+            public Attackable Target { get; set; }
+            public short Modifier { get; set; }
+        }
+
+        private readonly Dictionary<int, RepairEffectState> activeRepairEffects = new Dictionary<int, RepairEffectState>();
 
         public int DesignId { get; set; }
         public BattleStation BattleStation { get; set; }
@@ -106,6 +113,8 @@ namespace Ow.Game.Objects.Stations
         {
             if (!Installed)
             {
+                ClearRepairEffects();
+
                 var player = GameManager.GetPlayerById(OwnerId);
 
                 if (InstallationSecondsLeft > 0)
@@ -136,12 +145,18 @@ namespace Ow.Game.Objects.Stations
             }
             else if (Installed)
             {
-                if (BattleStation.AssetTypeId == AssetTypeModule.BATTLESTATION)
+                if (BattleStation.AssetTypeId != AssetTypeModule.BATTLESTATION)
+                {
+                    ClearRepairEffects();
+                }
+                else if (BattleStation.AssetTypeId == AssetTypeModule.BATTLESTATION)
                 {
                     if (Type != StationModuleModule.DEFLECTOR && Type != StationModuleModule.HULL && Type != StationModuleModule.NONE
                         && Type != StationModuleModule.DAMAGE_BOOSTER && Type != StationModuleModule.EXPERIENCE_BOOSTER 
                         && Type != StationModuleModule.HONOR_BOOSTER && Type != StationModuleModule.REPAIR)
                     {
+                        ClearRepairEffects();
+
                         foreach (var character in Spacemap.Characters.Values)
                         {
                             if (character is Player || character is Pet)
@@ -152,6 +167,10 @@ namespace Ow.Game.Objects.Stations
                     {
                         RepairStationAssets();
                     }
+                    else
+                    {
+                        ClearRepairEffects();
+                    }
                 }
             }
         }
@@ -160,40 +179,86 @@ namespace Ow.Game.Objects.Stations
         public void RepairStationAssets()
         {
             var stats = GetCurrentLevelStats();
-            if (stats == null || stats.RepairAmount <= 0)
+            if (stats == null || stats.RepairAmount <= 0 || Destroyed)
+            {
+                ClearRepairEffects();
                 return;
+            }
+
+            var now = DateTime.Now;
+            var repairTargets = GetRepairTargets(now).ToList();
+
+            SyncRepairEffects(repairTargets);
 
             var repairIntervalSeconds = stats.RepairIntervalSeconds > 0 ? stats.RepairIntervalSeconds : 10;
 
-            if (!Destroyed && repairTime.AddSeconds(repairIntervalSeconds) < DateTime.Now)
+            if (repairTime.AddSeconds(repairIntervalSeconds) < now)
             {
                 var repairedAnyTarget = false;
 
-                if (BattleStation.LastCombatTime.AddSeconds(10) < DateTime.Now)
-                    repairedAnyTarget = TryRepairTarget(BattleStation, stats.RepairAmount, VisualModifierCommand.EMERGENCY_REPAIR_EFFECT) || repairedAnyTarget;
-
-                foreach (var tower in BattleStation.DefenseTowers.Where(x => x != null && !x.Destroyed && x.Id != Id))
-                {
-                    if (tower.LastCombatTime.AddSeconds(10) >= DateTime.Now)
-                        continue;
-
-                    repairedAnyTarget = TryRepairTarget(tower, stats.RepairAmount, VisualModifierCommand.EMERGENCY_REPAIR_EFFECT) || repairedAnyTarget;
-                }
-
-                foreach (var player in GetAlliedPlayersInRepairRange())
-                {
-                    if (player.LastCombatTime.AddSeconds(10) >= DateTime.Now)
-                        continue;
-
-                    repairedAnyTarget = TryRepairTarget(player, stats.RepairAmount, VisualModifierCommand.HEAL_EFFECT) || repairedAnyTarget;
-                }
+                foreach (var repairTarget in repairTargets)
+                    repairedAnyTarget = TryRepairTarget(repairTarget.Target, stats.RepairAmount) || repairedAnyTarget;
 
                 if (repairedAnyTarget)
-                    repairTime = DateTime.Now;
+                    repairTime = now;
             }
         }
 
-        private bool TryRepairTarget(Attackable target, int repairAmount, short visualEffect = 0)
+        private IEnumerable<RepairEffectState> GetRepairTargets(DateTime now)
+        {
+            if (CanRepairTarget(BattleStation, now))
+                yield return new RepairEffectState { Target = BattleStation, Modifier = VisualModifierCommand.EMERGENCY_REPAIR_EFFECT };
+
+            foreach (var tower in BattleStation.DefenseTowers.Where(x => x != null && !x.Destroyed && x.Id != Id))
+            {
+                if (CanRepairTarget(tower, now))
+                    yield return new RepairEffectState { Target = tower, Modifier = VisualModifierCommand.EMERGENCY_REPAIR_EFFECT };
+            }
+
+            foreach (var player in GetAlliedPlayersInRepairRange())
+            {
+                if (CanRepairTarget(player, now))
+                    yield return new RepairEffectState { Target = player, Modifier = VisualModifierCommand.HEAL_EFFECT };
+            }
+        }
+
+        private static bool CanRepairTarget(Attackable target, DateTime now)
+        {
+            return target != null
+                && !target.Destroyed
+                && target.CurrentHitPoints > 0
+                && target.LastCombatTime.AddSeconds(10) < now
+                && (target.CurrentHitPoints < target.MaxHitPoints || target.CurrentShieldPoints < target.MaxShieldPoints);
+        }
+
+        private void SyncRepairEffects(IEnumerable<RepairEffectState> repairTargets)
+        {
+            var desiredEffects = repairTargets.ToDictionary(x => x.Target.Id, x => x);
+
+            foreach (var activeEffect in activeRepairEffects.Where(x => !desiredEffects.ContainsKey(x.Key) || desiredEffects[x.Key].Modifier != x.Value.Modifier).ToList())
+            {
+                activeEffect.Value.Target?.RemoveVisualModifier(activeEffect.Value.Modifier);
+                activeRepairEffects.Remove(activeEffect.Key);
+            }
+
+            foreach (var desiredEffect in desiredEffects)
+            {
+                if (!desiredEffect.Value.Target.VisualModifiers.ContainsKey(desiredEffect.Value.Modifier))
+                    desiredEffect.Value.Target.AddVisualModifier(desiredEffect.Value.Modifier, 0, "", 0, true);
+
+                activeRepairEffects[desiredEffect.Key] = desiredEffect.Value;
+            }
+        }
+
+        private void ClearRepairEffects()
+        {
+            foreach (var activeEffect in activeRepairEffects.Values.ToList())
+                activeEffect.Target?.RemoveVisualModifier(activeEffect.Modifier);
+
+            activeRepairEffects.Clear();
+        }
+
+        private bool TryRepairTarget(Attackable target, int repairAmount)
         {
             if (target == null || repairAmount <= 0)
                 return false;
@@ -211,9 +276,6 @@ namespace Ow.Game.Objects.Stations
                 target.Heal(repairAmount, 0, HealType.SHIELD);
                 repaired = true;
             }
-
-            if (repaired && visualEffect != 0)
-                _ = target.PlayTemporaryVisualModifier(visualEffect, RepairEffectDurationMilliseconds);
 
             return repaired;
         }
@@ -362,7 +424,7 @@ namespace Ow.Game.Objects.Stations
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
             return AssetCreateCommand.write(GetAssetType(), Name,
-                                          FactionId, Clan.Tag, Id, DesignId, 0,
+                                              FactionId, Clan.Tag, Id, GetVisualDesignId(), GetVisualExpansionStage(),
                                           Position.X, Position.Y, Clan.Id, false, true, true, true,
                                           new ClanRelationModule(clanRelationModule),
                                           VisualModifiers.Values.ToList());
@@ -370,6 +432,8 @@ namespace Ow.Game.Objects.Stations
 
         public void Remove(bool deleteModule = false, bool removeList = true, bool closeUI = false)
         {
+            ClearRepairEffects();
+
             if (IsStaticDefenseTower)
             {
                 Program.TickManager.RemoveTick(this);
@@ -436,7 +500,7 @@ namespace Ow.Game.Objects.Stations
                 CurrentShieldPoints = MaxShieldPoints;
 
             if (!IsDestroyedModuleState)
-                DesignId = GetCurrentDesignId();
+                DesignId = GetVisualDesignId();
 
             UpdateStatus();
         }
@@ -462,7 +526,7 @@ namespace Ow.Game.Objects.Stations
                 : null;
         }
 
-        private int GetCurrentDesignId()
+        public override int GetVisualDesignId()
         {
             var levelStats = GetCurrentLevelStats();
             if (levelStats != null && levelStats.DesignId > 0)
@@ -471,11 +535,17 @@ namespace Ow.Game.Objects.Stations
             return TowerDefinition?.DesignId ?? DesignId;
         }
 
+        public override int GetVisualExpansionStage()
+        {
+            return BattleStation?.GetVisualExpansionStage() ?? 1;
+        }
+
         public void EnterDestroyedState()
         {
             if (!IsStaticDefenseTower || TowerDefinition == null)
                 return;
 
+            ClearRepairEffects();
             RemoveVisualModifier(VisualModifierCommand.MODULE_INSTALL_EFFECT);
             RemoveVisualModifier(VisualModifierCommand.MODULE_LEVEL_UP_EFFECT);
             IsDestroyedModuleState = true;
@@ -498,7 +568,7 @@ namespace Ow.Game.Objects.Stations
             IsDestroyedModuleState = false;
             Destroyed = false;
             Type = TowerDefinition.Type;
-            DesignId = GetCurrentDesignId();
+            DesignId = GetVisualDesignId();
             ApplyLevelStats(true);
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
@@ -510,7 +580,7 @@ namespace Ow.Game.Objects.Stations
             if (!IsStaticDefenseTower || IsDestroyedModuleState)
                 return;
 
-            var updatedDesignId = GetCurrentDesignId();
+            var updatedDesignId = GetVisualDesignId();
             if (DesignId == updatedDesignId)
                 return;
 
