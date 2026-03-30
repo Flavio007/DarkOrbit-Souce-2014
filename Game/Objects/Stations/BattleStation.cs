@@ -128,7 +128,7 @@ namespace Ow.Game.Objects.Stations
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
             return AssetCreateCommand.write(GetAssetType(), Name,
-                FactionId, "", Id, 0, 0,
+                FactionId, "", Id, GetCurrentDesignId(), GetCurrentExpansionStage(),
                 Position.X, Position.Y, 0, true, true, true, true,
                 new ClanRelationModule(ClanRelationModule.NONE),
                 VisualModifiers.Values.ToList());
@@ -268,6 +268,7 @@ namespace Ow.Game.Objects.Stations
         private void UpdateShieldState(bool forceRefresh = false)
         {
             var shouldEnableShield = FactionId != 0 && !IsCurrentlyVulnerable();
+            var shieldWasActive = DeflectorActive;
 
             if (!forceRefresh && shouldEnableShield == DeflectorActive)
             {
@@ -286,6 +287,9 @@ namespace Ow.Game.Objects.Stations
                 AddVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR, DeflectorSecondsLeft, "", 0, true);
             else
                 RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+
+            if (shouldEnableShield && !shieldWasActive)
+                RestoreDestroyedTowers();
         }
 
         public static string GetFactionName(int factionId)
@@ -333,6 +337,7 @@ namespace Ow.Game.Objects.Stations
             if (FactionId == 0)
                 return false;
 
+            var previousLevel = Level;
             var maxLevel = Definition.GetMaxLevel();
             if (level < 1)
                 level = 1;
@@ -343,10 +348,39 @@ namespace Ow.Game.Objects.Stations
             ApplyLevelStats(restoreCurrent);
 
             foreach (var tower in DefenseTowers.Where(x => x != null && !x.Destroyed))
+            {
                 tower.ApplyLevelStats(restoreCurrent);
+                tower.RefreshVisual();
+            }
+
+            if (previousLevel != Level)
+                RefreshVisual();
 
             QueryManager.BattleStations.BattleStation(this);
             return true;
+        }
+
+        private int GetCurrentDesignId()
+        {
+            return Definition.GetCenterLevelDefinition(GetEffectiveLevel()).DesignId;
+        }
+
+        private int GetCurrentExpansionStage()
+        {
+            var stats = Definition.GetCenterLevelDefinition(GetEffectiveLevel());
+            return stats.ExpansionStage > 0 ? stats.ExpansionStage : Math.Max(0, GetEffectiveLevel() - 1);
+        }
+
+        private void RefreshVisual()
+        {
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+        }
+
+        private void RestoreDestroyedTowers()
+        {
+            foreach (var tower in DefenseTowers.Where(x => x != null && x.IsDestroyedModuleState).ToList())
+                tower.RestoreFromDestroyedState();
         }
     }
 }

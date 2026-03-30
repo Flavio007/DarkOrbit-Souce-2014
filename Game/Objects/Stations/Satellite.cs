@@ -46,8 +46,10 @@ namespace Ow.Game.Objects.Stations
     {
         public int DesignId { get; set; }
         public BattleStation BattleStation { get; set; }
+        public BattleStationTowerDefinition TowerDefinition { get; private set; }
         public int OwnerId { get; set; }
         public bool IsStaticDefenseTower { get; private set; }
+        public bool IsDestroyedModuleState { get; private set; }
         public Asset RepairPod { get; private set; }
         public int UpgradeLevel => BattleStation?.UpgradeLevel ?? 0;
 
@@ -84,6 +86,7 @@ namespace Ow.Game.Objects.Stations
             ShieldAbsorption = 0.8;
             BattleStation = battleStation;
             OwnerId = 0;
+            TowerDefinition = towerDefinition;
             Name = string.IsNullOrWhiteSpace(towerDefinition.Name) ? GetName(towerDefinition.Type) : towerDefinition.Name;
             DesignId = towerDefinition.DesignId;
             ItemId = 0;
@@ -206,7 +209,7 @@ namespace Ow.Game.Objects.Stations
 
         private void EnsureRepairAura()
         {
-            if (!IsStaticDefenseTower || Type != StationModuleModule.REPAIR || Destroyed || Spacemap == null || RepairPod != null)
+            if (!IsStaticDefenseTower || IsDestroyedModuleState || Type != StationModuleModule.REPAIR || Destroyed || Spacemap == null || RepairPod != null)
                 return;
 
             RepairPod = new Asset(Spacemap, Position, AssetTypeModule.HEALING_POD);
@@ -425,6 +428,9 @@ namespace Ow.Game.Objects.Stations
             if (restoreCurrent || CurrentShieldPoints > MaxShieldPoints)
                 CurrentShieldPoints = MaxShieldPoints;
 
+            if (!IsDestroyedModuleState)
+                DesignId = GetCurrentDesignId();
+
             UpdateStatus();
         }
 
@@ -447,6 +453,63 @@ namespace Ow.Game.Objects.Stations
             return IsStaticDefenseTower && BattleStation != null && BattleStation.Definition != null
                 ? BattleStation.Definition.Towers.FirstOrDefault(x => x.SlotId == SlotId)?.GetLevelDefinition(BattleStation.GetEffectiveLevel())
                 : null;
+        }
+
+        private int GetCurrentDesignId()
+        {
+            var levelStats = GetCurrentLevelStats();
+            if (levelStats != null && levelStats.DesignId > 0)
+                return levelStats.DesignId;
+
+            return TowerDefinition?.DesignId ?? DesignId;
+        }
+
+        public void EnterDestroyedState()
+        {
+            if (!IsStaticDefenseTower || TowerDefinition == null)
+                return;
+
+            RemoveRepairAura();
+            IsDestroyedModuleState = true;
+            Type = StationModuleModule.DESTROYED;
+            DesignId = TowerDefinition.DestroyedDesignId;
+            CurrentHitPoints = 0;
+            CurrentShieldPoints = 0;
+            Destroyed = true;
+            UpdateStatus();
+
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+        }
+
+        public void RestoreFromDestroyedState()
+        {
+            if (!IsStaticDefenseTower || TowerDefinition == null || !IsDestroyedModuleState)
+                return;
+
+            IsDestroyedModuleState = false;
+            Destroyed = false;
+            Type = TowerDefinition.Type;
+            DesignId = GetCurrentDesignId();
+            ApplyLevelStats(true);
+            EnsureRepairAura();
+
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+        }
+
+        public void RefreshVisual()
+        {
+            if (!IsStaticDefenseTower || IsDestroyedModuleState)
+                return;
+
+            var updatedDesignId = GetCurrentDesignId();
+            if (DesignId == updatedDesignId)
+                return;
+
+            DesignId = updatedDesignId;
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
         }
 
         public static string GetName(short type)

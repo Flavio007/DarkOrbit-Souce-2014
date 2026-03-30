@@ -353,7 +353,7 @@ namespace Ow.Game.Objects
             else if (this is Satellite satellite)
             {
                 if (satellite.IsStaticDefenseTower)
-                    satellite.BattleStation.HandleTowerDestroyed(satellite);
+                    satellite.EnterDestroyedState();
                 else
                 {
                     satellite.Remove(true);

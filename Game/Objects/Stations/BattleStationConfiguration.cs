@@ -16,6 +16,8 @@ namespace Ow.Game.Objects.Stations
         public int Level { get; set; }
         public int MaxHitPoints { get; set; }
         public int MaxShieldPoints { get; set; }
+        public int DesignId { get; set; }
+        public int ExpansionStage { get; set; }
         public int Damage { get; set; }
         public int Range { get; set; }
         public double CooldownSeconds { get; set; }
@@ -78,6 +80,7 @@ namespace Ow.Game.Objects.Stations
         public short Type { get; set; }
         public short AssetTypeId { get; set; }
         public int DesignId { get; set; }
+        public int DestroyedDesignId { get; set; }
         public List<BattleStationLevelDefinition> Levels { get; set; }
 
         public BattleStationLevelDefinition GetLevelDefinition(int level)
@@ -213,9 +216,9 @@ namespace Ow.Game.Objects.Stations
 <BattleStations>
     <Defaults stationAssetTypeId=""36"" asteroidAssetTypeId=""35"" captureRadius=""450"" captureSeconds=""10"" minPlayersToCapture=""1"" maxHitPoints=""250000"" maxShieldPoints=""250000"" towerAssetTypeId=""37"">
         <CenterLevels>
-            <Level level=""1"" hitPoints=""250000"" shieldPoints=""250000"" />
-            <Level level=""2"" hitPoints=""325000"" shieldPoints=""325000"" />
-            <Level level=""3"" hitPoints=""400000"" shieldPoints=""400000"" />
+            <Level level=""1"" hitPoints=""250000"" shieldPoints=""250000"" expansionStage=""0"" />
+            <Level level=""2"" hitPoints=""325000"" shieldPoints=""325000"" expansionStage=""1"" />
+            <Level level=""3"" hitPoints=""400000"" shieldPoints=""400000"" expansionStage=""2"" />
         </CenterLevels>
     </Defaults>
   <BattleStation mapId=""16"" name=""4-4 Battle Station"" x=""20900"" y=""13000"">
@@ -314,6 +317,8 @@ namespace Ow.Game.Objects.Stations
                 centerLevels.Add(new BattleStationLevelDefinition
                 {
                     Level = 1,
+                    DesignId = GetIntAttribute(stationElement, defaults, "designId", 0),
+                    ExpansionStage = GetIntAttribute(stationElement, defaults, "expansionStage", 0),
                     MaxHitPoints = GetIntAttribute(stationElement, defaults, "maxHitPoints", 250000),
                     MaxShieldPoints = GetIntAttribute(stationElement, defaults, "maxShieldPoints", 250000)
                 });
@@ -339,6 +344,7 @@ namespace Ow.Game.Objects.Stations
                     Type = ResolveTowerType(GetAttributeValue(towerElement, "type", "LASER_LOW_RANGE")),
                     AssetTypeId = GetShortAttribute(towerElement, defaults, "towerAssetTypeId", AssetTypeModule.SATELLITE),
                     DesignId = GetIntAttribute(towerElement, defaults, "designId", 6),
+                    DestroyedDesignId = GetIntAttribute(towerElement, defaults, "destroyedDesignId", 0),
                     Levels = ParseTowerLevels(towerElement, defaults)
                 });
             }
@@ -362,6 +368,7 @@ namespace Ow.Game.Objects.Stations
                 levels.Add(new BattleStationLevelDefinition
                 {
                     Level = 1,
+                    DesignId = GetIntAttribute(towerElement, defaults, "designId", 6),
                     MaxHitPoints = GetIntAttribute(towerElement, defaults, "towerHitPoints", 90000),
                     MaxShieldPoints = GetIntAttribute(towerElement, defaults, "towerShieldPoints", 90000),
                     Damage = GetIntAttribute(towerElement, defaults, "damage", 1000),
@@ -386,6 +393,8 @@ namespace Ow.Game.Objects.Stations
             return new BattleStationLevelDefinition
             {
                 Level = level,
+                DesignId = GetIntAttribute(levelElement, null, "designId", 0),
+                ExpansionStage = GetIntAttribute(levelElement, null, "expansionStage", 0),
                 MaxHitPoints = GetIntAttribute(levelElement, null, "hitPoints", 0),
                 MaxShieldPoints = GetIntAttribute(levelElement, null, "shieldPoints", 0),
                 Damage = GetIntAttribute(levelElement, null, "damage", 0),
