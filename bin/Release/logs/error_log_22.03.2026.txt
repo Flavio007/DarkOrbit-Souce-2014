@@ -1,0 +1,2 @@
+[22.03.2026 15: 09:46] - [Player.cs] SelectEntity void exception: System.NullReferenceException: Referência de objeto não definida para uma instância de um objeto.
+   em Ow.Game.Objects.Player.SelectEntity(Int32 entityId) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Player.cs:linha 943

@@ -1,6 +1,9 @@
 using Newtonsoft.Json;
 using Ow.Game.Movements;
 using Ow.Game.Objects;
+using Ow.Game.Objects.Players;
+using Ow.Game.Objects.Players.Managers;
+using Ow.Game.Ticks;
 using Ow.Managers;
 using Ow.Managers.MySQLManager;
 using Ow.Net.netty.commands;
@@ -298,13 +301,12 @@ namespace Ow.Game.GalaxyGates
             if (!IsCurrentWaveCompleted(instance))
                 return;
 
-            var jumpTarget = ResolveDecisionPortalTargetPosition(instance, sourcePortalId) ?? GetGateCenterByFaction(instance.Template, instance.OwnerFactionId);
-            await JumpPlayer(player, instance.MapId, jumpTarget, sourcePortalId);
-
             RemoveDecisionPortals(instance);
-            instance.CurrentWave++;
 
-            if (instance.CurrentWave > instance.Template.Waves.Count)
+            var nextWave = instance.CurrentWave + 1;
+            instance.CurrentWave = nextWave;
+
+            if (nextWave > instance.Template.Waves.Count)
             {
                 instance.Completed = true;
                 instance.PendingPersist = true;
@@ -314,7 +316,12 @@ namespace Ow.Game.GalaxyGates
                 return;
             }
 
+            var previousMap = instance.Spacemap;
+            AllocateFreshInstanceMap(instance);
+
             instance.PendingPersist = true;
+            await JumpPlayer(player, instance.MapId, GetGateCenterByFaction(instance.Template, instance.OwnerFactionId), sourcePortalId);
+            DestroyInstanceMap(previousMap);
             SpawnCurrentWave(instance);
         }
 
@@ -457,7 +464,7 @@ namespace Ow.Game.GalaxyGates
                     StarterMap = false,
                     PvpMap = false,
                     RangeDisabled = false,
-                    CloakBlocked = false,
+                    CloakBlocked = true,
                     LogoutBlocked = true,
                     DeathLocationRepair = false
                 };
@@ -469,7 +476,10 @@ namespace Ow.Game.GalaxyGates
                     null,
                     null,
                     null,
-                    options);
+                    options,
+                    null,
+                    instance.Template.VisualMapId,
+                    false);
 
                 map.Instance = true;
                 map.Curwave = Math.Max(0, instance.CurrentWave - 1);
@@ -501,16 +511,20 @@ namespace Ow.Game.GalaxyGates
                     player.SendPacket("0|A|STD|Galaxy Gate map was unavailable. You were returned to base.");
                 }
 
+                EnforceGalaxyGateVisibilityRules(player, targetMap);
                 player.LastCombatTime = DateTime.Now.AddSeconds(-999);
+                player.AllMapRange = false;
                 player.Spacemap?.RemoveCharacter(player);
                 player.CurrentInRangePortalId = -1;
                 player.Deselection();
                 player.Storage.InRangeAssets.Clear();
+                player.Storage.InRangeObjects.Clear();
                 player.InRangeCharacters.Clear();
                 player.SetPosition(targetPosition);
                 player.Spacemap = targetMap;
                 player.Spacemap?.AddAndInitPlayer(player);
                 player.AllMapRange = IsGalaxyGateMap(targetMap.Id);
+                targetMap.CheckActivatables(player);
             }
             finally
             {
@@ -806,6 +820,7 @@ namespace Ow.Game.GalaxyGates
 
         private void EnsureDecisionPortals(GalaxyGateInstance instance)
         {
+            CleanupStaleDecisionPortals(instance);
             if (instance.TemporaryPortals.Count >= 2)
                 return;
 
@@ -844,7 +859,7 @@ namespace Ow.Game.GalaxyGates
         private void RemoveDecisionPortals(GalaxyGateInstance instance)
         {
             foreach (var portal in instance.TemporaryPortals.ToList())
-                portal.Remove();
+                portal?.Remove();
             instance.TemporaryPortals.Clear();
         }
 
@@ -874,6 +889,112 @@ namespace Ow.Game.GalaxyGates
 
             lock (gateLock)
                 instance.RuntimeNpcToSlot.Clear();
+        }
+
+        private void CleanupStaleDecisionPortals(GalaxyGateInstance instance)
+        {
+            if (instance?.TemporaryPortals == null || instance.Spacemap == null)
+                return;
+
+            var stalePortals = instance.TemporaryPortals
+                .Where(x => x == null ||
+                            x.Spacemap == null ||
+                            x.Spacemap.Id != instance.Spacemap.Id ||
+                            !instance.Spacemap.Activatables.ContainsKey(x.Id))
+                .ToList();
+
+            foreach (var portal in stalePortals)
+                instance.TemporaryPortals.Remove(portal);
+        }
+
+        private void AllocateFreshInstanceMap(GalaxyGateInstance instance)
+        {
+            if (instance == null)
+                return;
+
+            instance.MapId = instance.Template != null && instance.Template.VisualMapId > 0
+                ? AllocateDynamicMapId(instance.Template.VisualMapId)
+                : AllocateDynamicMapId();
+
+            instance.Spacemap = null;
+            EnsureInstanceMap(instance);
+        }
+
+        private void DestroyInstanceMap(Spacemap map)
+        {
+            if (map == null || !map.Instance)
+                return;
+
+            foreach (var portal in map.Activatables.Values.OfType<Portal>().ToList())
+                portal.Remove();
+            map.Activatables.Clear();
+
+            foreach (var obj in map.Objects.Values.ToList())
+            {
+                if (obj is Collectable collectable)
+                {
+                    collectable.Respawnable = false;
+                    collectable.Dispose();
+                }
+                else if (obj is Mine mine)
+                {
+                    mine.Remove(true);
+                }
+                else if (obj is Asset asset)
+                {
+                    asset.Remove();
+                }
+                else
+                {
+                    map.Objects.TryRemove(obj.Id, out var removedObject);
+                }
+            }
+
+            foreach (var character in map.Characters.Values.ToList())
+            {
+                if (character is Player)
+                    continue;
+
+                character.Destroyed = true;
+                character.Deselection();
+                character.InRangeCharacters.Clear();
+                map.RemoveCharacter(character);
+
+                if (character is Tick tickable)
+                    Program.TickManager.RemoveTick(tickable);
+            }
+
+            map.InstanceNpcs.Clear();
+            map.POIs.Clear();
+            Program.TickManager.RemoveTick(map);
+            GameManager.Spacemaps.TryRemove(map.Id, out var removedMap);
+        }
+
+        private void EnforceGalaxyGateVisibilityRules(Player player, Spacemap targetMap)
+        {
+            if (player == null)
+                return;
+
+            var currentMapIsGate = player.Spacemap != null && IsGalaxyGateMap(player.Spacemap.Id);
+            var targetMapIsGate = targetMap != null && IsGalaxyGateMap(targetMap.Id);
+            if (!currentMapIsGate && !targetMapIsGate)
+                return;
+
+            if (player.Invisible)
+            {
+                player.Invisible = false;
+                player.UpdateShipStatus();
+                var cloakPacket = $"0|n|INV|{player.Id}|0";
+                player.SendPacket(cloakPacket);
+                player.SendPacketToInRangePlayers(cloakPacket);
+                player.SettingsManager?.SendNewItemStatus(CpuManager.CLK_XL);
+            }
+
+            if (player.Pet != null && player.Pet.Activated && player.Pet.Invisible)
+            {
+                player.Pet.Invisible = false;
+                player.Pet.SendPacketToInRangePlayers($"0|n|INV|{player.Pet.Id}|0");
+            }
         }
 
         private Position GetGateCenterByFaction(GalaxyGateTemplate template, int factionId)

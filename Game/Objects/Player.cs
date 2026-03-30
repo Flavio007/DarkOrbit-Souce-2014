@@ -804,6 +804,7 @@ namespace Ow.Game.Objects
         public byte[] GetShipInitializationCommand()
         {
             Console.WriteLine($"[CARGO_INIT] userId={Id} name={Name} shipId={Ship?.Id} shipBaseCargo={Ship?.Cargo ?? 0} current={CargoInUse} max={CargoCapacity}");
+            var clientMapId = Spacemap != null ? Spacemap.VisualMapId : 0;
             return ShipInitializationCommand.write(
                 Id,
                 Name,
@@ -819,7 +820,7 @@ namespace Ow.Game.Objects
                 MaxNanoHull,
                 Position.X,
                 Position.Y,
-                EventManager.GalaxyGate != null ? EventManager.GalaxyGate.GetClientMapId(Spacemap.Id) : Spacemap.Id,
+                clientMapId,
                 FactionId,
                 Clan.Id,
                 3,

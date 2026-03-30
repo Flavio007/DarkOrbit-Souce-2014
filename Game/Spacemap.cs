@@ -61,6 +61,8 @@ namespace Ow.Game
         public ConcurrentDictionary<string, POI> POIs = new ConcurrentDictionary<string, POI>();
 
         public int Id { get; set; }
+        public int VisualMapId { get; private set; }
+        public bool PersistAsVisualMapId { get; private set; }
         public string Name { get; set; }
         public int FactionId { get; set; }
         public string StationsJSON { get; set; }
@@ -74,9 +76,11 @@ namespace Ow.Game
         private List<StationBase> StationBase { get; set; }
         private List<CollectableBase> CollectablesBase { get; set; }
 
-        public Spacemap(int mapId, string name, int factionId, List<NpcsBase> npcs, List<PortalBase> portals, List<StationBase> stations, OptionsBase options, List<CollectableBase> collectables = null)
+        public Spacemap(int mapId, string name, int factionId, List<NpcsBase> npcs, List<PortalBase> portals, List<StationBase> stations, OptionsBase options, List<CollectableBase> collectables = null, int visualMapId = 0, bool persistAsVisualMapId = false)
         {
             Id = mapId;
+            VisualMapId = visualMapId > 0 ? visualMapId : mapId;
+            PersistAsVisualMapId = persistAsVisualMapId;
             Name = name;
             FactionId = factionId;
             NpcsBase = npcs;
@@ -99,11 +103,19 @@ namespace Ow.Game
 
         private void ParseLimits()
         {
+            var effectiveMapId = GetMapBehaviorId();
             Limits = new Position[] { null, null };
             Limits[0] = new Position(0, 0);
-            if (Id == 16 || Id == 29)
+            if (effectiveMapId == 16 || effectiveMapId == 29)
                 Limits[1] = new Position(41800, 26000);
+            else if (effectiveMapId == 255)
+                Limits[1] = new Position(10450, 6500);
             else Limits[1] = new Position(20800, 12800);
+        }
+
+        private int GetMapBehaviorId()
+        {
+            return VisualMapId > 0 ? VisualMapId : Id;
         }
 
         public void LoadObjects()
@@ -475,14 +487,15 @@ namespace Ow.Game
 
         public bool CheckRadiation(Player Player)
         {
+            var effectiveMapId = GetMapBehaviorId();
             int positionX = Player.Position.X;
             int positionY = Player.Position.Y;
 
             bool inRadiationZone = false;
 
-            if (Id == 255)
+            if (effectiveMapId == 255)
                 inRadiationZone = positionX < 0 || positionX > 10450 || positionY < 0 || positionY > 6500;
-            else if (Id == 16 || Id == 29 || Id == 42)
+            else if (effectiveMapId == 16 || effectiveMapId == 29 || effectiveMapId == 42)
                 inRadiationZone = positionX < 0 || positionX > 41800 || positionY < 0 || positionY > 26000;
             else
                 inRadiationZone = positionX < 0 || positionX > 20900 || positionY < 0 || positionY > 13000;

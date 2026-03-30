@@ -178,20 +178,7 @@ namespace Ow.Game.Objects.Players.Managers
                 .OrderBy(x => x.Id)
                 .ToList();
 
-            if (drones.Count == 0)
-            {
-                var fallbackLevel = getdronelevel(exp);
-
-                for (var i = 0; i < 8; i++)
-                    packetParts.Add($"2|{fallbackLevel}|{GetDesignId(designs[i])}");
-
-                if (Apis)
-                    packetParts.Add($"3|{fallbackLevel}|{GetDesignId(designs[8])}");
-
-                if (Zeus)
-                    packetParts.Add($"4|{fallbackLevel}|{GetDesignId(designs[9])}");
-            }
-            else
+            if (drones.Count > 0)
             {
                 for (var i = 0; i < drones.Count; i++)
                 {

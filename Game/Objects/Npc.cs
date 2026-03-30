@@ -118,6 +118,9 @@ namespace Ow.Game.Objects
                 if (target is Player && (target as Player).Storage.Sentinel)
                     damageShd -= Maths.GetPercentage(damageShd, 30);
 
+                damageHp = target.ClampHitpointDamage(damageHp);
+                damage = damageHp + damageShd;
+
                 var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
                 SendCommandToInRangePlayers(laserRunCommand);
 
@@ -141,7 +144,7 @@ namespace Ow.Game.Objects
                         playerTarget.AttackManager.QueueIncomingDamageHit(Id, DamageType.LASER, attackHitDamage);
                 }
 
-                if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+                if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
                 {
                     if (target is Player playerTarget)
                         playerTarget.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);

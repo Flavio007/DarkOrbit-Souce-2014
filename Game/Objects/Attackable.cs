@@ -54,6 +54,8 @@ namespace Ow.Game.Objects
 
         public virtual int RenderRange => 2000;
 
+        public virtual int MinimumHitpoints => 0;
+
         public bool Invisible { get; set; }
         public bool Invincible { get; set; }
 
@@ -162,6 +164,22 @@ namespace Ow.Game.Objects
                     }
                 }
             }
+        }
+
+        public int ClampHitpointDamage(int damage)
+        {
+            if (damage <= 0)
+                return 0;
+
+            var minimumHitpoints = MinimumHitpoints;
+            if (minimumHitpoints <= 0)
+                return damage;
+
+            var maxAllowedDamage = CurrentHitPoints - minimumHitpoints;
+            if (maxAllowedDamage <= 0)
+                return 0;
+
+            return damage > maxAllowedDamage ? maxAllowedDamage : damage;
         }
 
         public void SendPacketToInRangePlayers(string packet)
@@ -519,6 +537,8 @@ namespace Ow.Game.Objects
                 new CargoBox(Position, Spacemap, false, false);
                 if (npc is InstanceNpc instanceNpc)
                     EventManager.GalaxyGate?.HandleNpcDestroyed(instanceNpc);
+                else if (destroyer is Player tutorialDestroyer)
+                    EventManager.Tutorial?.HandleNpcDestroyed(npc, tutorialDestroyer);
                 if (npc.Respawnable)
                     npc.Respawn();
             }

@@ -3,6 +3,7 @@ using Ow.Game.Objects.AI;
 using Ow.Game.Objects.Players;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Managers;
+using System;
 using System.Collections.Generic;
 
 namespace Ow.Game.Objects
@@ -15,6 +16,9 @@ namespace Ow.Game.Objects
 
         public bool IsAiControlled { get; private set; }
         public string ConfiguredAbility { get; private set; }
+        public int MinimumHitpointLimit { get; private set; }
+
+        public override int MinimumHitpoints => MinimumHitpointLimit;
 
         public FakePlayer(int id, string name, Ship ship, Spacemap spacemap, Position position, int factionId)
             : base(id, name, GameManager.GetClan(0), factionId, 1, 0, ship)
@@ -91,6 +95,8 @@ namespace Ow.Game.Objects
                 DroneManager.Apis = false;
                 DroneManager.Zeus = false;
             }
+
+            MinimumHitpointLimit = 0;
         }
 
         public void ApplyProfile(
@@ -127,6 +133,46 @@ namespace Ow.Game.Objects
                 DroneManager.Zeus = DroneManager.DronesList.Exists(x => x != null && x.DroneType == 4);
             }
 
+            UpdateStatus();
+        }
+
+        public void ConfigureLoadout(int hitpoints, int damage, int shield, int speed, int laserCount = 0, bool fullLf3 = false, int shieldAbsorptionPercent = 0)
+        {
+            var resolvedHitpoints = hitpoints > 0 ? hitpoints : 1;
+            var resolvedSpeed = speed > 0 ? speed : Ship.BaseSpeed;
+            var resolvedShield = shield < 0 ? 0 : shield;
+
+            Equipment = new EquipmentBase(
+                new ConfigsBase(
+                    resolvedHitpoints,
+                    Math.Max(0, damage),
+                    resolvedShield,
+                    resolvedSpeed,
+                    resolvedHitpoints,
+                    Math.Max(0, damage),
+                    resolvedShield,
+                    resolvedSpeed,
+                    0,
+                    0,
+                    0,
+                    0),
+                new ItemsBase(0));
+
+            CurrentShieldAbsConfig1 = shieldAbsorptionPercent;
+            CurrentShieldAbsConfig2 = shieldAbsorptionPercent;
+            CurrentHitPoints = MaxHitPoints;
+            CurrentShieldPoints = MaxShieldPoints;
+            CurrentNanoHull = MaxNanoHull;
+            equipedlasercount = Math.Max(0, laserCount);
+            fulllf3 = fullLf3;
+            UpdateStatus();
+        }
+
+        public void SetMinimumHitpoints(int minimumHitpoints)
+        {
+            MinimumHitpointLimit = minimumHitpoints < 0 ? 0 : minimumHitpoints;
+            if (CurrentHitPoints < MinimumHitpointLimit)
+                CurrentHitPoints = MinimumHitpointLimit;
             UpdateStatus();
         }
 

@@ -53,7 +53,7 @@ namespace Ow.Game
             try
             {
                 Player.LastCombatTime = DateTime.Now.AddSeconds(-999);
-                Player.LastPosition.map = Player.Spacemap.Id;
+                Player.LastPosition.map = Player.Spacemap != null && Player.Spacemap.PersistAsVisualMapId ? Player.Spacemap.VisualMapId : Player.Spacemap.Id;
                 Player.LastPosition.x = Player.Position.X;
                 Player.LastPosition.y = Player.Position.Y;
                 Player.Group?.Leave(Player);

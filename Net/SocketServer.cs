@@ -137,6 +137,15 @@ class SocketServer
             case "BuyItem":
                 BuyItem(GameManager.GetPlayerById(Int(parameters["UserId"])), String(parameters["ItemType"]), (DataType)Short(parameters["DataType"]), Int(parameters["Amount"]));
                 break;
+            case "BuyAmmo":
+                BuyAmmo(
+                    GameManager.GetPlayerById(Int(parameters["UserId"])),
+                    String(parameters["AmmoCode"]),
+                    Int(parameters["AmmoAmount"]),
+                    (DataType)Short(parameters["DataType"]),
+                    Int(parameters["PriceAmount"])
+                );
+                break;
             case "ChangeClanData":
                 ChangeClanData(GameManager.GetClan(Int(parameters["ClanId"])), String(parameters["Name"]), String(parameters["Tag"]), Int(parameters["FactionId"]));
                 break;
@@ -551,6 +560,62 @@ class SocketServer
                     player.BoosterManager.Update();
                     break;
             }
+        }
+    }
+
+    public static void BuyAmmo(Player player, string ammoCode, int ammoAmount, DataType dataType, int priceAmount)
+    {
+        if (player?.GameSession == null)
+            return;
+
+        using (var mySqlClient = SqlDatabaseManager.GetClient())
+        {
+            var result = mySqlClient.ExecuteQueryRow($"SELECT data FROM player_accounts WHERE userId = {player.Id}");
+            player.Data = JsonConvert.DeserializeObject<DataBase>(result["data"].ToString());
+        }
+
+        player.SendPacket($"0|LM|ST|{(dataType == DataType.URIDIUM ? "URI" : "CRE")}|-{priceAmount}|{(dataType == DataType.URIDIUM ? player.Data.uridium : player.Data.credits)}");
+
+        var ammoId = MapShopAmmoCodeToAmmoId(ammoCode);
+        if (string.IsNullOrEmpty(ammoId) || ammoAmount <= 0)
+            return;
+
+        player.AddAmmo(ammoId, ammoAmount);
+    }
+
+    private static string MapShopAmmoCodeToAmmoId(string ammoCode)
+    {
+        switch ((ammoCode ?? string.Empty).Trim().ToLowerInvariant())
+        {
+            case "lcb10":
+                return AmmunitionManager.LCB_10;
+            case "mcb25":
+                return AmmunitionManager.MCB_25;
+            case "mcb50":
+                return AmmunitionManager.MCB_50;
+            case "sab50":
+                return AmmunitionManager.SAB_50;
+            case "rsb75":
+                return AmmunitionManager.RSB_75;
+            case "r310":
+                return AmmunitionManager.R_310;
+            case "plt26":
+                return AmmunitionManager.PLT_2026;
+            case "plt21":
+                return AmmunitionManager.PLT_2021;
+            case "plt3030":
+                return AmmunitionManager.PLT_3030;
+            case "eco10":
+                return AmmunitionManager.ROCKET_LAUNCHER_ECO_10;
+            case "hstrm01":
+                return AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01;
+            case "ubr100":
+            case "uber100":
+                return AmmunitionManager.ROCKET_LAUNCHER_UBR_100;
+            case "emp":
+                return AmmunitionManager.EMP_01;
+            default:
+                return string.Empty;
         }
     }
 

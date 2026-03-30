@@ -16,6 +16,7 @@ namespace Ow.Managers
         public static Scoremageddon Scoremageddon { get; set; }
         public static InvasionGate InvasionGate { get; set; }
         public static GalaxyGateManager GalaxyGate { get; set; }
+        public static TutorialManager Tutorial { get; set; }
 
         public static void InitiateEvents()
         {
@@ -25,6 +26,7 @@ namespace Ow.Managers
             Scoremageddon = new Scoremageddon();
             InvasionGate = new InvasionGate();
             GalaxyGate = new GalaxyGateManager();
+            Tutorial = new TutorialManager();
             GalaxyGate.Initialize();
         }
     }

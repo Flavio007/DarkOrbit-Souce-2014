@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Ow.Game.Objects.Players.Managers
+
 {
     class AttackManager : AbstractManager
     {
@@ -795,7 +796,7 @@ namespace Ow.Game.Objects.Players.Managers
                 Player.CurrentShieldPoints += sabDamage;
             }
 
-            if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+            if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
             {
                 FlushPendingDamageHitsForTarget(target);
                 if (target is Player targetPlayer)
@@ -849,7 +850,9 @@ namespace Ow.Game.Objects.Players.Managers
 
             target.LastCombatTime = DateTime.Now;
 
-            if (toHp && toDestroy && (damage >= target.CurrentHitPoints || target.CurrentHitPoints <= 0))
+            damage = target.ClampHitpointDamage(damage);
+
+            if (toHp && toDestroy && (damage >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0)))
             {
                 if (damageType == DamageType.RADIATION)
                     target.Destroy(null, DestructionType.RADIATION);

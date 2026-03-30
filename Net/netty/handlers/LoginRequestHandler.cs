@@ -98,6 +98,8 @@ namespace Ow.Net.netty.handlers
                         Player.SetPosition(new Position(Player.LastPosition.x, Player.LastPosition.y));
                 }
 
+                EventManager.Tutorial?.PreparePlayerForLogin(Player);
+
                 Program.TickManager.AddTick(Player);
 
                 QueryManager.SavePlayer.Information(Player);
