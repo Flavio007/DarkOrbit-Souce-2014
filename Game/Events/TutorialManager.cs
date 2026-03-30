@@ -15,6 +15,13 @@ namespace Ow.Game.Events
 {
     class TutorialManager
     {
+        private sealed class TutorialPilotNames
+        {
+            public string PhoenixName { get; set; }
+            public string VengeanceName { get; set; }
+            public string GoliathName { get; set; }
+        }
+
         private sealed class TutorialInstance
         {
             public int OwnerId { get; set; }
@@ -114,6 +121,36 @@ namespace Ow.Game.Events
         private readonly object tutorialLock = new object();
         private readonly Dictionary<int, TutorialInstance> instancesByOwner = new Dictionary<int, TutorialInstance>();
         private readonly Dictionary<int, TutorialInstance> instancesByMap = new Dictionary<int, TutorialInstance>();
+        private readonly Dictionary<int, TutorialPilotNames> pilotNamesByFaction = new Dictionary<int, TutorialPilotNames>
+        {
+            {
+                1,
+                new TutorialPilotNames
+                {
+                    PhoenixName = "Aiden Flux",
+                    VengeanceName = "Rhea Voss",
+                    GoliathName = "Dorian Steel"
+                }
+            },
+            {
+                2,
+                new TutorialPilotNames
+                {
+                    PhoenixName = "Lucian Pike",
+                    VengeanceName = "Selene Ward",
+                    GoliathName = "Cassius Vale"
+                }
+            },
+            {
+                3,
+                new TutorialPilotNames
+                {
+                    PhoenixName = "Nyx Arden",
+                    VengeanceName = "Kael Vanta",
+                    GoliathName = "Vorin Hex"
+                }
+            }
+        };
         private int nextDynamicMapId = TutorialMapStartId;
 
         public void PreparePlayerForLogin(Player player)
@@ -295,26 +332,31 @@ namespace Ow.Game.Events
             if (ship == null)
                 return null;
 
+            var pilotNames = ResolvePilotNames(owner.FactionId);
+
             var fakePlayer = new FakePlayer(
                 Randoms.CreateRandomID(),
-                $"tutorial_phoenix_{owner.Id}",
+                pilotNames.PhoenixName,
                 ship,
                 instance.Spacemap,
                 new Position(TutorialCenter.X, TutorialCenter.Y),
                 owner.FactionId);
 
-            fakePlayer.ApplyProfile("Tutorial Phoenix", GameManager.GetClan(0), 1, 1, "", null, 0, 0, 0, new List<Drones>());
+            fakePlayer.ApplyProfile(pilotNames.PhoenixName, GameManager.GetClan(0), 1, 1, "", null, 0, 0, 0, new List<Drones>());
             fakePlayer.ConfigureLoadout(ship.BaseHitpoints, 0, 0, ship.BaseSpeed, 0, false, 0);
             fakePlayer.SetMinimumHitpoints(1);
             fakePlayer.CurrentShieldPoints = 0;
+            RemoveExtraLife(fakePlayer);
             fakePlayer.UpdateStatus();
             return fakePlayer;
         }
 
         private void SpawnRewards(TutorialInstance instance, Player owner)
         {
-            instance.SupportVengeance = CreateSupportShip(instance, owner, Ship.VENGEANCE, "Tutorial Vengeance", SupportVengeancePosition, CreateDrones(1, 8, 6));
-            instance.SupportGoliath = CreateSupportShip(instance, owner, Ship.GOLIATH, "Tutorial Goliath", SupportGoliathPosition, CreateDrones(2, 8, 6));
+            var pilotNames = ResolvePilotNames(owner.FactionId);
+
+            instance.SupportVengeance = CreateSupportShip(instance, owner, Ship.VENGEANCE, pilotNames.VengeanceName, SupportVengeancePosition, CreateDrones(1, 8, 6));
+            instance.SupportGoliath = CreateSupportShip(instance, owner, Ship.GOLIATH, pilotNames.GoliathName, SupportGoliathPosition, CreateDrones(2, 8, 6));
 
             MoveSupportShipTowardsPhoenix(instance, instance.SupportVengeance, true);
             MoveSupportShipTowardsPhoenix(instance, instance.SupportGoliath, false);
@@ -351,11 +393,33 @@ namespace Ow.Game.Events
                 owner.FactionId);
 
             fakePlayer.ApplyProfile(name, GameManager.GetClan(0), 1, 1, "", null, 0, 0, 0, drones);
-            fakePlayer.SkillTree.shieldEngineering = 5;
-            fakePlayer.shieldeng = true;
+            if (shipId == Ship.GOLIATH)
+            {
+                fakePlayer.SkillTree.shieldEngineering = 5;
+                fakePlayer.shieldeng = true;
+            }
+
             fakePlayer.CurrentShieldPoints = fakePlayer.MaxShieldPoints;
+            RemoveExtraLife(fakePlayer);
             fakePlayer.UpdateStatus();
             return fakePlayer;
+        }
+
+        private TutorialPilotNames ResolvePilotNames(int factionId)
+        {
+            if (pilotNamesByFaction.TryGetValue(factionId, out var pilotNames))
+                return pilotNames;
+
+            return pilotNamesByFaction[1];
+        }
+
+        private static void RemoveExtraLife(FakePlayer fakePlayer)
+        {
+            if (fakePlayer == null)
+                return;
+
+            fakePlayer.MaxNanoHull = 0;
+            fakePlayer.CurrentNanoHull = 0;
         }
 
         private void MoveSupportShipTowardsPhoenix(TutorialInstance instance, FakePlayer supportShip, bool approachFromLeft)

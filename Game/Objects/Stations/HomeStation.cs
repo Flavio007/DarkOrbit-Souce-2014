@@ -21,6 +21,9 @@ namespace Ow.Game.Objects.Stations
     {
         public static int SECURE_ZONE_RANGE = 1500;
         private static readonly int[] SolitaryHomeMaps = { 20, 24, 28 };
+        private static readonly int[] RingDefenseMaps = { 1, 5, 9 };
+        private static readonly int[] LargeTurretAngles = { 0, 90, 180, 270 };
+        private static readonly int[] SmallTurretAngles = { 45, 135, 225, 315 };
 
         public RepairStation RepairStation { get; set; }
         public HangarStation HangarStation { get; set; }
@@ -31,6 +34,9 @@ namespace Ow.Game.Objects.Stations
         {
             if (!UseSolitaryVisual())
                 PrepareStations();
+
+            if (UseRingDefense())
+                PrepareRingDefense();
         }
 
         private bool UseSolitaryVisual()
@@ -41,6 +47,11 @@ namespace Ow.Game.Objects.Stations
         private int GetVisualFactionId()
         {
             return UseSolitaryVisual() ? FactionId + 3 : FactionId;
+        }
+
+        private bool UseRingDefense()
+        {
+            return RingDefenseMaps.Contains(Spacemap.Id);
         }
 
         private AssetTypeModule GetVisualAssetType()
@@ -61,6 +72,23 @@ namespace Ow.Game.Objects.Stations
 
             var oPosition = new Position(Position.X + -1080, Position.Y + -1);
             OreTradeStation = new OreTradeStation(Spacemap, FactionId, oPosition, Clan);
+        }
+
+        public void PrepareRingDefense()
+        {
+            foreach (var angle in LargeTurretAngles)
+                new HomeTurret(Spacemap, FactionId, GetRingPosition(angle), AssetTypeModule.var42v);
+
+            foreach (var angle in SmallTurretAngles)
+                new HomeTurret(Spacemap, FactionId, GetRingPosition(angle), AssetTypeModule.varBa);
+        }
+
+        private Position GetRingPosition(int angleInDegrees)
+        {
+            var radians = angleInDegrees * (Math.PI / 180d);
+            var x = Position.X + Convert.ToInt32(SECURE_ZONE_RANGE * Math.Cos(radians));
+            var y = Position.Y + Convert.ToInt32(SECURE_ZONE_RANGE * Math.Sin(radians));
+            return new Position(x, y);
         }
 
         public override void Click(GameSession gameSession)

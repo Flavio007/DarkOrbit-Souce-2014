@@ -19,7 +19,7 @@ namespace Ow.Game.Objects
             AssetTypeId = assetTypeId;
         }
 
-        public byte[] GetAssetCreateCommand()
+        public virtual byte[] GetAssetCreateCommand()
         {
             return AssetCreateCommand.write(new AssetTypeModule(AssetTypeId), "",
                               0, "", Id, 0, 0,

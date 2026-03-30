@@ -133,6 +133,7 @@
     <Compile Include="Game\Objects\POI.cs" />
     <Compile Include="Game\Objects\Portal.cs" />
     <Compile Include="Game\Objects\Stations\BattleStation.cs" />
+    <Compile Include="Game\Objects\Stations\HomeTurret.cs" />
     <Compile Include="Game\Objects\Stations\OreTradeStation.cs" />
     <Compile Include="Game\Objects\Stations\QuestGiverStation.cs" />
     <Compile Include="Game\Objects\Stations\HomeStation.cs" />
