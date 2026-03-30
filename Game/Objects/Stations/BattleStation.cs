@@ -1,15 +1,10 @@
 ﻿using Ow.Game;
 using Ow.Game.Movements;
-using Ow.Game.Ticks;
 using Ow.Managers;
 using Ow.Net.netty.commands;
-using Ow.Utils;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ow.Game.Objects.Stations
 {
@@ -36,230 +31,322 @@ namespace Ow.Game.Objects.Stations
         public int DeflectorSecondsLeft = 0;
         public int DeflectorSecondsMax = 0;
 
-        public string AsteroidName { get; set; }
+        public string AsteroidName { get; private set; }
+        public BattleStationDefinition Definition { get; private set; }
+        public List<Satellite> DefenseTowers { get; private set; }
+        public int Level { get; private set; }
+        public int UpgradeLevel => Level;
 
-        public BattleStation(string name, Spacemap spacemap, Position position, Clan clan, 
-            List<EquippedModuleBase> modules, bool inBuildingState, int buildTimeInMinutes, DateTime buildTime,
-            bool deflectorActive, int deflectorSecondsLeft, DateTime deflectorTime,
-            List<int> visualModifiers) : base(spacemap, (clan.Id != 0 ? clan.FactionId : 0), position, clan, (clan.Id == 0 || inBuildingState ? AssetTypeModule.ASTEROID : AssetTypeModule.BATTLESTATION))
+        public DateTime buildTime = DateTime.MinValue;
+        public DateTime deflectorTime = DateTime.MinValue;
+
+        private int capturingFactionId;
+        private DateTime captureStartedAt = DateTime.MinValue;
+        private bool previousVulnerabilityState;
+
+        public BattleStation(BattleStationDefinition definition, Spacemap spacemap)
+            : base(spacemap, 0, definition.Position, GameManager.GetClan(0), definition.AsteroidAssetTypeId)
         {
+            Definition = definition;
+            AsteroidName = definition.Name;
+            Name = definition.Name;
+            DefenseTowers = new List<Satellite>();
+
             ShieldAbsorption = 0.8;
+            Level = 0;
+            ApplyLevelStats(true);
+            Invincible = true;
+            previousVulnerabilityState = Definition.IsVulnerableAt(DateTime.Now);
 
-            MaxHitPoints = 100000;
-            CurrentHitPoints = MaxHitPoints;
-            CurrentShieldPoints = 100000;
-            MaxShieldPoints = 100000;
-
-            InBuildingState = inBuildingState;
-            BuildTimeInMinutes = buildTimeInMinutes;
-
-            DeflectorActive = deflectorActive;
-            DeflectorSecondsLeft = deflectorSecondsLeft;
-            DeflectorSecondsMax = deflectorSecondsLeft;
-
-            AsteroidName = name;
-
-            Name = Clan.Id != 0 ? Clan.Name : name;
-
-            if (DeflectorActive)
-            {
-                DeflectorSecondsLeft = DeflectorSecondsLeft - (int)DateTime.Now.Subtract(deflectorTime).TotalMinutes;
-                this.deflectorTime = DateTime.Now;
-                Invincible = true;
-                AddVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR, DeflectorSecondsLeft, "", 0, true);
-                Program.TickManager.AddTick(this);
-            }
-
-            foreach (var modifier in visualModifiers)
-                AddVisualModifier((short)modifier, 0, "", 0, true);
-
-            foreach (var module in modules)
-            {
-                var satellite = new List<Satellite>();
-
-                foreach (var m in module.Modules)
-                {
-                    var s = new Satellite(this, m.OwnerId, Satellite.GetName(m.Type), m.DesignId, m.ItemId, m.SlotId, m.Type, Satellite.GetPosition(Position, m.SlotId));
-                    s.InstallationSecondsLeft = m.InstallationSecondsLeft;
-                    s.Installed = m.Installed;
-                    s.CurrentHitPoints = m.CurrentHitPoints;
-                    s.MaxHitPoints = m.MaxHitPoints;
-                    s.CurrentShieldPoints = m.CurrentShieldPoints;
-                    s.MaxShieldPoints = m.MaxShieldPoints;
-
-                    if (DeflectorActive)
-                        s.AddVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR, 0, "", 0, true);
-                    satellite.Add(s);
-                }
-
-                EquippedStationModule.Add(module.ClanId, satellite);
-            }
-
-            if (Clan.Id != 0 && InBuildingState)
-            {
-                BuildTimeInMinutes = BuildTimeInMinutes - (int)DateTime.Now.Subtract(buildTime).TotalMinutes;
-                this.buildTime = DateTime.Now;
-                Program.TickManager.AddTick(this);
-            }
-            else if (Clan.Id != 0 && !InBuildingState)
-                Build();
+            Program.TickManager.AddTick(this);
         }
 
-        public DateTime buildTime = new DateTime();
-        public DateTime deflectorTime = new DateTime();
         public new void Tick()
         {
-            if (InBuildingState && buildTime.AddMinutes(BuildTimeInMinutes) < DateTime.Now)
-            {
-                Build();
-                QueryManager.BattleStations.BattleStation(this);
-            }
+            var wasVulnerable = previousVulnerabilityState;
+            UpdateShieldState();
+            var isVulnerable = IsCurrentlyVulnerable();
 
-            if (DeflectorActive && deflectorTime.AddSeconds(DeflectorSecondsLeft) < DateTime.Now)
-                DeactiveDeflector();
+            if (FactionId == 0)
+                ProcessCapture();
+            else
+                ResetCapture();
+
+            if (FactionId != 0 && wasVulnerable && !isVulnerable)
+                HandleVulnerabilitySurvived();
+
+            previousVulnerabilityState = isVulnerable;
         }
 
-        public void DeactiveDeflector()
+        public bool IsCurrentlyVulnerable()
         {
-            RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+            return Definition.IsVulnerableAt(DateTime.Now);
+        }
 
-            foreach (var modules in EquippedStationModule.Values)
-                foreach (var satellite in modules)
-                    satellite.RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+        public void HandleDestroyed(Attackable destroyer)
+        {
+            var destroyerName = destroyer != null ? destroyer.Name : "Unknown";
+            var ownerName = GetFactionName(FactionId);
 
-            Invincible = false;
-            DeflectorActive = false;
-            DeflectorSecondsLeft = 0;
+            GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} was destroyed by {destroyerName}. Previous owner: {ownerName}.");
+
+            Neutralize();
+            Destroyed = false;
             QueryManager.BattleStations.BattleStation(this);
         }
 
-        public void Build()
+        public void HandleTowerDestroyed(Satellite tower)
         {
-            AssetTypeId = AssetTypeModule.BATTLESTATION;
+            if (tower == null)
+                return;
 
-            RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_CONSTRUCTING);
-            //Visuals.Add(new VisualModifierCommand(Id, VisualModifierCommand.BATTLESTATION_DOWNTIME_TIMER, 1800, "", 0, true));
-            PrepareSatellites();
-
-            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
-
-            foreach (var character in Spacemap.Characters.Values)
-            {
-                if (character is Player player)
-                {
-                    short relationType = character.Clan.Id != 0 && Clan.Id != 0 ? Clan.GetRelation(character.Clan) : (short)0;
-                    player.SendCommand(GetAssetCreateCommand(relationType));
-                }
-            }
-
-            BuildTimeInMinutes = 0;
-            InBuildingState = false;
-        }
-
-        public void PrepareSatellites()
-        {
-            foreach (var satellite in EquippedStationModule[Clan.Id])
-            {
-                if (satellite.Type != StationModuleModule.DEFLECTOR && satellite.Type != StationModuleModule.HULL)
-                {
-                    Spacemap.Activatables.TryAdd(satellite.Id, satellite);
-
-                    foreach (var character in satellite.Spacemap.Characters.Values)
-                    {
-                        if (character is Player player)
-                        {                   
-                            short relationType = character.Clan.Id != 0 && satellite.Clan.Id != 0 ? satellite.Clan.GetRelation(character.Clan) : (short)0;
-                            player.SendCommand(satellite.GetAssetCreateCommand(relationType));
-                        }
-                    }
-                }
-            }
+            tower.Remove();
+            DefenseTowers.Remove(tower);
+            Spacemap.Activatables.TryRemove(tower.Id, out var removedTower);
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(tower.GetAssetType(), tower.Id));
         }
 
         public override void Click(GameSession gameSession)
         {
             var player = gameSession.Player;
+            if (player == null)
+                return;
 
-            int secondsLeft = (int)(TimeSpan.FromMinutes(BuildTimeInMinutes).TotalSeconds - (DateTime.Now - buildTime).TotalSeconds);
-
-            if (InBuildingState)
-                player.SendCommand(BattleStationBuildingStateCommand.write(Id, Id, Name, secondsLeft, 0, Clan.Name, new FactionModule((short)FactionId)));
-            else
+            if (FactionId == 0)
             {
-                if (player.Clan.Id == 0)
-                    player.SendCommand(BattleStationNoClanUiInitializationCommand.write(Id));
-                else
-                {
-                    var stationModuleModule = new List<StationModuleModule>();
-
-                    if (EquippedStationModule.ContainsKey(player.Clan.Id))
-                    {
-                        foreach (var mm in EquippedStationModule[player.Clan.Id])
-                        {
-                            if (mm.Type == StationModuleModule.HULL || mm.Type == StationModuleModule.DEFLECTOR)
-                            {
-                                mm.CurrentHitPoints = CurrentHitPoints;
-                                mm.MaxHitPoints = MaxHitPoints;
-                                mm.CurrentShieldPoints = CurrentShieldPoints;
-                                mm.MaxShieldPoints = MaxShieldPoints;
-                            }
-
-                            stationModuleModule.Add(new StationModuleModule(Id, mm.ItemId, mm.SlotId, mm.Type, mm.CurrentHitPoints,
-                                    mm.MaxHitPoints, mm.CurrentShieldPoints, mm.MaxShieldPoints, 16, QueryManager.GetUserPilotName(mm.OwnerId), 0, mm.InstallationSecondsLeft, 0, 0, 500));
-                        }
-                    }
-
-                    var playerModules = new List<StationModuleModule>();
-
-                    for (var i = 0; i < player.Storage.BattleStationModules.Count; i++)
-                    {
-                        if (!player.Storage.BattleStationModules[i].InUse)
-                            playerModules.Add(new StationModuleModule(Id, player.Storage.BattleStationModules[i].Id, i, player.Storage.BattleStationModules[i].Type, 1, 1, 1, 1, 16, QueryManager.GetUserPilotName(player.Id), 0, 0, 0, 0, 500));
-                    }
-
-                    if (Clan.Id != 0 && player.Clan.Id == Clan.Id)
-                    {
-                        player.SendCommand(BattleStationManagementUiInitializationCommand.write(
-                            Id, 
-                            Id, 
-                            Name, 
-                            Clan.Name, 
-                            new FactionModule((short)FactionId), 
-                            new BattleStationStatusCommand(Id, Id, Name, DeflectorActive, 0, DeflectorSecondsMax, 0, 0, 0, 0, 0, 0, 0, 0, new EquippedModulesModule(stationModuleModule)),
-                            new AvailableModulesCommand(playerModules),
-                            0,
-                            0,
-                            0,
-                            false));
-                    }
-                    else
-                    {
-                        var bestClan = EquippedStationModule.Values.Where(x => x.Where(y => y.Installed).ToList().Count() > 0).ToList().Count > 0 ? EquippedStationModule.OrderByDescending(x => x.Value.Count) : null;
-                        player.SendCommand(BattleStationBuildingUiInitializationCommand.write(Id, Id, Name,
-                                          new AsteroidProgressCommand(
-                                                  Id,
-                                                  (float)(EquippedStationModule.ContainsKey(player.Clan.Id) ? EquippedStationModule[player.Clan.Id].Where(x => x.Installed).ToList().Count : 0) / 10,
-                                                  (float)(bestClan != null ? bestClan.FirstOrDefault().Value.Where(x => x.Installed).ToList().Count : 0) / 10,
-                                                  player.Clan.Name,
-                                                  bestClan != null ? GameManager.GetClan(bestClan.FirstOrDefault().Key)?.Name : "Leading clan's progress",
-                                                  new EquippedModulesModule(EquippedStationModule.ContainsKey(player.Clan.Id) ? stationModuleModule : new List<StationModuleModule>()),
-                                                  (EquippedStationModule.ContainsKey(player.Clan.Id) ? EquippedStationModule[player.Clan.Id].Where(x => x.Installed).ToList().Count : 0) == 10),
-                                          new AvailableModulesCommand(playerModules),
-                                          1,
-                                          60,
-                                          0));
-                    }
-                }
+                var captureText = capturingFactionId == 0
+                    ? $"Neutral battle station. Stay within {Definition.CaptureRadius} units for {Definition.CaptureSeconds} seconds to capture it for your company."
+                    : $"Neutral battle station. {GetFactionName(capturingFactionId)} is capturing it.";
+                player.SendPacket($"0|A|STD|{captureText}");
+                return;
             }
+
+            var shieldState = DeflectorActive ? "Shield active" : "Vulnerable";
+            player.SendPacket($"0|A|STD|Battle station owner: {GetFactionName(FactionId)}. {shieldState}. Level {GetEffectiveLevel()} (upgrade {UpgradeLevel}).");
         }
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
             return AssetCreateCommand.write(GetAssetType(), Name,
-                                          FactionId, Clan.Tag, Id, 0, 0,
-                                          Position.X, Position.Y, Clan.Id, true, true, true, true,
-                                          new ClanRelationModule(clanRelationModule),
-                                          VisualModifiers.Values.ToList());
+                FactionId, "", Id, 0, 0,
+                Position.X, Position.Y, 0, true, true, true, true,
+                new ClanRelationModule(ClanRelationModule.NONE),
+                VisualModifiers.Values.ToList());
+        }
+
+        private void ProcessCapture()
+        {
+            var contenders = Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => !player.Destroyed && player.CurrentHitPoints > 0 && player.Position.DistanceTo(Position) <= Definition.CaptureRadius)
+                .GroupBy(player => player.FactionId)
+                .Where(group => group.Key > 0 && group.Count() >= Definition.MinPlayersToCapture)
+                .ToList();
+
+            if (contenders.Count != 1)
+            {
+                ResetCapture();
+                return;
+            }
+
+            var contenderFactionId = contenders[0].Key;
+            if (capturingFactionId != contenderFactionId)
+            {
+                capturingFactionId = contenderFactionId;
+                captureStartedAt = DateTime.Now;
+                return;
+            }
+
+            if (captureStartedAt != DateTime.MinValue && captureStartedAt.AddSeconds(Definition.CaptureSeconds) <= DateTime.Now)
+                Claim(contenderFactionId);
+        }
+
+        private void Claim(int factionId)
+        {
+            var previousAssetType = AssetTypeId;
+
+            FactionId = factionId;
+            Clan = GameManager.GetClan(0);
+            AssetTypeId = Definition.StationAssetTypeId;
+            SetUpgradeLevel(1, true);
+
+            SpawnDefenseTowers();
+            ResetCapture();
+            previousVulnerabilityState = IsCurrentlyVulnerable();
+            UpdateShieldState(true);
+
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} was captured by {GetFactionName(FactionId)} at level 1.");
+
+            QueryManager.BattleStations.BattleStation(this);
+        }
+
+        private void Neutralize()
+        {
+            var previousAssetType = AssetTypeId;
+
+            RemoveDefenseTowers();
+            ResetCapture();
+
+            FactionId = 0;
+            Level = 0;
+            Clan = GameManager.GetClan(0);
+            AssetTypeId = Definition.AsteroidAssetTypeId;
+            ApplyLevelStats(true);
+            Invincible = true;
+            DeflectorActive = false;
+            DeflectorSecondsLeft = 0;
+            DeflectorSecondsMax = 0;
+            previousVulnerabilityState = Definition.IsVulnerableAt(DateTime.Now);
+            RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+        }
+
+        private void SpawnDefenseTowers()
+        {
+            RemoveDefenseTowers();
+
+            foreach (var towerDefinition in Definition.Towers)
+            {
+                var tower = new Satellite(this, towerDefinition, Satellite.GetPosition(Position, towerDefinition.SlotId));
+                DefenseTowers.Add(tower);
+                Spacemap.Activatables.TryAdd(tower.Id, tower);
+                GameManager.SendCommandToMap(Spacemap.Id, tower.GetAssetCreateCommand());
+            }
+        }
+
+        private void RemoveDefenseTowers()
+        {
+            foreach (var tower in DefenseTowers.ToList())
+            {
+                tower.Remove();
+                Spacemap.Activatables.TryRemove(tower.Id, out var removedTower);
+                GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(tower.GetAssetType(), tower.Id));
+            }
+
+            DefenseTowers.Clear();
+        }
+
+        private void ResetCapture()
+        {
+            capturingFactionId = 0;
+            captureStartedAt = DateTime.MinValue;
+        }
+
+        private void ApplyLevelStats(bool restoreCurrent)
+        {
+            var stats = Definition.GetCenterLevelDefinition(GetEffectiveLevel());
+            MaxHitPoints = stats.MaxHitPoints > 0 ? stats.MaxHitPoints : Definition.MaxHitPoints;
+            MaxShieldPoints = stats.MaxShieldPoints > 0 ? stats.MaxShieldPoints : Definition.MaxShieldPoints;
+
+            if (restoreCurrent || CurrentHitPoints > MaxHitPoints)
+                CurrentHitPoints = MaxHitPoints;
+            if (restoreCurrent || CurrentShieldPoints > MaxShieldPoints)
+                CurrentShieldPoints = MaxShieldPoints;
+
+            UpdateStatus();
+        }
+
+        private void HandleVulnerabilitySurvived()
+        {
+            if (UpgradeLevel < Definition.GetMaxLevel())
+            {
+                SetUpgradeLevel(UpgradeLevel + 1, true);
+                GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} survived the vulnerability window and reached level {GetEffectiveLevel()}.");
+            }
+            else
+            {
+                GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} survived the vulnerability window and remains at max level.");
+            }
+
+            QueryManager.BattleStations.BattleStation(this);
+        }
+
+        private void UpdateShieldState(bool forceRefresh = false)
+        {
+            var shouldEnableShield = FactionId != 0 && !IsCurrentlyVulnerable();
+
+            if (!forceRefresh && shouldEnableShield == DeflectorActive)
+            {
+                DeflectorSecondsLeft = Definition.GetSecondsUntilStateChange(DateTime.Now);
+                DeflectorSecondsMax = DeflectorSecondsLeft;
+                return;
+            }
+
+            DeflectorActive = shouldEnableShield;
+            Invincible = shouldEnableShield;
+            DeflectorSecondsLeft = Definition.GetSecondsUntilStateChange(DateTime.Now);
+            DeflectorSecondsMax = DeflectorSecondsLeft;
+            deflectorTime = DateTime.Now;
+
+            if (shouldEnableShield)
+                AddVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR, DeflectorSecondsLeft, "", 0, true);
+            else
+                RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+        }
+
+        public static string GetFactionName(int factionId)
+        {
+            switch (factionId)
+            {
+                case 1:
+                    return "MMO";
+                case 2:
+                    return "EIC";
+                case 3:
+                    return "VRU";
+                default:
+                    return "Neutral";
+            }
+        }
+
+        public int GetBoostPercentage(BoostedAttributeType boostedAttributeType)
+        {
+            if (FactionId == 0 || DefenseTowers == null || DefenseTowers.Count == 0)
+                return 0;
+
+            return DefenseTowers
+                .Where(x => x != null && !x.Destroyed)
+                .Sum(x => x.GetBoostPercentage(boostedAttributeType));
+        }
+
+        public static int GetFactionBoostPercentage(int factionId, BoostedAttributeType boostedAttributeType)
+        {
+            if (factionId <= 0)
+                return 0;
+
+            return GameManager.BattleStations.Values
+                .Where(x => x != null && x.FactionId == factionId && !x.Destroyed)
+                .Sum(x => x.GetBoostPercentage(boostedAttributeType));
+        }
+
+        public int GetEffectiveLevel()
+        {
+            return UpgradeLevel <= 0 ? 1 : UpgradeLevel;
+        }
+
+        public bool SetUpgradeLevel(int level, bool restoreCurrent = true)
+        {
+            if (FactionId == 0)
+                return false;
+
+            var maxLevel = Definition.GetMaxLevel();
+            if (level < 1)
+                level = 1;
+            else if (level > maxLevel)
+                level = maxLevel;
+
+            Level = level;
+            ApplyLevelStats(restoreCurrent);
+
+            foreach (var tower in DefenseTowers.Where(x => x != null && !x.Destroyed))
+                tower.ApplyLevelStats(restoreCurrent);
+
+            QueryManager.BattleStations.BattleStation(this);
+            return true;
         }
     }
 }

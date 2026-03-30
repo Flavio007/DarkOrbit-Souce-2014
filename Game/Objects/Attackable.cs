@@ -348,56 +348,28 @@ namespace Ow.Game.Objects
             }
             else if (this is BattleStation battleStation)
             {
-                if (destroyer.Clan.Id != 0)
-                {
-                    GameManager.SendPacketToAll($"0|A|STM|msg_station_destroyed_by_clan|%DESTROYER%|{destroyer.Clan.Name}|%MAP%|{Spacemap.Name}|%LOSER%|{battleStation.Clan.Name}|%STATION%|{battleStation.AsteroidName}");
-                }
-                else
-                {
-                    GameManager.SendPacketToAll($"0|A|STM|msg_station_destroyed|%MAP%|{Spacemap.Name}|%LOSER%|{battleStation.Clan.Name}|%STATION%|{battleStation.AsteroidName}");
-                }
-
-                battleStation.EquippedStationModule.Remove(battleStation.Clan.Id);
-                battleStation.Clan = GameManager.GetClan(0);
-                battleStation.Name = battleStation.AsteroidName;
-                battleStation.InBuildingState = false;
-                battleStation.FactionId = 0;
-                battleStation.BuildTimeInMinutes = 0;
-                battleStation.AssetTypeId = AssetTypeModule.ASTEROID;
-                battleStation.CurrentHitPoints = battleStation.MaxHitPoints;
-                battleStation.CurrentShieldPoints = battleStation.MaxShieldPoints;
-
-                Program.TickManager.RemoveTick(battleStation);
-
-                //TODO check
-                GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(battleStation.GetAssetType(), battleStation.Id));
-                GameManager.SendCommandToMap(Spacemap.Id, battleStation.GetAssetCreateCommand(0));
-
-                QueryManager.BattleStations.BattleStation(battleStation);
-                QueryManager.BattleStations.Modules(battleStation);
+                battleStation.HandleDestroyed(destroyer);
             }
             else if (this is Satellite satellite)
             {
-                if (!satellite.BattleStation.Destroyed && satellite.Type != StationModuleModule.HULL && satellite.Type != StationModuleModule.DEFLECTOR)
+                if (satellite.IsStaticDefenseTower)
+                    satellite.BattleStation.HandleTowerDestroyed(satellite);
+                else
                 {
-                    GameManager.SendPacketToClan($"0|A|STM|msg_station_module_destroyed|%STATION%|{satellite.BattleStation.AsteroidName}|%MAP%|{Spacemap.Name}|%MODULE%|{satellite.Name}|%LEVEL%|16", satellite.Clan.Id);
+                    satellite.Remove(true);
+                    satellite.Type = StationModuleModule.NONE;
+                    satellite.CurrentHitPoints = 0;
+                    satellite.CurrentShieldPoints = 0;
+                    satellite.DesignId = 0;
+
+                    if (satellite.BattleStation.Destroyed)
+                    {
+                        Spacemap.Activatables.TryRemove(satellite.Id, out var activatable);
+                        GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(satellite.GetAssetType(), satellite.Id));
+                    }
+                    else if (satellite.BattleStation.AssetTypeId == AssetTypeModule.BATTLESTATION)
+                        GameManager.SendCommandToMap(Spacemap.Id, satellite.GetAssetCreateCommand(0));
                 }
-
-                satellite.Remove(true);
-                satellite.Type = StationModuleModule.NONE;
-                satellite.CurrentHitPoints = 0;
-                satellite.CurrentShieldPoints = 0;
-                satellite.DesignId = 0;
-
-                if (satellite.BattleStation.Destroyed)
-                {
-                    Spacemap.Activatables.TryRemove(satellite.Id, out var activatable);
-                    GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(satellite.GetAssetType(), satellite.Id));
-                }
-                else if (satellite.BattleStation.AssetTypeId == AssetTypeModule.BATTLESTATION)
-                    GameManager.SendCommandToMap(Spacemap.Id, satellite.GetAssetCreateCommand(0));
-
-                QueryManager.BattleStations.Modules(satellite.BattleStation);
             }
 
             if (destroyer is Player destroyerPlayer)
@@ -439,7 +411,9 @@ namespace Ow.Game.Objects
                 }
 
                 experience += Maths.GetPercentage(experience, destroyerPlayer.BoosterManager.GetPercentage(BoostedAttributeType.EP));
+                experience += Maths.GetPercentage(experience, BattleStation.GetFactionBoostPercentage(destroyerPlayer.FactionId, BoostedAttributeType.EP));
                 honor += Maths.GetPercentage(honor, destroyerPlayer.BoosterManager.GetPercentage(BoostedAttributeType.HONOUR));
+                honor += Maths.GetPercentage(honor, BattleStation.GetFactionBoostPercentage(destroyerPlayer.FactionId, BoostedAttributeType.HONOUR));
                 honor += Maths.GetPercentage(honor, destroyerPlayer.GetSkillPercentage("Cruelty"));
                 if (this is Npc)
                 {
@@ -617,6 +591,16 @@ namespace Ow.Game.Objects
                     }
                 }
 
+                if ((target is BattleStation || target is Satellite) && target.FactionId != 0 && target.FactionId == FactionId)
+                {
+                    player.DisableAttack(player.Settings.InGameSettings.selectedLaser);
+
+                    if (sendMessage)
+                        player.SendPacket("0|A|STD|You can't attack assets of your own company!");
+
+                    return false;
+                }
+
                 if ((target is Player && (target as Player).Storage.IsInDemilitarizedZone) || (Duel.InDuel(player) && player.Storage.Duel.PeaceArea))
                 {
                     player.DisableAttack(player.Settings.InGameSettings.selectedLaser);
@@ -647,7 +631,8 @@ namespace Ow.Game.Objects
             }
             else if (this is Satellite)
             {
-                if (relationType != ClanRelationModule.AT_WAR && (target.FactionId == FactionId || target.Clan.Id == Clan.Id || relationType == ClanRelationModule.ALLIED || relationType == ClanRelationModule.NON_AGGRESSION_PACT))
+                var sameClan = Clan != null && Clan.Id != 0 && target.Clan != null && target.Clan.Id == Clan.Id;
+                if (relationType != ClanRelationModule.AT_WAR && (target.FactionId == FactionId || sameClan || relationType == ClanRelationModule.ALLIED || relationType == ClanRelationModule.NON_AGGRESSION_PACT))
                     return false;
             }
 

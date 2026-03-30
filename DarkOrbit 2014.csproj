@@ -133,6 +133,7 @@
     <Compile Include="Game\Objects\POI.cs" />
     <Compile Include="Game\Objects\Portal.cs" />
     <Compile Include="Game\Objects\Stations\BattleStation.cs" />
+    <Compile Include="Game\Objects\Stations\BattleStationConfiguration.cs" />
     <Compile Include="Game\Objects\Stations\HomeTurret.cs" />
     <Compile Include="Game\Objects\Stations\OreTradeStation.cs" />
     <Compile Include="Game\Objects\Stations\QuestGiverStation.cs" />
@@ -450,6 +451,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="config\battle_stations.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

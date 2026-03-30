@@ -460,6 +460,58 @@ namespace Ow.Chat
                 var mod = message.Split(' ')[1];
                 gameSession.Player.Storage.GodMode = mod == "on" ? true : mod == "off" ? false : false;
             }
+            else if (cmd == "/upgrade" && Permission == Permissions.ADMINISTRATOR)
+            {
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/upgrade <nivel>'.#");
+                    return;
+                }
+
+                if (!int.TryParse(args[1], out var requestedLevel))
+                {
+                    Send("dq%Nivel invalido.#");
+                    return;
+                }
+
+                BattleStation battleStation = null;
+                if (gameSession.Player.Selected is BattleStation selectedBattleStation)
+                    battleStation = selectedBattleStation;
+                else if (gameSession.Player.Selected is Satellite selectedSatellite)
+                    battleStation = selectedSatellite.BattleStation;
+
+                if (battleStation == null && gameSession.Player.Spacemap != null)
+                {
+                    battleStation = gameSession.Player.Spacemap.Activatables.Values
+                        .OfType<BattleStation>()
+                        .Where(x => x != null && !x.Destroyed)
+                        .OrderBy(x => x.Position.DistanceTo(gameSession.Player.Position))
+                        .FirstOrDefault();
+                }
+
+                if (battleStation == null)
+                {
+                    Send("dq%Nenhuma estação de batalha encontrada no mapa atual.#");
+                    return;
+                }
+
+                if (battleStation.FactionId == 0)
+                {
+                    Send("dq%A estação precisa estar capturada antes de receber upgrade.#");
+                    return;
+                }
+
+                if (!battleStation.SetUpgradeLevel(requestedLevel, true))
+                {
+                    Send("dq%Nao foi possivel alterar o nivel da estação.#");
+                    return;
+                }
+
+                var finalLevel = battleStation.GetEffectiveLevel();
+                GameManager.SendPacketToMap(battleStation.Spacemap.Id, $"0|A|STD|Battle station {battleStation.Name} was set to level {finalLevel} by {gameSession.Player.Name}.");
+                Send($"dq%Estação {battleStation.Name} ajustada para o nível {finalLevel}.#");
+            }
             else if (cmd == "/fake")
             {
                 if (Permission != Permissions.ADMINISTRATOR)

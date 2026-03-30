@@ -4,14 +4,11 @@ using Ow.Game.Movements;
 using Ow.Game.Objects.Players;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Managers;
-using Ow.Managers.MySQLManager;
 using Ow.Net.netty.commands;
 using Ow.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ow.Game.Objects.Stations
 {
@@ -50,6 +47,9 @@ namespace Ow.Game.Objects.Stations
         public int DesignId { get; set; }
         public BattleStation BattleStation { get; set; }
         public int OwnerId { get; set; }
+        public bool IsStaticDefenseTower { get; private set; }
+        public Asset RepairPod { get; private set; }
+        public int UpgradeLevel => BattleStation?.UpgradeLevel ?? 0;
 
         public bool EmergencyRepairActive = false;
         public bool Installed = false;
@@ -74,6 +74,25 @@ namespace Ow.Game.Objects.Stations
             CurrentHitPoints = MaxHitPoints;
             CurrentShieldPoints = 100000;
             MaxShieldPoints = 100000;
+
+            Program.TickManager.AddTick(this);
+        }
+
+        public Satellite(BattleStation battleStation, BattleStationTowerDefinition towerDefinition, Position position)
+            : base(battleStation.Spacemap, battleStation.FactionId, position, battleStation.Clan, towerDefinition.AssetTypeId)
+        {
+            ShieldAbsorption = 0.8;
+            BattleStation = battleStation;
+            OwnerId = 0;
+            Name = string.IsNullOrWhiteSpace(towerDefinition.Name) ? GetName(towerDefinition.Type) : towerDefinition.Name;
+            DesignId = towerDefinition.DesignId;
+            ItemId = 0;
+            SlotId = towerDefinition.SlotId;
+            Type = towerDefinition.Type;
+            IsStaticDefenseTower = true;
+            Installed = true;
+            ApplyLevelStats(true);
+            EnsureRepairAura();
 
             Program.TickManager.AddTick(this);
         }
@@ -109,7 +128,6 @@ namespace Ow.Game.Objects.Stations
                     if (player != null)
                         BattleStation.Click(player.GameSession);
 
-                    QueryManager.BattleStations.Modules(BattleStation);
                 }
             }
             else if (Installed)
@@ -127,40 +145,95 @@ namespace Ow.Game.Objects.Stations
                         }
                     }
                     else if (Type == StationModuleModule.REPAIR)
-                        RepairModules();
+                    {
+                        EnsureRepairAura();
+                        RepairStationAssets();
+                    }
                 }
             }
         }
 
         public DateTime repairTime = new DateTime();
-        public void RepairModules()
+        public void RepairStationAssets()
         {
-            //TODO check
-            if (!Destroyed && repairTime.AddSeconds(1) < DateTime.Now)
-            {
-                foreach (var module in BattleStation.EquippedStationModule[Clan.Id])
-                {
-                    if (module.LastCombatTime.AddSeconds(10) >= DateTime.Now) return;
-                    if (module.CurrentHitPoints >= module.MaxHitPoints) return;
+            var stats = GetCurrentLevelStats();
+            if (stats == null || stats.RepairAmount <= 0)
+                return;
 
-                    module.Heal(7500);
+            var repairIntervalSeconds = stats.RepairIntervalSeconds > 0 ? stats.RepairIntervalSeconds : 10;
+
+            if (!Destroyed && repairTime.AddSeconds(repairIntervalSeconds) < DateTime.Now)
+            {
+                var repairedAnyTarget = false;
+
+                if (BattleStation.LastCombatTime.AddSeconds(10) < DateTime.Now)
+                    repairedAnyTarget = TryRepairTarget(BattleStation, stats.RepairAmount) || repairedAnyTarget;
+
+                foreach (var tower in BattleStation.DefenseTowers.Where(x => x != null && !x.Destroyed && x.Id != Id))
+                {
+                    if (tower.LastCombatTime.AddSeconds(10) >= DateTime.Now)
+                        continue;
+
+                    repairedAnyTarget = TryRepairTarget(tower, stats.RepairAmount) || repairedAnyTarget;
                 }
 
-                repairTime = DateTime.Now;
+                if (repairedAnyTarget)
+                    repairTime = DateTime.Now;
             }
+        }
+
+        private bool TryRepairTarget(Attackable target, int repairAmount)
+        {
+            if (target == null || repairAmount <= 0)
+                return false;
+
+            var repaired = false;
+
+            if (target.CurrentHitPoints < target.MaxHitPoints)
+            {
+                target.Heal(repairAmount);
+                repaired = true;
+            }
+
+            if (target.CurrentShieldPoints < target.MaxShieldPoints)
+            {
+                target.Heal(repairAmount, 0, HealType.SHIELD);
+                repaired = true;
+            }
+
+            return repaired;
+        }
+
+        private void EnsureRepairAura()
+        {
+            if (!IsStaticDefenseTower || Type != StationModuleModule.REPAIR || Destroyed || Spacemap == null || RepairPod != null)
+                return;
+
+            RepairPod = new Asset(Spacemap, Position, AssetTypeModule.HEALING_POD);
+            GameManager.SendCommandToMap(Spacemap.Id, RepairPod.GetAssetCreateCommand());
+        }
+
+        private void RemoveRepairAura()
+        {
+            if (RepairPod == null)
+                return;
+
+            RepairPod.Remove();
+            RepairPod = null;
         }
 
         public DateTime lastAttackTime = new DateTime();
         public void Attack(Attackable target, double shieldPenetration = 0)
         {
-            var missProbability = Type == StationModuleModule.LASER_LOW_RANGE ? 0.1 : Type == StationModuleModule.LASER_MID_RANGE ? 0.3 : Type == StationModuleModule.LASER_HIGH_RANGE ? 0.4 : Type == StationModuleModule.ROCKET_LOW_ACCURACY ? 0.5 : Type == StationModuleModule.ROCKET_MID_ACCURACY ? 0.3 : 1.00;
+            var currentLevelStats = GetCurrentLevelStats();
+            var missProbability = currentLevelStats != null && currentLevelStats.MissProbability > 0 ? currentLevelStats.MissProbability : (Type == StationModuleModule.LASER_LOW_RANGE ? 0.1 : Type == StationModuleModule.LASER_MID_RANGE ? 0.3 : Type == StationModuleModule.LASER_HIGH_RANGE ? 0.4 : Type == StationModuleModule.ROCKET_LOW_ACCURACY ? 0.5 : Type == StationModuleModule.ROCKET_MID_ACCURACY ? 0.3 : 1.00);
 
-            var damage = AttackManager.RandomizeDamage((Type == StationModuleModule.LASER_LOW_RANGE ? 59850 : Type == StationModuleModule.LASER_MID_RANGE ? 48450 : Type == StationModuleModule.LASER_HIGH_RANGE ? 28500 : Type == StationModuleModule.ROCKET_LOW_ACCURACY ? 85500 : Type == StationModuleModule.ROCKET_MID_ACCURACY ? 71250 : 0), missProbability);
-            damage = 1000; //for test
+            var baseDamage = currentLevelStats != null && currentLevelStats.Damage > 0 ? currentLevelStats.Damage : (Type == StationModuleModule.LASER_LOW_RANGE ? 1000 : Type == StationModuleModule.LASER_MID_RANGE ? 1400 : Type == StationModuleModule.LASER_HIGH_RANGE ? 1800 : Type == StationModuleModule.ROCKET_LOW_ACCURACY ? 1800 : Type == StationModuleModule.ROCKET_MID_ACCURACY ? 1400 : 0);
+            var damage = AttackManager.RandomizeDamage(baseDamage, missProbability);
 
             var damageType = (Type == StationModuleModule.LASER_LOW_RANGE || Type == StationModuleModule.LASER_MID_RANGE || Type == StationModuleModule.LASER_HIGH_RANGE) ? DamageType.LASER : (Type == StationModuleModule.ROCKET_LOW_ACCURACY || Type == StationModuleModule.ROCKET_MID_ACCURACY) ? DamageType.ROCKET : DamageType.LASER;
 
-            var cooldown = (Type == StationModuleModule.ROCKET_LOW_ACCURACY || Type == StationModuleModule.ROCKET_MID_ACCURACY) ? 2 : 1;
+            var cooldown = currentLevelStats != null && currentLevelStats.CooldownSeconds > 0 ? currentLevelStats.CooldownSeconds : ((Type == StationModuleModule.ROCKET_LOW_ACCURACY || Type == StationModuleModule.ROCKET_MID_ACCURACY) ? 2 : 1);
 
             if (target.Position.DistanceTo(Position) < GetRange())
             {
@@ -286,6 +359,13 @@ namespace Ow.Game.Objects.Stations
 
         public void Remove(bool deleteModule = false, bool removeList = true, bool closeUI = false)
         {
+            if (IsStaticDefenseTower)
+            {
+                RemoveRepairAura();
+                Program.TickManager.RemoveTick(this);
+                return;
+            }
+
             var player = GameManager.GetPlayerById(OwnerId);
 
             if (player != null)
@@ -313,7 +393,6 @@ namespace Ow.Game.Objects.Stations
                         player.SendCommand(OutOfBattleStationRangeCommand.write(BattleStation.Id));
 
                     QueryManager.SavePlayer.Modules(player);
-                    QueryManager.BattleStations.Modules(BattleStation);
                 }
             }
 
@@ -322,7 +401,52 @@ namespace Ow.Game.Objects.Stations
 
         public int GetRange()
         {
+            var currentLevelStats = GetCurrentLevelStats();
+            if (currentLevelStats != null && currentLevelStats.Range > 0)
+                return currentLevelStats.Range;
+
             return Type == StationModuleModule.LASER_LOW_RANGE ? 590 : Type == StationModuleModule.LASER_MID_RANGE ? 650 : Type == StationModuleModule.LASER_HIGH_RANGE ? 720 : Type == StationModuleModule.ROCKET_LOW_ACCURACY ? 900 : Type == StationModuleModule.ROCKET_MID_ACCURACY ? 780 : 0;
+        }
+
+        public void ApplyLevelStats(bool restoreCurrent)
+        {
+            if (!IsStaticDefenseTower)
+                return;
+
+            var currentLevelStats = GetCurrentLevelStats();
+            if (currentLevelStats == null)
+                return;
+
+            MaxHitPoints = currentLevelStats.MaxHitPoints;
+            MaxShieldPoints = currentLevelStats.MaxShieldPoints;
+
+            if (restoreCurrent || CurrentHitPoints > MaxHitPoints)
+                CurrentHitPoints = MaxHitPoints;
+            if (restoreCurrent || CurrentShieldPoints > MaxShieldPoints)
+                CurrentShieldPoints = MaxShieldPoints;
+
+            UpdateStatus();
+        }
+
+        public int GetBoostPercentage(BoostedAttributeType boostedAttributeType)
+        {
+            if (!IsStaticDefenseTower || BattleStation == null || BattleStation.FactionId == 0)
+                return 0;
+
+            if (boostedAttributeType == BoostedAttributeType.HONOUR && Type == StationModuleModule.HONOR_BOOSTER)
+                return GetCurrentLevelStats()?.BoostPercent ?? 0;
+
+            if (boostedAttributeType == BoostedAttributeType.EP && Type == StationModuleModule.EXPERIENCE_BOOSTER)
+                return GetCurrentLevelStats()?.BoostPercent ?? 0;
+
+            return 0;
+        }
+
+        private BattleStationLevelDefinition GetCurrentLevelStats()
+        {
+            return IsStaticDefenseTower && BattleStation != null && BattleStation.Definition != null
+                ? BattleStation.Definition.Towers.FirstOrDefault(x => x.SlotId == SlotId)?.GetLevelDefinition(BattleStation.GetEffectiveLevel())
+                : null;
         }
 
         public static string GetName(short type)

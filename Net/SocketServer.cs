@@ -669,12 +669,6 @@ class SocketServer
 
     public static void LeaveFromClan(Player player)
     {
-        foreach (var battleStation in GameManager.BattleStations.Values)
-        {
-            if (battleStation.EquippedStationModule.ContainsKey(player.Clan.Id))
-                battleStation.EquippedStationModule[player.Clan.Id].ForEach(x => { if (x.OwnerId == player.Id) { x.Destroy(null, DestructionType.MISC); } });
-        }
-
         if (player?.GameSession != null)
         {
             if (player.Clan.Id != 0)
@@ -692,9 +686,6 @@ class SocketServer
     {
         if (deletedClan != null)
         {
-            foreach (var battleStation in GameManager.BattleStations.Values.Where(x => x.Clan.Id == deletedClan.Id))
-                battleStation.Destroy(null, DestructionType.MISC);
-
             GameManager.Clans.TryRemove(deletedClan.Id, out deletedClan);
 
             foreach (var gameSession in GameManager.GameSessions.Values)

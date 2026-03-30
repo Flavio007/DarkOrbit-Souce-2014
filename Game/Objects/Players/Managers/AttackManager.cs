@@ -1015,6 +1015,8 @@ namespace Ow.Game.Objects.Players.Managers
 
         private int GetRocketLauncherRocketDamage()
         {
+            var selectedTarget = Player.Selected;
+
             switch (Player.Settings.InGameSettings.selectedRocketLauncher)
             {
                 case AmmunitionManager.ROCKET_LAUNCHER_ECO_10:
@@ -1022,7 +1024,7 @@ namespace Ow.Game.Objects.Players.Managers
                 case AmmunitionManager.ROCKET_LAUNCHER_HSTRM_01:
                     return 4000;
                 case AmmunitionManager.ROCKET_LAUNCHER_UBR_100:
-                    return Player.SelectedCharacter.FactionId == 0 ? 7200 : 4000;
+                    return selectedTarget != null && selectedTarget.FactionId == 0 ? 7200 : 4000;
                 case AmmunitionManager.ROCKET_LAUNCHER_SAR_01:
                     return 1200;
                 case AmmunitionManager.ROCKET_LAUNCHER_SAR_02:

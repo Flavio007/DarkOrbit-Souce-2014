@@ -16,19 +16,7 @@ namespace Ow.Net.netty.handlers.BattleStationRequestHandlers
     {
         public void execute(GameSession gameSession, byte[] bytes)
         {
-            var read = new EmergencyRepairRequest();
-            read.readCommand(bytes);
-
-            var player = gameSession.Player;
-            var battleStation = player.Spacemap.GetActivatableMapEntity(read.battleStationId) as BattleStation;
-
-            if (battleStation != null)
-            {
-                var module = battleStation.EquippedStationModule[player.Clan.Id].Where(x => x.SlotId == read.slotId).FirstOrDefault();
-
-                if (module != null && battleStation.AssetTypeId == AssetTypeModule.BATTLESTATION && !module.EmergencyRepairActive)
-                    Repair(1200, module);
-            }
+            gameSession?.Player?.SendPacket("0|A|STD|Legacy battle station emergency repair is disabled for faction stations.");
         }
 
         public async void Repair(int seconds, Satellite satellite)

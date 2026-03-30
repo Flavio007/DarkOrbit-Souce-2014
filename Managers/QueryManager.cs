@@ -1531,74 +1531,18 @@ namespace Ow.Managers
         {
             public static void BattleStation(BattleStation battleStation)
             {
-                using (var mySqlClient = SqlDatabaseManager.GetClient())
-                {
-                    var visualModifiers = new List<int>();
-
-                    foreach (var modifier in battleStation.VisualModifiers.Keys)
-                        visualModifiers.Add(modifier);
-
-                    var buildTime = battleStation.AssetTypeId != AssetTypeModule.BATTLESTATION && battleStation.InBuildingState ? $"buildTime = '{battleStation.buildTime.ToString("yyyy-MM-dd HH:mm:ss")}'," : "";
-                    var deflectorTime = !battleStation.DeflectorActive ? $"deflectorTime = '{battleStation.deflectorTime.ToString("yyyy-MM-dd HH:mm:ss")}'," : "";
-
-                    mySqlClient.ExecuteNonQuery($"UPDATE server_battlestations SET clanId = {battleStation.Clan.Id}," +
-                    $"inBuildingState = {battleStation.InBuildingState}, buildTimeInMinutes = {battleStation.BuildTimeInMinutes}, {buildTime}" +
-                    $"deflectorActive = {battleStation.DeflectorActive}, deflectorSecondsLeft = {battleStation.DeflectorSecondsLeft}, {deflectorTime} visualModifiers = '{JsonConvert.SerializeObject(visualModifiers)}' WHERE name = '{battleStation.AsteroidName}'");
-                }
+                // Faction battle stations are configuration-driven for now.
             }
 
             public static void Modules(BattleStation battleStation)
             {
-                var modules = new List<EquippedModuleBase>();
-
-                foreach (var equipped in battleStation.EquippedStationModule)
-                {
-                    var module = new List<SatelliteBase>();
-
-                    foreach (var equippedModule in battleStation.EquippedStationModule[equipped.Key])
-                    {
-                        module.Add(new SatelliteBase(equippedModule.OwnerId, equippedModule.ItemId, equippedModule.SlotId, equippedModule.DesignId, equippedModule.Type, equippedModule.CurrentHitPoints,
-                            equippedModule.MaxHitPoints, equippedModule.CurrentShieldPoints, equippedModule.MaxShieldPoints, equippedModule.InstallationSecondsLeft, equippedModule.Installed));
-                    }
-
-                    modules.Add(new EquippedModuleBase(equipped.Key, module));
-                }
-
-                using (var mySqlClient = SqlDatabaseManager.GetClient())
-                    mySqlClient.ExecuteNonQuery($"UPDATE server_battlestations SET modules = '{JsonConvert.SerializeObject(modules)}' WHERE name = '{battleStation.AsteroidName}'");
+                // Legacy station modules are disabled for faction battle stations.
             }
         }
 
         public static void LoadBattleStations()
         {
-            using (var mySqlClient = SqlDatabaseManager.GetClient())
-            {
-                var data = (DataTable)mySqlClient.ExecuteQueryTable("SELECT * FROM server_battlestations");
-                foreach (DataRow row in data.Rows)
-                {
-                    bool active = Convert.ToBoolean(row["active"]);
-
-                    if (active)
-                    {
-                        string name = Convert.ToString(row["name"]);
-                        int mapId = Convert.ToInt32(row["mapId"]);
-                        int clanId = Convert.ToInt32(row["clanId"]);
-                        int positionX = Convert.ToInt32(row["positionX"]);
-                        int positionY = Convert.ToInt32(row["positionY"]);
-                        var modules = JsonConvert.DeserializeObject<List<EquippedModuleBase>>(row["modules"].ToString());
-                        var inBuildingState = Convert.ToBoolean(Convert.ToInt32(row["inBuildingState"]));
-                        var buildTimeInMinutes = Convert.ToInt32(row["buildTimeInMinutes"]);
-                        var buildTime = DateTime.Parse(row["buildTime"].ToString());
-                        var deflectorActive = Convert.ToBoolean(Convert.ToInt32(row["deflectorActive"]));
-                        var deflectorSecondsLeft = Convert.ToInt32(row["deflectorSecondsLeft"]);
-                        var deflectorTime = DateTime.Parse(row["deflectorTime"].ToString());
-                        var visualModifiers = JsonConvert.DeserializeObject<List<int>>(row["visualModifiers"].ToString());
-
-                        var battleStation = new BattleStation(name, GameManager.GetSpacemap(mapId), new Position(positionX, positionY), GameManager.GetClan(clanId), modules, inBuildingState, buildTimeInMinutes, buildTime, deflectorActive, deflectorSecondsLeft, deflectorTime, visualModifiers);
-                        GameManager.BattleStations.TryAdd(battleStation.Name, battleStation);
-                    }
-                }
-            }
+            BattleStationConfiguration.SpawnConfiguredStations();
         }
 
         public static void LoadShips()
