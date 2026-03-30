@@ -186,6 +186,7 @@ namespace Ow.Game.Objects.Stations
         {
             var previousAssetType = AssetTypeId;
 
+            ClearStationVisualEffects();
             RemoveDefenseTowers();
             ResetCapture();
 
@@ -255,6 +256,7 @@ namespace Ow.Game.Objects.Stations
             if (UpgradeLevel < Definition.GetMaxLevel())
             {
                 SetUpgradeLevel(UpgradeLevel + 1, true);
+                TriggerLevelUpVisualEffect();
                 GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} survived the vulnerability window and reached level {GetEffectiveLevel()}.");
             }
             else
@@ -284,12 +286,55 @@ namespace Ow.Game.Objects.Stations
             deflectorTime = DateTime.Now;
 
             if (shouldEnableShield)
+            {
+                SetConstructionVisualState(false);
                 AddVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR, DeflectorSecondsLeft, "", 0, true);
+            }
             else
+            {
                 RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+                SetConstructionVisualState(true);
+            }
 
             if (shouldEnableShield && !shieldWasActive)
                 RestoreDestroyedTowers();
+        }
+
+        private void SetConstructionVisualState(bool constructionActive)
+        {
+            if (constructionActive)
+                AddVisualModifier(VisualModifierCommand.CONSTRUCTION_EFFECT, 0, "", 0, true);
+            else
+                RemoveVisualModifier(VisualModifierCommand.CONSTRUCTION_EFFECT);
+
+            foreach (var tower in DefenseTowers.Where(x => x != null))
+            {
+                if (constructionActive && !tower.Destroyed && !tower.IsDestroyedModuleState)
+                    tower.AddVisualModifier(VisualModifierCommand.MODULE_INSTALL_EFFECT, 0, "", 0, true);
+                else
+                    tower.RemoveVisualModifier(VisualModifierCommand.MODULE_INSTALL_EFFECT);
+            }
+        }
+
+        private void TriggerLevelUpVisualEffect()
+        {
+            _ = PlayTemporaryVisualModifier(VisualModifierCommand.MODULE_LEVEL_UP_EFFECT, 2000);
+
+            foreach (var tower in DefenseTowers.Where(x => x != null && !x.Destroyed))
+                _ = tower.PlayTemporaryVisualModifier(VisualModifierCommand.MODULE_LEVEL_UP_EFFECT, 2000);
+        }
+
+        private void ClearStationVisualEffects()
+        {
+            RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_DEFLECTOR);
+            RemoveVisualModifier(VisualModifierCommand.CONSTRUCTION_EFFECT);
+            RemoveVisualModifier(VisualModifierCommand.MODULE_LEVEL_UP_EFFECT);
+
+            foreach (var tower in DefenseTowers.Where(x => x != null))
+            {
+                tower.RemoveVisualModifier(VisualModifierCommand.MODULE_INSTALL_EFFECT);
+                tower.RemoveVisualModifier(VisualModifierCommand.MODULE_LEVEL_UP_EFFECT);
+            }
         }
 
         public static string GetFactionName(int factionId)

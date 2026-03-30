@@ -34,6 +34,85 @@ namespace Ow.Chat
 
     class ChatClient
     {
+        private static readonly Dictionary<string, short> TestAssetTypeByXmlId = new Dictionary<string, short>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "headquarters_home_mmo", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_mmo_demolished", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_home_eic", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_eic_demolished", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_home_vru", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_vru_demolished", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_outpost_mmo", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_outpost_eic", AssetTypeModule.BASE_COMPANY },
+            { "headquarters_outpost_vru", AssetTypeModule.BASE_COMPANY },
+            { "hangar_home_1", AssetTypeModule.HANGAR_HOME },
+            { "hangar_home_2", AssetTypeModule.HANGAR_HOME },
+            { "hangar_home_3", AssetTypeModule.HANGAR_HOME },
+            { "hangar_home_4", AssetTypeModule.HANGAR_HOME },
+            { "hangar_home_5", AssetTypeModule.HANGAR_HOME },
+            { "hangar_home_6", AssetTypeModule.HANGAR_HOME },
+            { "hangar_outpost_1", AssetTypeModule.HANGAR_HOME },
+            { "hangar_outpost_2", AssetTypeModule.HANGAR_HOME },
+            { "hangar_outpost_3", AssetTypeModule.HANGAR_HOME },
+            { "questgiver_3", AssetTypeModule.QUESTGIVER },
+            { "questgiver_4", AssetTypeModule.QUESTGIVER },
+            { "questgiver_5", AssetTypeModule.QUESTGIVER },
+            { "questgiver_6", AssetTypeModule.QUESTGIVER },
+            { "questgiver_7", AssetTypeModule.QUESTGIVER },
+            { "questgiver_8", AssetTypeModule.QUESTGIVER },
+            { "questgiver_9", AssetTypeModule.QUESTGIVER },
+            { "questgiver_10", AssetTypeModule.QUESTGIVER },
+            { "questgiver_11", AssetTypeModule.QUESTGIVER },
+            { "repairstation_home_1", AssetTypeModule.REPAIR_STATION },
+            { "repairstation_home_2", AssetTypeModule.REPAIR_STATION },
+            { "repairstation_home_3", AssetTypeModule.REPAIR_STATION },
+            { "repairstation_outpost_1", AssetTypeModule.REPAIR_STATION },
+            { "repairstation_outpost_2", AssetTypeModule.REPAIR_STATION },
+            { "repairstation_outpost_3", AssetTypeModule.REPAIR_STATION },
+            { "refinery_home_1", AssetTypeModule.ORE_TRADE_STATION },
+            { "refinery_home_2", AssetTypeModule.ORE_TRADE_STATION },
+            { "refinery_home_3", AssetTypeModule.ORE_TRADE_STATION },
+            { "refinery_outpost_1", AssetTypeModule.ORE_TRADE_STATION },
+            { "refinery_outpost_2", AssetTypeModule.ORE_TRADE_STATION },
+            { "refinery_outpost_3", AssetTypeModule.ORE_TRADE_STATION },
+            { "boosterstation_1", AssetTypeModule.BOOSTER_STATION },
+            { "boosterstation_2", AssetTypeModule.BOOSTER_STATION },
+            { "boosterstation_3", AssetTypeModule.BOOSTER_STATION },
+            { "boosterstation_4", AssetTypeModule.BOOSTER_STATION },
+            { "turret_55_1", AssetTypeModule.varBa },
+            { "turret_56_1", AssetTypeModule.varBa },
+            { "turret_55_2", AssetTypeModule.varBa },
+            { "turret_56_2", AssetTypeModule.varBa },
+            { "turret_55_3", AssetTypeModule.varBa },
+            { "turret_56_3", AssetTypeModule.varBa },
+            { "turret_57_1", AssetTypeModule.var42v },
+            { "turret_58_1", AssetTypeModule.var42v },
+            { "turret_57_2", AssetTypeModule.var42v },
+            { "turret_58_2", AssetTypeModule.var42v },
+            { "turret_57_3", AssetTypeModule.var42v },
+            { "turret_58_3", AssetTypeModule.var42v },
+            { "relay", AssetTypeModule.RELAY_STATION },
+            { "static_relay", AssetTypeModule.RELAY_STATION }
+        };
+
+        private static readonly Dictionary<string, short> VisualModifierByEffectAlias = new Dictionary<string, short>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "battleRepairRobot1", VisualModifierCommand.BATTLE_REPAIR_BOT },
+            { "construction", VisualModifierCommand.CONSTRUCTION_EFFECT },
+            { "drawFireOwner", VisualModifierCommand.DRAW_FIRE_OWNER },
+            { "drawFireTarget", VisualModifierCommand.DRAW_FIRE_TARGET },
+            { "drawFireVictim", VisualModifierCommand.DRAW_FIRE_TARGET },
+            { "emergencyRepair", VisualModifierCommand.EMERGENCY_REPAIR_EFFECT },
+            { "fortify", VisualModifierCommand.FORTIFY },
+            { "healEffect", VisualModifierCommand.HEAL_EFFECT },
+            { "mirrorControls", VisualModifierCommand.MIRRORED_CONTROLS },
+            { "moduleInstall", VisualModifierCommand.MODULE_INSTALL_EFFECT },
+            { "moduleLevelUp", VisualModifierCommand.MODULE_LEVEL_UP_EFFECT },
+            { "shield1", VisualModifierCommand.PRISMATIC_SHIELD },
+            { "stickyBomb", VisualModifierCommand.STICKY_BOMB },
+            { "warpAnimation", VisualModifierCommand.WARP_ANIMATION_EFFECT }
+        };
+
         public Socket Socket { get; set; }
         public int UserId { get; set; }
         public Permissions Permission { get; set; }
@@ -553,6 +632,65 @@ namespace Ow.Chat
                 var fake = AIShips.CreateStationaryFakePlayer(ship, gameSession.Player.Spacemap, gameSession.Player.Position, factionId);
                 Send($"dq%Fake ship created. Id={fake.Id}, Name={fake.Name}, Ship={shipId}, Faction={factionId}.#");
             }
+            else if (cmd == "/effect" && Permission == Permissions.ADMINISTRATOR)
+            {
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/effect <VISUAL_MODIFIER_ID|NAME|EFFECT_ALIAS> [attribute] [count] [shipLootId]' or '/effect remove <...>'. XML effect IDs are different.#");
+                    return;
+                }
+
+                var removeEffect = args[1].Equals("remove", StringComparison.OrdinalIgnoreCase) || args[1].Equals("off", StringComparison.OrdinalIgnoreCase);
+                var effectIndex = removeEffect ? 2 : 1;
+
+                if (args.Length <= effectIndex)
+                {
+                    Send("dq%Use '/effect <VISUAL_MODIFIER_ID|NAME|EFFECT_ALIAS> [attribute] [count] [shipLootId]' or '/effect remove <...>'. XML effect IDs are different.#");
+                    return;
+                }
+
+                if (!TryResolveVisualModifier(args[effectIndex], out var modifier))
+                {
+                    Send("dq%Invalid effect. Use a visual modifier ID, a VisualModifierCommand constant, or an effect alias like healEffect.#");
+                    return;
+                }
+
+                if (removeEffect)
+                {
+                    gameSession.Player.RemoveVisualModifier(modifier);
+                    Send($"dq%Effect {modifier} removed from {gameSession.Player.Name}.#");
+                    return;
+                }
+
+                var attribute = 0;
+                var count = 0;
+                var shipLootId = gameSession.Player.Ship?.LootId ?? "";
+
+                if (args.Length > effectIndex + 1 && !int.TryParse(args[effectIndex + 1], out attribute))
+                {
+                    Send("dq%Invalid attribute value.#");
+                    return;
+                }
+
+                if (args.Length > effectIndex + 2 && !int.TryParse(args[effectIndex + 2], out count))
+                {
+                    Send("dq%Invalid count value.#");
+                    return;
+                }
+
+                if (args.Length > effectIndex + 3)
+                    shipLootId = args[effectIndex + 3];
+
+                gameSession.Player.RemoveVisualModifier(modifier);
+                gameSession.Player.AddVisualModifier(modifier, attribute, shipLootId, count, true);
+                Send($"dq%Effect {modifier} applied to {gameSession.Player.Name}. Attribute={attribute}, Count={count}, ShipLootId={shipLootId}.#");
+            }
+            else if (cmd == "/clear" && Permission == Permissions.ADMINISTRATOR)
+            {
+                var removedEffects = ClearVisualModifiers(gameSession.Player);
+                Send($"dq%Removed {removedEffects} effect(s) from {gameSession.Player.Name}.#");
+            }
             else if (cmd == "/test")
             {
                 var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -567,15 +705,15 @@ namespace Ow.Chat
 
                 if (args.Length < 2)
                 {
-                    Send("dq%Use '/test <TypeId> [FactionId]'.#");
+                    Send("dq%Use '/test <TypeId|TYPE_NAME|ASSET_ID> [FactionId]'.#");
                     Out.WriteLine($"[TEST_CMD] Invalid usage user={gameSession.Player.Id}", "ChatClient.cs");
                     return;
                 }
 
-                if (!short.TryParse(args[1], out var typeId))
+                if (!TryResolveTestAssetType(args[1], out var typeId, out var visualAssetName))
                 {
-                    Send("dq%Invalid ID.#");
-                    Out.WriteLine($"[TEST_CMD] Invalid ID value='{args[1]}' user={gameSession.Player.Id}", "ChatClient.cs");
+                    Send("dq%Invalid asset type. Use a numeric ID, an AssetTypeModule constant name, or an XML asset id like boosterstation_1.#");
+                    Out.WriteLine($"[TEST_CMD] Invalid type value='{args[1]}' user={gameSession.Player.Id}", "ChatClient.cs");
                     return;
                 }
 
@@ -614,14 +752,16 @@ namespace Ow.Chat
                     var oldAssetType = homeStation.GetAssetType();
                     GameManager.SendCommandToMap(testMapId, AssetRemoveCommand.write(oldAssetType, homeStation.Id));
                     homeStation.AssetTypeId = typeId;
+                    homeStation.VisualAssetNameOverride = visualAssetName;
                     if (factionId.HasValue)
                         homeStation.FactionId = factionId.Value;
                     GameManager.SendCommandToMap(testMapId, homeStation.GetAssetCreateCommand());
                 }
 
                 var finalFaction = homeStations.FirstOrDefault()?.FactionId;
-                Send($"dq%Map 58 station updated. TypeId={typeId}, FactionId={finalFaction}.#");
-                Out.WriteLine($"[TEST_CMD] Success user={gameSession.Player.Id} typeId={typeId} requestedFaction={(factionId.HasValue ? factionId.Value.ToString() : "unchanged")} stations={homeStations.Count} finalFaction={finalFaction}", "ChatClient.cs");
+                var resolvedAsset = string.IsNullOrEmpty(visualAssetName) ? typeId.ToString() : visualAssetName;
+                Send($"dq%Map 58 station updated. Asset={resolvedAsset}, TypeId={typeId}, FactionId={finalFaction}.#");
+                Out.WriteLine($"[TEST_CMD] Success user={gameSession.Player.Id} typeId={typeId} visualAsset={(string.IsNullOrEmpty(visualAssetName) ? "<default>" : visualAssetName)} requestedFaction={(factionId.HasValue ? factionId.Value.ToString() : "unchanged")} stations={homeStations.Count} finalFaction={finalFaction}", "ChatClient.cs");
             }
 
             else if (cmd == "/testbox")
@@ -927,6 +1067,69 @@ namespace Ow.Chat
                     Logger.Log("chat_log", $"{gameSession.Player.Name} ({gameSession.Player.Id}): {message}");
                 }
             }
+        }
+
+        private static bool TryResolveTestAssetType(string value, out short typeId, out string visualAssetName)
+        {
+            visualAssetName = null;
+
+            if (short.TryParse(value, out typeId))
+                return true;
+
+            var normalizedValue = value.Trim();
+            var fields = typeof(AssetTypeModule).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            foreach (var field in fields)
+            {
+                if (field.FieldType != typeof(short) || !field.Name.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                typeId = (short)field.GetValue(null);
+                return true;
+            }
+
+            if (TestAssetTypeByXmlId.TryGetValue(normalizedValue, out typeId))
+            {
+                visualAssetName = normalizedValue;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryResolveVisualModifier(string value, out short modifier)
+        {
+            if (short.TryParse(value, out modifier))
+                return true;
+
+            var normalizedValue = value.Trim();
+
+            if (VisualModifierByEffectAlias.TryGetValue(normalizedValue, out modifier))
+                return true;
+
+            var fields = typeof(VisualModifierCommand).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            foreach (var field in fields)
+            {
+                if (field.FieldType != typeof(short) || !field.Name.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                modifier = (short)field.GetValue(null);
+                return true;
+            }
+
+            modifier = 0;
+            return false;
+        }
+
+        private static int ClearVisualModifiers(Player player)
+        {
+            if (player == null)
+                return 0;
+
+            var modifiers = player.VisualModifiers.Keys.ToList();
+            foreach (var modifier in modifiers)
+                player.RemoveVisualModifier(modifier);
+
+            return modifiers.Count;
         }
 
         public void Close()

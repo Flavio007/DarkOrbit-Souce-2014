@@ -25,6 +25,7 @@ namespace Ow.Game.Objects.Stations
         private static readonly int[] LargeTurretAngles = { 0, 90, 180, 270 };
         private static readonly int[] SmallTurretAngles = { 45, 135, 225, 315 };
 
+        public string VisualAssetNameOverride { get; set; }
         public RepairStation RepairStation { get; set; }
         public HangarStation HangarStation { get; set; }
         public QuestGiverStation QuestGiverStation { get; set; }
@@ -57,6 +58,11 @@ namespace Ow.Game.Objects.Stations
         private AssetTypeModule GetVisualAssetType()
         {
             return new AssetTypeModule(UseSolitaryVisual() ? AssetTypeModule.HANGAR_HOME : AssetTypeId);
+        }
+
+        private string GetVisualAssetName()
+        {
+            return string.IsNullOrEmpty(VisualAssetNameOverride) ? "HQ" : VisualAssetNameOverride;
         }
 
         public void PrepareStations()
@@ -98,7 +104,7 @@ namespace Ow.Game.Objects.Stations
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
-            return AssetCreateCommand.write(GetVisualAssetType(), "HQ",
+            return AssetCreateCommand.write(GetVisualAssetType(), GetVisualAssetName(),
                                           GetVisualFactionId(), "", Id, 0, 0,
                                           Position.X, Position.Y, 0, true, true, true, false,
                                           new ClanRelationModule(clanRelationModule),

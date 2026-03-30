@@ -44,13 +44,15 @@ namespace Ow.Game.Objects.Stations
 
     class Satellite : Activatable
     {
+        private const int AlliedRepairRange = 700;
+        private const int RepairEffectDurationMilliseconds = 2000;
+
         public int DesignId { get; set; }
         public BattleStation BattleStation { get; set; }
         public BattleStationTowerDefinition TowerDefinition { get; private set; }
         public int OwnerId { get; set; }
         public bool IsStaticDefenseTower { get; private set; }
         public bool IsDestroyedModuleState { get; private set; }
-        public Asset RepairPod { get; private set; }
         public int UpgradeLevel => BattleStation?.UpgradeLevel ?? 0;
 
         public bool EmergencyRepairActive = false;
@@ -95,7 +97,6 @@ namespace Ow.Game.Objects.Stations
             IsStaticDefenseTower = true;
             Installed = true;
             ApplyLevelStats(true);
-            EnsureRepairAura();
 
             Program.TickManager.AddTick(this);
         }
@@ -126,7 +127,7 @@ namespace Ow.Game.Objects.Stations
                     Installed = true;
 
                     if (BattleStation.AssetTypeId == AssetTypeModule.BATTLESTATION)
-                        RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_INSTALLING);
+                        RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_CONSTRUCTING);
 
                     if (player != null)
                         BattleStation.Click(player.GameSession);
@@ -149,7 +150,6 @@ namespace Ow.Game.Objects.Stations
                     }
                     else if (Type == StationModuleModule.REPAIR)
                     {
-                        EnsureRepairAura();
                         RepairStationAssets();
                     }
                 }
@@ -170,14 +170,22 @@ namespace Ow.Game.Objects.Stations
                 var repairedAnyTarget = false;
 
                 if (BattleStation.LastCombatTime.AddSeconds(10) < DateTime.Now)
-                    repairedAnyTarget = TryRepairTarget(BattleStation, stats.RepairAmount) || repairedAnyTarget;
+                    repairedAnyTarget = TryRepairTarget(BattleStation, stats.RepairAmount, VisualModifierCommand.EMERGENCY_REPAIR_EFFECT) || repairedAnyTarget;
 
                 foreach (var tower in BattleStation.DefenseTowers.Where(x => x != null && !x.Destroyed && x.Id != Id))
                 {
                     if (tower.LastCombatTime.AddSeconds(10) >= DateTime.Now)
                         continue;
 
-                    repairedAnyTarget = TryRepairTarget(tower, stats.RepairAmount) || repairedAnyTarget;
+                    repairedAnyTarget = TryRepairTarget(tower, stats.RepairAmount, VisualModifierCommand.EMERGENCY_REPAIR_EFFECT) || repairedAnyTarget;
+                }
+
+                foreach (var player in GetAlliedPlayersInRepairRange())
+                {
+                    if (player.LastCombatTime.AddSeconds(10) >= DateTime.Now)
+                        continue;
+
+                    repairedAnyTarget = TryRepairTarget(player, stats.RepairAmount, VisualModifierCommand.HEAL_EFFECT) || repairedAnyTarget;
                 }
 
                 if (repairedAnyTarget)
@@ -185,7 +193,7 @@ namespace Ow.Game.Objects.Stations
             }
         }
 
-        private bool TryRepairTarget(Attackable target, int repairAmount)
+        private bool TryRepairTarget(Attackable target, int repairAmount, short visualEffect = 0)
         {
             if (target == null || repairAmount <= 0)
                 return false;
@@ -204,25 +212,25 @@ namespace Ow.Game.Objects.Stations
                 repaired = true;
             }
 
+            if (repaired && visualEffect != 0)
+                _ = target.PlayTemporaryVisualModifier(visualEffect, RepairEffectDurationMilliseconds);
+
             return repaired;
         }
 
-        private void EnsureRepairAura()
+        private IEnumerable<Player> GetAlliedPlayersInRepairRange()
         {
-            if (!IsStaticDefenseTower || IsDestroyedModuleState || Type != StationModuleModule.REPAIR || Destroyed || Spacemap == null || RepairPod != null)
-                return;
+            if (BattleStation == null || Spacemap == null || BattleStation.FactionId == 0)
+                return Enumerable.Empty<Player>();
 
-            RepairPod = new Asset(Spacemap, Position, AssetTypeModule.HEALING_POD);
-            GameManager.SendCommandToMap(Spacemap.Id, RepairPod.GetAssetCreateCommand());
-        }
-
-        private void RemoveRepairAura()
-        {
-            if (RepairPod == null)
-                return;
-
-            RepairPod.Remove();
-            RepairPod = null;
+            return Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => player != null
+                    && !player.Destroyed
+                    && player.CurrentHitPoints > 0
+                    && player.FactionId == BattleStation.FactionId
+                    && player.Position.DistanceTo(BattleStation.Position) <= AlliedRepairRange)
+                .ToList();
         }
 
         public DateTime lastAttackTime = new DateTime();
@@ -364,7 +372,6 @@ namespace Ow.Game.Objects.Stations
         {
             if (IsStaticDefenseTower)
             {
-                RemoveRepairAura();
                 Program.TickManager.RemoveTick(this);
                 return;
             }
@@ -469,7 +476,8 @@ namespace Ow.Game.Objects.Stations
             if (!IsStaticDefenseTower || TowerDefinition == null)
                 return;
 
-            RemoveRepairAura();
+            RemoveVisualModifier(VisualModifierCommand.MODULE_INSTALL_EFFECT);
+            RemoveVisualModifier(VisualModifierCommand.MODULE_LEVEL_UP_EFFECT);
             IsDestroyedModuleState = true;
             Type = StationModuleModule.DESTROYED;
             DesignId = TowerDefinition.DestroyedDesignId;
@@ -492,7 +500,6 @@ namespace Ow.Game.Objects.Stations
             Type = TowerDefinition.Type;
             DesignId = GetCurrentDesignId();
             ApplyLevelStats(true);
-            EnsureRepairAura();
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());

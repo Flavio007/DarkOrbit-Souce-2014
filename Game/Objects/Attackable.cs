@@ -66,6 +66,7 @@ namespace Ow.Game.Objects
 
         public ConcurrentDictionary<int, Character> InRangeCharacters = new ConcurrentDictionary<int, Character>();
         public ConcurrentDictionary<int, VisualModifierCommand> VisualModifiers = new ConcurrentDictionary<int, VisualModifierCommand>();
+        private readonly ConcurrentDictionary<int, int> temporaryVisualModifierTokens = new ConcurrentDictionary<int, int>();
 
         public Attackable Selected { get; set; }
 
@@ -734,6 +735,25 @@ namespace Ow.Game.Objects
                             break;
                     }
                 }
+            }
+        }
+
+        public async Task PlayTemporaryVisualModifier(short modifier, int durationMilliseconds, int attribute = 0, string shipLootId = "", int count = 0)
+        {
+            var token = temporaryVisualModifierTokens.AddOrUpdate(modifier, 1, (_, existingToken) => existingToken + 1);
+
+            RemoveVisualModifier(modifier);
+            AddVisualModifier(modifier, attribute, shipLootId, count, true);
+
+            if (durationMilliseconds <= 0)
+                return;
+
+            await Task.Delay(durationMilliseconds);
+
+            if (temporaryVisualModifierTokens.TryGetValue(modifier, out var currentToken) && currentToken == token)
+            {
+                RemoveVisualModifier(modifier);
+                temporaryVisualModifierTokens.TryRemove(modifier, out _);
             }
         }
 

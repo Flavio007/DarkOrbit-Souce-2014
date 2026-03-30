@@ -68,6 +68,13 @@ namespace Ow.Net.netty.commands
         public const short varY2t = 41;
         public const short HIGHLIGHT = 42;
         public const short UBA_WINNER = 88;
+        // Visual modifier packet IDs are a different ID space from <effects><effect id="..."> in the client XML.
+        public const short HEAL_EFFECT = varN2t;
+        public const short EMERGENCY_REPAIR_EFFECT = EMERGENCY_REPAIR;
+        public const short CONSTRUCTION_EFFECT = BATTLESTATION_CONSTRUCTING;
+        public const short WARP_ANIMATION_EFFECT = varY2t;
+        public const short MODULE_INSTALL_EFFECT = 54;
+        public const short MODULE_LEVEL_UP_EFFECT = SURGEON_PLAGUE;
 
         public int attribute = 0;
         public int userId = 0;

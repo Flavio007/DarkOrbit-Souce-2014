@@ -34,6 +34,8 @@ namespace Ow.Game.Events
             public FakePlayer SupportGoliath { get; set; }
             public TutorialExitPortal ExitPortal { get; set; }
             public bool RewardsSpawned { get; set; }
+            public bool RewardsSequenceStarted { get; set; }
+            public bool CleanedUp { get; set; }
         }
 
         private sealed class TutorialExitPortal : Portal
@@ -105,6 +107,11 @@ namespace Ow.Game.Events
         private const int SupportShipApproachOffsetX = 320;
         private const int SupportShipApproachOffsetY = 120;
         private const int ExitPortalOffsetY = 520;
+        private const int WarpEffectDurationMs = 1800;
+        private const int SupportShipWarpStaggerMs = 350;
+        private const int SupportShipApproachDelayMs = 700;
+        private const int PhoenixPortalApproachPauseMs = 850;
+        private const int PhoenixPortalJumpDelayMs = 900;
 
         private static readonly Position TutorialCenter = new Position(5225, 3250);
         private static readonly Position[] StreunerPositions =
@@ -210,6 +217,8 @@ namespace Ow.Game.Events
         {
             if (instance == null)
                 return;
+
+            instance.CleanedUp = true;
 
             instance.ExitPortal?.Remove();
 
@@ -320,6 +329,8 @@ namespace Ow.Game.Events
             }
 
             instance.RewardsSpawned = false;
+            instance.RewardsSequenceStarted = false;
+            instance.CleanedUp = false;
             instance.SupportVengeance = null;
             instance.SupportGoliath = null;
             instance.ExitPortal?.Remove();
@@ -376,6 +387,45 @@ namespace Ow.Game.Events
             GameManager.SendCommandToMap(instance.Spacemap.Id, instance.ExitPortal.GetAssetCreateCommand());
 
             instance.RewardsSpawned = true;
+
+            if (!instance.RewardsSequenceStarted)
+            {
+                instance.RewardsSequenceStarted = true;
+                _ = RunRewardSequenceAsync(instance);
+            }
+        }
+
+        private async Task RunRewardSequenceAsync(TutorialInstance instance)
+        {
+            try
+            {
+                if (!IsInstanceActive(instance))
+                    return;
+
+                StartWarpAnimation(instance.SupportVengeance);
+                await Task.Delay(SupportShipWarpStaggerMs);
+
+                if (!IsInstanceActive(instance))
+                    return;
+
+                StartWarpAnimation(instance.SupportGoliath);
+                await Task.Delay(SupportShipApproachDelayMs);
+
+                if (!IsInstanceActive(instance))
+                    return;
+
+                MoveSupportShipTowardsPhoenix(instance, instance.SupportVengeance, true);
+                MoveSupportShipTowardsPhoenix(instance, instance.SupportGoliath, false);
+
+                var supportMovementTime = Math.Max(GetMovementDelay(instance.SupportVengeance), GetMovementDelay(instance.SupportGoliath));
+                await Task.Delay(supportMovementTime + PhoenixPortalApproachPauseMs);
+
+                await AnimatePhoenixPortalJumpAsync(instance);
+            }
+            catch (Exception e)
+            {
+                Logger.Log("error_log", $"- [TutorialManager.cs] RunRewardSequenceAsync exception: {e}");
+            }
         }
 
         private FakePlayer CreateSupportShip(TutorialInstance instance, Player owner, int shipId, string name, Position position, List<Drones> drones)
@@ -437,6 +487,29 @@ namespace Ow.Game.Events
             Movement.Move(supportShip, targetPosition);
         }
 
+        private async Task AnimatePhoenixPortalJumpAsync(TutorialInstance instance)
+        {
+            if (!IsInstanceActive(instance) || instance.Phoenix == null || instance.ExitPortal == null)
+                return;
+
+            var targetPosition = ClampToMap(
+                instance.Spacemap,
+                new Position(instance.ExitPortal.Position.X, instance.ExitPortal.Position.Y));
+
+            Movement.Move(instance.Phoenix, targetPosition);
+            await Task.Delay(GetMovementDelay(instance.Phoenix) + PhoenixPortalApproachPauseMs);
+
+            if (!IsInstanceActive(instance) || instance.Phoenix == null || instance.ExitPortal == null)
+                return;
+
+            GameManager.SendCommandToMap(instance.Spacemap.Id, ActivatePortalCommand.write(instance.ExitPortal.TargetSpaceMapId, instance.ExitPortal.Id));
+            StartWarpAnimation(instance.Phoenix);
+            await Task.Delay(PhoenixPortalJumpDelayMs);
+
+            RemoveTutorialCharacter(instance.Phoenix);
+            instance.Phoenix = null;
+        }
+
         private Position ResolveExitPortalPosition(TutorialInstance instance)
         {
             if (instance?.Phoenix == null)
@@ -488,6 +561,59 @@ namespace Ow.Game.Events
                 y = map.Limits[1].Y;
 
             return new Position(x, y);
+        }
+
+        private static int GetMovementDelay(Character character)
+        {
+            if (character == null)
+                return 0;
+
+            return Math.Max(0, character.MovementTime);
+        }
+
+        private static bool IsCharacterActive(Character character)
+        {
+            return character != null && !character.Destroyed && character.Spacemap != null;
+        }
+
+        private static bool IsInstanceActive(TutorialInstance instance)
+        {
+            return instance != null && !instance.CleanedUp && instance.Spacemap != null;
+        }
+
+        private static void StartWarpAnimation(Character character)
+        {
+            if (!IsCharacterActive(character))
+                return;
+
+            var shipLootId = character.Ship?.LootId ?? "";
+            GameManager.SendCommandToMap(
+                character.Spacemap.Id,
+                new VisualModifierCommand(character.Id, VisualModifierCommand.WARP_ANIMATION_EFFECT, 0, shipLootId, 0, true).writeCommand());
+
+            _ = StopWarpAnimationAsync(character, shipLootId);
+        }
+
+        private static async Task StopWarpAnimationAsync(Character character, string shipLootId)
+        {
+            await Task.Delay(WarpEffectDurationMs);
+
+            if (!IsCharacterActive(character))
+                return;
+
+            GameManager.SendCommandToMap(
+                character.Spacemap.Id,
+                new VisualModifierCommand(character.Id, VisualModifierCommand.WARP_ANIMATION_EFFECT, 0, shipLootId, 0, false).writeCommand());
+        }
+
+        private static void RemoveTutorialCharacter(FakePlayer fakePlayer)
+        {
+            if (fakePlayer == null || fakePlayer.Destroyed)
+                return;
+
+            Program.TickManager.RemoveTick(fakePlayer);
+            fakePlayer.Spacemap?.RemoveCharacter(fakePlayer);
+            fakePlayer.Destroyed = true;
         }
     }
 }
