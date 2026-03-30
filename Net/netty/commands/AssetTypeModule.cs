@@ -72,6 +72,61 @@ namespace Ow.Net.netty.commands
         public const short QUESTGIVER = 34;
         public const short BOXTYPE_FLOWER = 10;
 
+        public static class BoxTypeNames
+        {
+            public const string FROM_SHIP_BLOCKED = "FROM_SHIP_BLOCKED";
+            public const string FROM_SHIP = "FROM_SHIP";
+            public const string FROM_SPACEBALL = "FROM_SPACEBALL";
+            public const string FUELCAN = "FUELCAN";
+            public const string ICY_BOX = "ICY_BOX";
+            public const string BONUS_BOX = "BONUS_BOX";
+            public const string RAZER_BOX = "RAZER_BOX";
+            public const string ONE_PLAYER = "ONE_PLAYER";
+            public const string ALIEN_EGG = "ALIEN_EGG";
+            public const string GIANT_PUMPKIN = "GIANT_PUMPKIN";
+            public const string MINI_PUMPKIN = "MINI_PUMPKIN";
+            public const string TURKEY_CARGO = "TURKEY_CARGO";
+            public const string STAR_SMALL = "STAR_SMALL";
+            public const string FLOWER = "FLOWER";
+            public const string MAY_FIRST = "MAY_FIRST";
+            public const string ITALIAN_FLAG = "ITALIAN_FLAG";
+            public const string TURKISH_FLAG = "TURKISH_FLAG";
+            public const string POLISH_FLAG = "POLISH_FLAG";
+            public const string GIFT_BOXES = "GIFT_BOXES";
+            public const string CARNIVAL = "CARNIVAL";
+            public const string SOLAR_CLASH = "SOLAR_CLASH";
+            public const string PET_ONLY_BOX = "PET_ONLY_BOX";
+            public const string PIRATE_BOOTY = "PIRATE_BOOTY";
+            public const string PIRATE_BOOTY_GOLD = "PIRATE_BOOTY_GOLD";
+            public const string HUNGARIAN_FLAG = "HUNGARIAN_FLAG";
+            public const string ST_PATRICKS = "ST_PATRICKS";
+            public const string BRAZIL = "BRAZIL";
+            public const string FRENCH_FLAG = "FRENCH_FLAG";
+            public const string RUSSIAN_FLAG = "RUSSIAN_FLAG";
+            public const string CZECH_FLAG = "CZECH_FLAG";
+            public const string USA_FLAG = "USA_FLAG";
+            public const string PIRATE_BOOTY_RED = "PIRATE_BOOTY_RED";
+            public const string PIRATE_BOOTY_BLUE = "PIRATE_BOOTY_BLUE";
+            public const string BASTILLE_DAY = "BASTILLE_DAY";
+            public const string ID_MEXICO = "ID_MEXICO";
+            public const string HITAC = "HITAC";
+            public const string HITAC_MINION = "HITAC_MINION";
+            public const string GERMAN_FLAG = "GERMAN_FLAG";
+            public const string SPANISH_FLAG = "SPANISH_FLAG";
+            public const string CANDY_CARGO = "CANDY_CARGO";
+            public const string BIRTHDAY = "BIRTHDAY";
+            public const string TREASURE = "TREASURE";
+            public const string BOLLERWAGEN = "BOLLERWAGEN";
+            public const string CONFLICT_RISING = "CONFLICT_RISING";
+            public const string PIRATE_BOOTY_SILVER = "PIRATE_BOOTY_SILVER";
+            public const string BRITISH_FLAG = "BRITISH_FLAG";
+            public const string FOOTBALL_BOX = "FOOTBALL_BOX";
+            public const string DEMANER_BOX = "DEMANER_BOX";
+            public const string PLAGUE_BOX = "PLAGUE_BOX";
+            public const string HELIX_BOX = "HELIX_BOX";
+            public const string UBA_EXPO_BOX = "UBA_EXPO_BOX";
+        }
+
         public short typeValue = 0;
 
         public AssetTypeModule(short TypeValue)

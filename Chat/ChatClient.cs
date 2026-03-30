@@ -20,6 +20,8 @@ using System.Collections.Concurrent;
 using Ow.Managers.MySQLManager;
 using Ow.Game.Objects.Stations;
 using Ow.Game.Objects.AI;
+using Ow.Game.Objects.Collectables;
+using Ow.Game.Objects.Mines;
 
 namespace Ow.Chat
 {
@@ -620,6 +622,65 @@ namespace Ow.Chat
                 var finalFaction = homeStations.FirstOrDefault()?.FactionId;
                 Send($"dq%Map 58 station updated. TypeId={typeId}, FactionId={finalFaction}.#");
                 Out.WriteLine($"[TEST_CMD] Success user={gameSession.Player.Id} typeId={typeId} requestedFaction={(factionId.HasValue ? factionId.Value.ToString() : "unchanged")} stations={homeStations.Count} finalFaction={finalFaction}", "ChatClient.cs");
+            }
+
+            else if (cmd == "/testbox")
+            {
+                if (Permission != Permissions.ADMINISTRATOR)
+                {
+                    Send("dq%You don't have permission to use '/testbox'.#");
+                    return;
+                }
+
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/testbox <ID|TYPE_NAME>'.#");
+                    return;
+                }
+
+                var spawnPosition = new Position(gameSession.Player.Position.X, gameSession.Player.Position.Y + 200);
+
+                if (short.TryParse(args[1], out var boxId))
+                {
+                    new BonusBox(boxId, spawnPosition, gameSession.Player.Spacemap, false);
+                    Send($"dq%Bonus box criada com ID {boxId} em X={spawnPosition.X}, Y={spawnPosition.Y}.#");
+                    return;
+                }
+
+                if (!BonusBox.TryNormalizeBoxTypeName(args[1], out var visualTypeName))
+                {
+                    Send("dq%Invalid box type. Use an AssetType ID or a client XML type name like HELIX_BOX.#");
+                    return;
+                }
+
+                new BonusBox(AssetTypeModule.BOXTYPE_BONUS_BOX, visualTypeName, spawnPosition, gameSession.Player.Spacemap, false);
+                Send($"dq%Bonus box criada com tipo {visualTypeName} em X={spawnPosition.X}, Y={spawnPosition.Y}.#");
+            }
+
+            else if (cmd == "/testmine")
+            {
+                if (Permission != Permissions.ADMINISTRATOR)
+                {
+                    Send("dq%You don't have permission to use '/testmine'.#");
+                    return;
+                }
+
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/testmine <ID>'.#");
+                    return;
+                }
+
+                if (!int.TryParse(args[1], out var mineTypeId))
+                {
+                    Send("dq%Invalid ID.#");
+                    return;
+                }
+
+                new ACM_01(gameSession.Player, gameSession.Player.Spacemap, new Position(gameSession.Player.Position.X, gameSession.Player.Position.Y), mineTypeId);
+                Send($"dq%Mina normal criada com ID {mineTypeId} em X={gameSession.Player.Position.X}, Y={gameSession.Player.Position.Y}.#");
             }
 
             else if (cmd == "/start_spaceball" && Permission == Permissions.ADMINISTRATOR)

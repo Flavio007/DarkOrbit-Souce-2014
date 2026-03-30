@@ -29,7 +29,71 @@ namespace Ow.Game.Objects.Collectables
         private static readonly int[] SpecialXenomit = { 25, 50, 75, 100, 150 };
         private static readonly int[] SpecialUridium = { 30, 75, 150 };
 
+        private static readonly HashSet<string> SupportedBoxTypeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            AssetTypeModule.BoxTypeNames.FROM_SHIP_BLOCKED,
+            AssetTypeModule.BoxTypeNames.FROM_SHIP,
+            AssetTypeModule.BoxTypeNames.FROM_SPACEBALL,
+            AssetTypeModule.BoxTypeNames.FUELCAN,
+            AssetTypeModule.BoxTypeNames.ICY_BOX,
+            AssetTypeModule.BoxTypeNames.BONUS_BOX,
+            AssetTypeModule.BoxTypeNames.RAZER_BOX,
+            AssetTypeModule.BoxTypeNames.ONE_PLAYER,
+            AssetTypeModule.BoxTypeNames.ALIEN_EGG,
+            AssetTypeModule.BoxTypeNames.GIANT_PUMPKIN,
+            AssetTypeModule.BoxTypeNames.MINI_PUMPKIN,
+            AssetTypeModule.BoxTypeNames.TURKEY_CARGO,
+            AssetTypeModule.BoxTypeNames.STAR_SMALL,
+            AssetTypeModule.BoxTypeNames.FLOWER,
+            AssetTypeModule.BoxTypeNames.MAY_FIRST,
+            AssetTypeModule.BoxTypeNames.ITALIAN_FLAG,
+            AssetTypeModule.BoxTypeNames.TURKISH_FLAG,
+            AssetTypeModule.BoxTypeNames.POLISH_FLAG,
+            AssetTypeModule.BoxTypeNames.GIFT_BOXES,
+            AssetTypeModule.BoxTypeNames.CARNIVAL,
+            AssetTypeModule.BoxTypeNames.SOLAR_CLASH,
+            AssetTypeModule.BoxTypeNames.PET_ONLY_BOX,
+            AssetTypeModule.BoxTypeNames.PIRATE_BOOTY,
+            AssetTypeModule.BoxTypeNames.PIRATE_BOOTY_GOLD,
+            AssetTypeModule.BoxTypeNames.HUNGARIAN_FLAG,
+            AssetTypeModule.BoxTypeNames.ST_PATRICKS,
+            AssetTypeModule.BoxTypeNames.BRAZIL,
+            AssetTypeModule.BoxTypeNames.FRENCH_FLAG,
+            AssetTypeModule.BoxTypeNames.RUSSIAN_FLAG,
+            AssetTypeModule.BoxTypeNames.CZECH_FLAG,
+            AssetTypeModule.BoxTypeNames.USA_FLAG,
+            AssetTypeModule.BoxTypeNames.PIRATE_BOOTY_RED,
+            AssetTypeModule.BoxTypeNames.PIRATE_BOOTY_BLUE,
+            AssetTypeModule.BoxTypeNames.BASTILLE_DAY,
+            AssetTypeModule.BoxTypeNames.ID_MEXICO,
+            AssetTypeModule.BoxTypeNames.HITAC,
+            AssetTypeModule.BoxTypeNames.HITAC_MINION,
+            AssetTypeModule.BoxTypeNames.GERMAN_FLAG,
+            AssetTypeModule.BoxTypeNames.SPANISH_FLAG,
+            AssetTypeModule.BoxTypeNames.CANDY_CARGO,
+            AssetTypeModule.BoxTypeNames.BIRTHDAY,
+            AssetTypeModule.BoxTypeNames.TREASURE,
+            AssetTypeModule.BoxTypeNames.BOLLERWAGEN,
+            AssetTypeModule.BoxTypeNames.CONFLICT_RISING,
+            AssetTypeModule.BoxTypeNames.PIRATE_BOOTY_SILVER,
+            AssetTypeModule.BoxTypeNames.BRITISH_FLAG,
+            AssetTypeModule.BoxTypeNames.FOOTBALL_BOX,
+            AssetTypeModule.BoxTypeNames.DEMANER_BOX,
+            AssetTypeModule.BoxTypeNames.PLAGUE_BOX,
+            AssetTypeModule.BoxTypeNames.HELIX_BOX,
+            AssetTypeModule.BoxTypeNames.UBA_EXPO_BOX
+        };
+
+        public string VisualTypeName { get; private set; }
+
         public BonusBox(Position position, Spacemap spacemap, bool respawnable, Player toPlayer = null) : base(AssetTypeModule.BOXTYPE_BONUS_BOX, position, spacemap, respawnable, toPlayer) { }
+
+        public BonusBox(short collectableId, Position position, Spacemap spacemap, bool respawnable, Player toPlayer = null) : base(collectableId, position, spacemap, respawnable, toPlayer) { }
+
+        public BonusBox(short collectableId, string visualTypeName, Position position, Spacemap spacemap, bool respawnable, Player toPlayer = null) : base(collectableId, position, spacemap, respawnable, toPlayer)
+        {
+            VisualTypeName = NormalizeBoxTypeName(visualTypeName);
+        }
 
         public override void Reward(Player player)
         {
@@ -191,7 +255,76 @@ namespace Ow.Game.Objects.Collectables
 
         public override byte[] GetCollectableCreateCommand()
         {
-            return CreateBoxCommand.write("BONUS_BOX", Hash, Position.Y, Position.X);
+            return CreateBoxCommand.write(string.IsNullOrEmpty(VisualTypeName) ? GetBoxTypeName(CollectableId) : VisualTypeName, Hash, Position.Y, Position.X);
+        }
+
+        public static bool TryNormalizeBoxTypeName(string rawTypeName, out string normalizedTypeName)
+        {
+            normalizedTypeName = NormalizeBoxTypeName(rawTypeName);
+            return !string.IsNullOrEmpty(normalizedTypeName);
+        }
+
+        private static string NormalizeBoxTypeName(string rawTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(rawTypeName))
+                return null;
+
+            var normalizedTypeName = rawTypeName.Trim().ToUpperInvariant();
+            if (normalizedTypeName.StartsWith("BOX_"))
+                normalizedTypeName = normalizedTypeName.Substring(4);
+
+            return SupportedBoxTypeNames.Contains(normalizedTypeName) ? normalizedTypeName : null;
+        }
+
+        private string GetBoxTypeName(int collectableId)
+        {
+            switch (collectableId)
+            {
+                case AssetTypeModule.BOXTYPE_FROM_SHIP_BLOCKED:
+                    return AssetTypeModule.BoxTypeNames.FROM_SHIP_BLOCKED;
+                case AssetTypeModule.BOXTYPE_FROM_SHIP:
+                    return AssetTypeModule.BoxTypeNames.FROM_SHIP;
+                case AssetTypeModule.BOXTYPE_BONUS_BOX:
+                    return AssetTypeModule.BoxTypeNames.BONUS_BOX;
+                case AssetTypeModule.BOXTYPE_ALIEN_EGG:
+                    return AssetTypeModule.BoxTypeNames.ALIEN_EGG;
+                case AssetTypeModule.BOXTYPE_UNIQUE_COLLECTABLE:
+                    return AssetTypeModule.BoxTypeNames.BONUS_BOX;
+                case AssetTypeModule.BOXTYPE_GIANT_PUMPKIN:
+                    return AssetTypeModule.BoxTypeNames.GIANT_PUMPKIN;
+                case AssetTypeModule.BOXTYPE_MINI_PUMPKIN:
+                    return AssetTypeModule.BoxTypeNames.MINI_PUMPKIN;
+                case AssetTypeModule.BOXTYPE_TURKEY:
+                    return AssetTypeModule.BoxTypeNames.TURKEY_CARGO;
+                case AssetTypeModule.BOXTYPE_STAR_BIG:
+                    return AssetTypeModule.BoxTypeNames.BONUS_BOX;
+                case AssetTypeModule.BOXTYPE_STAR_SMALL:
+                    return AssetTypeModule.BoxTypeNames.STAR_SMALL;
+                case AssetTypeModule.BOXTYPE_FLOWER:
+                    return AssetTypeModule.BoxTypeNames.FLOWER;
+                case AssetTypeModule.BOXTYPE_ITALY:
+                    return AssetTypeModule.BoxTypeNames.ITALIAN_FLAG;
+                case AssetTypeModule.BOXTYPE_FROM_SPACEBALL:
+                    return AssetTypeModule.BoxTypeNames.FROM_SPACEBALL;
+                case AssetTypeModule.BOXTYPE_VUELTA_TSHIRT:
+                    return AssetTypeModule.BoxTypeNames.BONUS_BOX;
+                case AssetTypeModule.BOXTYPE_CRESCENT_STAR:
+                    return AssetTypeModule.BoxTypeNames.TURKISH_FLAG;
+                case AssetTypeModule.BOXTYPE_INDEPENDANCE_POLAND:
+                    return AssetTypeModule.BoxTypeNames.POLISH_FLAG;
+                case AssetTypeModule.BOXTYPE_GIFT_BOX:
+                    return AssetTypeModule.BoxTypeNames.GIFT_BOXES;
+                case AssetTypeModule.BOXTYPE_CARNIVAL:
+                    return AssetTypeModule.BoxTypeNames.CARNIVAL;
+                case AssetTypeModule.BOXTYPE_FUELCAN:
+                    return AssetTypeModule.BoxTypeNames.FUELCAN;
+                case AssetTypeModule.BOXTYPE_SUMMERGAMES_2011:
+                    return AssetTypeModule.BoxTypeNames.SOLAR_CLASH;
+                case AssetTypeModule.BOXTYPE_PIRATE_BOOTY:
+                    return AssetTypeModule.BoxTypeNames.PIRATE_BOOTY;
+                default:
+                    return AssetTypeModule.BoxTypeNames.BONUS_BOX;
+            }
         }
     }
 }
