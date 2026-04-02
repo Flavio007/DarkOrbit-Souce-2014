@@ -53,7 +53,7 @@ namespace Ow.Game
 
     class Spacemap : Tick
     {
-        private static readonly bool OresEnabled = false;
+        private static readonly bool OresEnabled = true;
 
         public ConcurrentDictionary<int, Character> Characters = new ConcurrentDictionary<int, Character>();
         public ConcurrentDictionary<int, Activatable> Activatables = new ConcurrentDictionary<int, Activatable>();

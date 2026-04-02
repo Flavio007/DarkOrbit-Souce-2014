@@ -387,15 +387,18 @@ namespace Ow.Game.Objects.Stations
 
             var previousLevel = Level;
             Level = Definition.NormalizeUpgradeLevel(level);
+            var levelChanged = previousLevel != Level;
             ApplyLevelStats(restoreCurrent);
 
             foreach (var tower in DefenseTowers.Where(x => x != null && !x.Destroyed))
             {
                 tower.ApplyLevelStats(restoreCurrent);
-                tower.RefreshVisual();
+
+                if (levelChanged)
+                    tower.RefreshVisual(true);
             }
 
-            if (previousLevel != Level)
+            if (levelChanged)
                 RefreshVisual();
 
             QueryManager.BattleStations.BattleStation(this);

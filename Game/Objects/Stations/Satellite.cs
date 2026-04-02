@@ -537,7 +537,11 @@ namespace Ow.Game.Objects.Stations
 
         public override int GetVisualExpansionStage()
         {
-            return BattleStation?.GetVisualExpansionStage() ?? 1;
+            var levelStats = GetCurrentLevelStats();
+            if (levelStats != null && levelStats.ExpansionStage > 0)
+                return levelStats.ExpansionStage;
+
+            return BattleStation?.GetEffectiveLevel() ?? 1;
         }
 
         public void EnterDestroyedState()
@@ -575,13 +579,13 @@ namespace Ow.Game.Objects.Stations
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
         }
 
-        public void RefreshVisual()
+        public void RefreshVisual(bool forceRefresh = false)
         {
             if (!IsStaticDefenseTower || IsDestroyedModuleState)
                 return;
 
             var updatedDesignId = GetVisualDesignId();
-            if (DesignId == updatedDesignId)
+            if (!forceRefresh && DesignId == updatedDesignId)
                 return;
 
             DesignId = updatedDesignId;

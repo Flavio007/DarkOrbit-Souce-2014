@@ -1,4 +1,5 @@
 using Ow.Game.Movements;
+using Ow.Net.netty;
 using Ow.Net.netty.commands;
 using Ow.Utils;
 using System;
@@ -38,12 +39,14 @@ namespace Ow.Game.Objects.Collectables
             amount += Maths.GetPercentage(amount, player.GetSkillPercentage("Tractor Beam I"));
             if (amount < 1) amount = 1;
 
-            player.ChangeCargo(OreType, amount);
+            var applied = player.ChangeCargo(OreType, amount, false);
+            if (applied > 0)
+                player.SendPacket($"0|{ServerCommands.BOX_COLLECT_RESPONSE}|{ServerCommands.BOX_CONTENT_ORE}|{ResourceKey}|{applied}");
         }
 
         public override byte[] GetCollectableCreateCommand()
         {
-            return AddOreCommand.write(Position.X, Position.Y, (short)OreType, Hash);
+            return CreateBoxCommand.write("FROM_SHIP", Hash, Position.Y, Position.X);
         }
 
         protected override Position GetRespawnPosition()
