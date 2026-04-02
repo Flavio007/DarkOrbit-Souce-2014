@@ -666,7 +666,7 @@ namespace Ow.Game.Objects.Players.Managers
                 leftItems.Add("spaceball", "title_spaceball");
             if (EventManager.Scoremageddon.Active)
                 leftItems.Add("scoreevent", "title_scoreevent");
-            if (Player.BoosterManager.Boosters.Count >= 1)
+            if (Player.BoosterManager.HasVisibleBoosters)
                 leftItems.Add("booster", "title_booster");
             /*if (Player.RankId == 21)
                 leftItems.Add("traininggrounds", "title_traininggrounds");*/

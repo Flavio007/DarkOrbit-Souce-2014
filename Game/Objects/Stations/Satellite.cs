@@ -138,6 +138,8 @@ namespace Ow.Game.Objects.Stations
                     if (BattleStation.AssetTypeId == AssetTypeModule.BATTLESTATION)
                         RemoveVisualModifier(VisualModifierCommand.BATTLESTATION_CONSTRUCTING);
 
+                    BattleStation?.RefreshBoosterInterface();
+
                     if (player != null)
                         BattleStation.Click(player.GameSession);
 
@@ -425,7 +427,7 @@ namespace Ow.Game.Objects.Stations
         {
             return AssetCreateCommand.write(GetAssetType(), Name,
                                               FactionId, Clan.Tag, Id, GetVisualDesignId(), GetVisualExpansionStage(),
-                                          Position.X, Position.Y, Clan.Id, false, true, true, true,
+                                          Position.X, Position.Y, Clan.Id, false, true, true, false,
                                           new ClanRelationModule(clanRelationModule),
                                           VisualModifiers.Values.ToList());
         }
@@ -560,6 +562,8 @@ namespace Ow.Game.Objects.Stations
             Destroyed = true;
             UpdateStatus();
 
+            BattleStation?.RefreshBoosterInterface();
+
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
         }
@@ -574,6 +578,8 @@ namespace Ow.Game.Objects.Stations
             Type = TowerDefinition.Type;
             DesignId = GetVisualDesignId();
             ApplyLevelStats(true);
+
+            BattleStation?.RefreshBoosterInterface();
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());

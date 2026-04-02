@@ -20,7 +20,7 @@ namespace Ow.Net.netty.handlers
 
             var player = gameSession.Player;
 
-            var obj = player.Spacemap.Objects.Values.Where(x => x is Collectable collectable && collectable.Hash == read.hash).FirstOrDefault();
+            var obj = player.Spacemap.Objects.Values.FirstOrDefault(x => x is Collectable collectable && collectable.Hash == read.hash);
             if (obj != null)
                 (obj as Collectable).Collect(player);
         }

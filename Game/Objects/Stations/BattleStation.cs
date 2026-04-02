@@ -1,5 +1,6 @@
 ﻿using Ow.Game;
 using Ow.Game.Movements;
+using Ow.Game.Objects;
 using Ow.Managers;
 using Ow.Net.netty.commands;
 using System;
@@ -93,6 +94,7 @@ namespace Ow.Game.Objects.Stations
             Neutralize();
             Destroyed = false;
             QueryManager.BattleStations.BattleStation(this);
+            RefreshBoosterInterface();
         }
 
         public void HandleTowerDestroyed(Satellite tower)
@@ -104,6 +106,7 @@ namespace Ow.Game.Objects.Stations
             DefenseTowers.Remove(tower);
             Spacemap.Activatables.TryRemove(tower.Id, out var removedTower);
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(tower.GetAssetType(), tower.Id));
+            RefreshBoosterInterface();
         }
 
         public override void Click(GameSession gameSession)
@@ -182,6 +185,7 @@ namespace Ow.Game.Objects.Stations
             GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} was captured by {GetFactionName(FactionId)} at level 1.");
 
             QueryManager.BattleStations.BattleStation(this);
+            RefreshBoosterInterface();
         }
 
         private void Neutralize()
@@ -206,6 +210,16 @@ namespace Ow.Game.Objects.Stations
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            RefreshBoosterInterface();
+        }
+
+        public void RefreshBoosterInterface()
+        {
+            if (Spacemap == null)
+                return;
+
+            foreach (var player in Spacemap.Characters.Values.OfType<Player>())
+                player.BoosterManager?.Update();
         }
 
         private void SpawnDefenseTowers()
@@ -402,6 +416,10 @@ namespace Ow.Game.Objects.Stations
                 RefreshVisual();
 
             QueryManager.BattleStations.BattleStation(this);
+
+            if (levelChanged)
+                RefreshBoosterInterface();
+
             return true;
         }
 

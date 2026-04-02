@@ -1023,6 +1023,7 @@ namespace Ow.Game.Objects
             Spacemap = GameManager.GetSpacemap(mapId);
 
             Spacemap.AddAndInitPlayer(this);
+            BoosterManager.Update();
             Storage.Jumping = false;
         }
 
@@ -1295,7 +1296,7 @@ namespace Ow.Game.Objects
 
         public void SendCargoStatus()
         {
-            Console.WriteLine($"[CARGO_UPDATE] userId={Id} name={Name} current={CargoInUse} max={CargoCapacity} packet={CargoCapacity}|{CargoInUse}");
+            Console.WriteLine($"[CARGO_UPDATE] userId={Id} name={Name} used={CargoInUse} free={FreeCargo} max={CargoCapacity} packet={CargoCapacity}|{CargoInUse}");
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.CARGO_CHANGE}|{CargoCapacity}|{CargoInUse}");
         }
 
@@ -1444,6 +1445,7 @@ namespace Ow.Game.Objects
 
         public void SendOreShopInfo()
         {
+            Console.WriteLine($"[ORE_INFO] userId={Id} name={Name} prometium={Prometium} endurium={Endurium} terbium={Terbium} prometid={Prometid} duranium={Duranium} promerium={Promerium} xenomit={Xenomit} seprom={Seprom} palladium={Palladium}");
             SendCargoStatus();
             SendOreCount();
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SET_ORE_PRICES}|{GetOreSellPrice(Ores.Prometium)}|{GetOreSellPrice(Ores.Endurium)}|{GetOreSellPrice(Ores.Terbium)}|{GetOreSellPrice(Ores.Prometid)}|{GetOreSellPrice(Ores.Duranium)}|{GetOreSellPrice(Ores.Promerium)}");

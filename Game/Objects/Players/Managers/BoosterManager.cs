@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Ow.Game.Objects;
+using Ow.Game.Objects.Stations;
 using Ow.Managers;
 using Ow.Net.netty.commands;
 using System;
@@ -26,6 +27,8 @@ namespace Ow.Game.Objects.Players.Managers
     class BoosterManager : AbstractManager
     {
         public Dictionary<short, List<BoosterBase>> Boosters = new Dictionary<short, List<BoosterBase>>();
+
+        public bool HasVisibleBoosters => GetVisibleBoosterTypes().Count > 0;
 
         public BoosterManager(Player player) : base(player) { }
 
@@ -92,19 +95,20 @@ namespace Ow.Game.Objects.Players.Managers
         public void Update()
         {
             var boostedAttributes = new List<BoosterUpdateModule>();
+            var visibleBoosterTypes = GetVisibleBoosterTypes();
 
-            if (Boosters.ContainsKey((short)BoostedAttributeType.DAMAGE) && Boosters[(short)BoostedAttributeType.DAMAGE].Count >= 1)
-                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.DAMAGE), GetPercentage(BoostedAttributeType.DAMAGE), Boosters[(short)BoostedAttributeType.DAMAGE].Select(x => new BoosterTypeModule(x.Type)).ToList()));
-            if (Boosters.ContainsKey((short)BoostedAttributeType.SHIELD) && Boosters[(short)BoostedAttributeType.SHIELD].Count >= 1)
-                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.SHIELD), GetPercentage(BoostedAttributeType.SHIELD), Boosters[(short)BoostedAttributeType.SHIELD].Select(x => new BoosterTypeModule(x.Type)).ToList()));
-            if (Boosters.ContainsKey((short)BoostedAttributeType.MAXHP) && Boosters[(short)BoostedAttributeType.MAXHP].Count >= 1)
-                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.MAXHP), GetPercentage(BoostedAttributeType.MAXHP), Boosters[(short)BoostedAttributeType.MAXHP].Select(x => new BoosterTypeModule(x.Type)).ToList()));
-            if (Boosters.ContainsKey((short)BoostedAttributeType.REPAIR) && Boosters[(short)BoostedAttributeType.REPAIR].Count >= 1)
-                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.REPAIR), GetPercentage(BoostedAttributeType.REPAIR), Boosters[(short)BoostedAttributeType.REPAIR].Select(x => new BoosterTypeModule(x.Type)).ToList()));
-            if (Boosters.ContainsKey((short)BoostedAttributeType.HONOUR) && Boosters[(short)BoostedAttributeType.HONOUR].Count >= 1)
-                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.HONOUR), GetPercentage(BoostedAttributeType.HONOUR), Boosters[(short)BoostedAttributeType.HONOUR].Select(x => new BoosterTypeModule(x.Type)).ToList()));
-            if (Boosters.ContainsKey((short)BoostedAttributeType.EP) && Boosters[(short)BoostedAttributeType.EP].Count >= 1)
-                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.EP), GetPercentage(BoostedAttributeType.EP), Boosters[(short)BoostedAttributeType.EP].Select(x => new BoosterTypeModule(x.Type)).ToList()));
+            if (visibleBoosterTypes.ContainsKey((short)BoostedAttributeType.DAMAGE) && visibleBoosterTypes[(short)BoostedAttributeType.DAMAGE].Count >= 1)
+                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.DAMAGE), GetVisiblePercentage(BoostedAttributeType.DAMAGE), visibleBoosterTypes[(short)BoostedAttributeType.DAMAGE].Select(x => new BoosterTypeModule(x)).ToList()));
+            if (visibleBoosterTypes.ContainsKey((short)BoostedAttributeType.SHIELD) && visibleBoosterTypes[(short)BoostedAttributeType.SHIELD].Count >= 1)
+                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.SHIELD), GetVisiblePercentage(BoostedAttributeType.SHIELD), visibleBoosterTypes[(short)BoostedAttributeType.SHIELD].Select(x => new BoosterTypeModule(x)).ToList()));
+            if (visibleBoosterTypes.ContainsKey((short)BoostedAttributeType.MAXHP) && visibleBoosterTypes[(short)BoostedAttributeType.MAXHP].Count >= 1)
+                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.MAXHP), GetVisiblePercentage(BoostedAttributeType.MAXHP), visibleBoosterTypes[(short)BoostedAttributeType.MAXHP].Select(x => new BoosterTypeModule(x)).ToList()));
+            if (visibleBoosterTypes.ContainsKey((short)BoostedAttributeType.REPAIR) && visibleBoosterTypes[(short)BoostedAttributeType.REPAIR].Count >= 1)
+                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.REPAIR), GetVisiblePercentage(BoostedAttributeType.REPAIR), visibleBoosterTypes[(short)BoostedAttributeType.REPAIR].Select(x => new BoosterTypeModule(x)).ToList()));
+            if (visibleBoosterTypes.ContainsKey((short)BoostedAttributeType.HONOUR) && visibleBoosterTypes[(short)BoostedAttributeType.HONOUR].Count >= 1)
+                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.HONOUR), GetVisiblePercentage(BoostedAttributeType.HONOUR), visibleBoosterTypes[(short)BoostedAttributeType.HONOUR].Select(x => new BoosterTypeModule(x)).ToList()));
+            if (visibleBoosterTypes.ContainsKey((short)BoostedAttributeType.EP) && visibleBoosterTypes[(short)BoostedAttributeType.EP].Count >= 1)
+                boostedAttributes.Add(new BoosterUpdateModule(new BoostedAttributeTypeModule(BoostedAttributeTypeModule.EP), GetVisiblePercentage(BoostedAttributeType.EP), visibleBoosterTypes[(short)BoostedAttributeType.EP].Select(x => new BoosterTypeModule(x)).ToList()));
 
             Player.SendCommand(AttributeBoosterUpdateCommand.write(boostedAttributes));
             Player.SendCommand(AttributeHitpointUpdateCommand.write(Player.CurrentHitPoints, Player.MaxHitPoints, Player.CurrentNanoHull, Player.MaxNanoHull));
@@ -123,6 +127,77 @@ namespace Ow.Game.Objects.Players.Managers
                     percentage += GetBoosterPercentage(booster.Type);
 
             return percentage;
+        }
+
+        private int GetVisiblePercentage(BoostedAttributeType boostedAttributeType)
+        {
+            return GetPercentage(boostedAttributeType) + GetCurrentMapStationBoostPercentage(boostedAttributeType);
+        }
+
+        private Dictionary<short, List<short>> GetVisibleBoosterTypes()
+        {
+            var visibleBoosters = Boosters.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value.Select(x => x.Type).Distinct().ToList());
+
+            foreach (var stationBooster in GetCurrentMapStationBoosterTypes())
+            {
+                if (!visibleBoosters.ContainsKey(stationBooster.Key))
+                    visibleBoosters[stationBooster.Key] = new List<short>();
+
+                foreach (var boosterType in stationBooster.Value.Where(x => !visibleBoosters[stationBooster.Key].Contains(x)))
+                    visibleBoosters[stationBooster.Key].Add(boosterType);
+            }
+
+            return visibleBoosters;
+        }
+
+        private Dictionary<short, List<short>> GetCurrentMapStationBoosterTypes()
+        {
+            var stationBoosters = new Dictionary<short, List<short>>();
+
+            if (Player.Spacemap == null || Player.FactionId <= 0)
+                return stationBoosters;
+
+            var currentMapBoosters = new[]
+            {
+                new
+                {
+                    AttributeType = (short)BoostedAttributeType.HONOUR,
+                    BoosterType = BoosterTypeModule.HONM_1,
+                    Percentage = GetCurrentMapStationBoostPercentage(BoostedAttributeType.HONOUR)
+                },
+                new
+                {
+                    AttributeType = (short)BoostedAttributeType.EP,
+                    BoosterType = BoosterTypeModule.XPM_1,
+                    Percentage = GetCurrentMapStationBoostPercentage(BoostedAttributeType.EP)
+                }
+            };
+
+            foreach (var stationBooster in currentMapBoosters.Where(x => x.Percentage > 0))
+            {
+                if (!stationBoosters.ContainsKey(stationBooster.AttributeType))
+                    stationBoosters[stationBooster.AttributeType] = new List<short>();
+
+                stationBoosters[stationBooster.AttributeType].Add(stationBooster.BoosterType);
+            }
+
+            return stationBoosters;
+        }
+
+        private int GetCurrentMapStationBoostPercentage(BoostedAttributeType boostedAttributeType)
+        {
+            if (Player.Spacemap == null || Player.FactionId <= 0)
+                return 0;
+
+            return GameManager.BattleStations.Values
+                .Where(x => x != null
+                    && !x.Destroyed
+                    && x.FactionId == Player.FactionId
+                    && x.Spacemap != null
+                    && x.Spacemap.Id == Player.Spacemap.Id)
+                .Sum(x => x.GetBoostPercentage(boostedAttributeType));
         }
 
         private short GetBoosterType(short boosterType)
