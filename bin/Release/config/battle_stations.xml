@@ -8,8 +8,8 @@
     </CenterLevels>
   </Defaults>
   <BattleStation mapId="16" name="4-4 Battle Station" x="20900" y="13000">
-    <Vulnerability start="14:30" end="15:30" />
-    <Vulnerability start="20:00" end="20:30" />
+    <Vulnerability start="12:30" end="13:00" />
+    <Vulnerability start="20:00" end="21:00" />
     <Tower slotId="2" type="LASER_LOW_RANGE" designId="6" name="North-East Laser Tower">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />

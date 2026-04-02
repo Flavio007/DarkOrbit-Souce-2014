@@ -120,6 +120,17 @@ namespace Ow.Game.Objects.Stations
                 .LastOrDefault(x => x.Level <= level) ?? CenterLevels.OrderBy(x => x.Level).First();
         }
 
+        public int GetCenterVisualIndex(int level)
+        {
+            if (CenterLevels == null || CenterLevels.Count == 0)
+                return 0;
+
+            var orderedLevels = CenterLevels.OrderBy(x => x.Level).ToList();
+            var resolvedLevel = GetCenterLevelDefinition(level);
+            var index = orderedLevels.FindIndex(x => x.Level == resolvedLevel.Level);
+            return index >= 0 ? index : 0;
+        }
+
         public int GetMinLevel()
         {
             return CenterLevels != null && CenterLevels.Count > 0 ? CenterLevels.Min(x => x.Level) : 1;

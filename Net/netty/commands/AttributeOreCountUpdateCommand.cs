@@ -7,15 +7,14 @@ using Ow.Utils;
 
 namespace Ow.Net.netty.commands
 {
-    class CpuInitializationCommand
+    class AttributeOreCountUpdateCommand
     {
-        public const short ID = 31812;
+        public const short ID = 106;
 
-        public static byte[] write(bool advancedJumpCPUEquiped, bool radarCPUEquiped)
+        public static byte[] write(int oreCount)
         {
             ByteArray param1 = new ByteArray(ID);
-            param1.writeBoolean(advancedJumpCPUEquiped);
-            param1.writeBoolean(radarCPUEquiped);
+            param1.writeInt(oreCount >> 11 | oreCount << 21);
             return param1.ToByteArray();
         }
     }

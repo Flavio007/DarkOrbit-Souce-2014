@@ -121,6 +121,8 @@ namespace Ow.Game.Objects.Stations
                 return;
             }
 
+            player.SendCommand(GetStatusCommand().writeCommand());
+
             var shieldState = DeflectorActive ? "Shield active" : "Vulnerable";
             player.SendPacket($"0|A|STD|Battle station owner: {GetFactionName(FactionId)}. {shieldState}. Level {GetEffectiveLevel()} (upgrade {UpgradeLevel}).");
         }
@@ -402,7 +404,9 @@ namespace Ow.Game.Objects.Stations
 
         public override int GetVisualDesignId()
         {
-            return Definition.GetCenterLevelDefinition(GetEffectiveLevel()).DesignId;
+            var factionVisualIndex = FactionId > 0 ? FactionId - 1 : 0;
+            var hullVisualIndex = Definition.GetCenterVisualIndex(GetEffectiveLevel());
+            return (factionVisualIndex << 16) | (hullVisualIndex & 0xFFFF);
         }
 
         private static int GetClientExpansionStage(int level)
@@ -424,23 +428,110 @@ namespace Ow.Game.Objects.Stations
         {
             var effectiveLevel = GetEffectiveLevel();
             var stats = Definition.GetCenterLevelDefinition(effectiveLevel);
+            var visualStage = stats.ExpansionStage > 0 ? stats.ExpansionStage : GetClientExpansionStage(effectiveLevel);
 
-            if (stats.ExpansionStage > 0)
-                return stats.ExpansionStage;
-
-            return GetClientExpansionStage(effectiveLevel);
+            return (visualStage << 16) | (visualStage & 0xFFFF);
         }
 
         private void RefreshVisual()
         {
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+
+            if (FactionId != 0)
+                BroadcastStatusCommand();
         }
 
         private void RestoreDestroyedTowers()
         {
             foreach (var tower in DefenseTowers.Where(x => x != null && x.IsDestroyedModuleState).ToList())
                 tower.RestoreFromDestroyedState();
+        }
+
+        public BattleStationStatusCommand GetStatusCommand()
+        {
+            return new BattleStationStatusCommand(
+                Id,
+                Id,
+                Name,
+                DeflectorActive,
+                DeflectorSecondsLeft,
+                DeflectorSecondsMax,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                new EquippedModulesModule(GetStatusModules()));
+        }
+
+        public void SendStatusCommand(Player player)
+        {
+            if (player == null || FactionId == 0)
+                return;
+
+            player.SendCommand(GetStatusCommand().writeCommand());
+        }
+
+        private void BroadcastStatusCommand()
+        {
+            if (FactionId == 0)
+                return;
+
+            GameManager.SendCommandToMap(Spacemap.Id, GetStatusCommand().writeCommand());
+        }
+
+        private List<StationModuleModule> GetStatusModules()
+        {
+            var modules = new List<StationModuleModule>
+            {
+                CreateStatusModule(0, StationModuleModule.HULL, CurrentHitPoints, MaxHitPoints, CurrentShieldPoints, MaxShieldPoints, GetEffectiveLevel(), 0, 0),
+                CreateStatusModule(1, StationModuleModule.DEFLECTOR, CurrentHitPoints, MaxHitPoints, CurrentShieldPoints, MaxShieldPoints, GetEffectiveLevel(), DeflectorSecondsLeft, DeflectorSecondsMax)
+            };
+
+            foreach (var tower in DefenseTowers.Where(x => x != null))
+            {
+                modules.Add(CreateStatusModule(
+                    tower.SlotId,
+                    tower.Type,
+                    tower.CurrentHitPoints,
+                    tower.MaxHitPoints,
+                    tower.CurrentShieldPoints,
+                    tower.MaxShieldPoints,
+                    tower.UpgradeLevel > 0 ? tower.UpgradeLevel : GetEffectiveLevel(),
+                    tower.EmergencyRepairActive ? 1 : 0,
+                    tower.EmergencyRepairActive ? 1 : 0,
+                    tower.ItemId,
+                    tower.OwnerId,
+                    tower.Name,
+                    tower.Installed ? 0 : tower.InstallationSecondsLeft,
+                    tower.InstallationSecondsLeft));
+            }
+
+            return modules;
+        }
+
+        private StationModuleModule CreateStatusModule(int slotId, short type, int currentHitpoints, int maxHitpoints, int currentShield, int maxShield, int upgradeLevel, int emergencyRepairSecondsLeft, int emergencyRepairSecondsTotal, int itemId = 0, int ownerId = 0, string ownerName = "", int installationSeconds = 0, int installationSecondsLeft = 0)
+        {
+            return new StationModuleModule(
+                Id,
+                itemId,
+                slotId,
+                type,
+                currentHitpoints,
+                maxHitpoints,
+                currentShield,
+                maxShield,
+                upgradeLevel,
+                string.IsNullOrWhiteSpace(ownerName) ? ownerId.ToString() : ownerName,
+                installationSeconds,
+                installationSecondsLeft,
+                emergencyRepairSecondsLeft,
+                emergencyRepairSecondsTotal,
+                0);
         }
     }
 }
