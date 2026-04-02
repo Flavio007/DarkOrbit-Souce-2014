@@ -555,6 +555,7 @@ namespace Ow.Game.Objects
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
                 value += Maths.GetPercentage(value, 60); //seprom
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
+                value += Maths.GetPercentage(value, BattleStation.GetFactionBoostPercentage(FactionId, BoostedAttributeType.DAMAGE));
 
                 if (Selected != null && Selected.FactionId != 0)
                 {
@@ -1296,8 +1297,8 @@ namespace Ow.Game.Objects
 
         public void SendCargoStatus()
         {
-            Console.WriteLine($"[CARGO_UPDATE] userId={Id} name={Name} used={CargoInUse} free={FreeCargo} max={CargoCapacity} packet={CargoCapacity}|{CargoInUse}");
-            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.CARGO_CHANGE}|{CargoCapacity}|{CargoInUse}");
+            Console.WriteLine($"[CARGO_UPDATE] userId={Id} name={Name} used={CargoInUse} free={FreeCargo} max={CargoCapacity} packet={CargoCapacity}|{FreeCargo}");
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.CARGO_CHANGE}|{CargoCapacity}|{1}");
         }
 
         public void SendCargoFullWarning()

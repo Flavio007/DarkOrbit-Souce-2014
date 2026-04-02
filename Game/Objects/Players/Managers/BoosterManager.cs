@@ -163,6 +163,12 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 new
                 {
+                    AttributeType = (short)BoostedAttributeType.DAMAGE,
+                    BoosterType = BoosterTypeModule.DMGM_1,
+                    Percentage = GetCurrentMapStationBoostPercentage(BoostedAttributeType.DAMAGE)
+                },
+                new
+                {
                     AttributeType = (short)BoostedAttributeType.HONOUR,
                     BoosterType = BoosterTypeModule.HONM_1,
                     Percentage = GetCurrentMapStationBoostPercentage(BoostedAttributeType.HONOUR)

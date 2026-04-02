@@ -512,6 +512,9 @@ namespace Ow.Game.Objects.Stations
             if (!IsStaticDefenseTower || BattleStation == null || BattleStation.FactionId == 0)
                 return 0;
 
+            if (boostedAttributeType == BoostedAttributeType.DAMAGE && Type == StationModuleModule.DAMAGE_BOOSTER)
+                return GetCurrentLevelStats()?.BoostPercent ?? 0;
+
             if (boostedAttributeType == BoostedAttributeType.HONOUR && Type == StationModuleModule.HONOR_BOOSTER)
                 return GetCurrentLevelStats()?.BoostPercent ?? 0;
 

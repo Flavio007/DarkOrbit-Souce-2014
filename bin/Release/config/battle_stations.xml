@@ -7,48 +7,136 @@
       <Level level="16" hitPoints="400000" shieldPoints="400000" expansionStage="16" />
     </CenterLevels>
   </Defaults>
-  <BattleStation mapId="16" name="4-4 Battle Station" x="20900" y="13000">
+  <BattleStation mapId="16" name="Tyris" x="11000" y="13000">
     <Vulnerability start="12:30" end="13:00" />
     <Vulnerability start="20:00" end="21:00" />
-    <Tower slotId="2" type="LASER_LOW_RANGE" designId="6" name="North-East Laser Tower">
-      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
-      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
-      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
+    <Tower slotId="2" type="LASER_HIGH_RANGE" designId="4" name="North-East Siege Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
     </Tower>
-    <Tower slotId="3" type="HONOR_BOOSTER" designId="9" name="East Honour Booster">
+    <Tower slotId="3" type="ROCKET_LOW_ACCURACY" designId="8" name="East Barrage Launcher">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1700" range="900" cooldownSeconds="2.4" missProbability="0.45" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="2200" range="940" cooldownSeconds="2.2" missProbability="0.40" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2700" range="980" cooldownSeconds="2.0" missProbability="0.35" />
+    </Tower>
+    <Tower slotId="4" type="DAMAGE_BOOSTER" designId="10" name="South-East Damage Booster">
       <Level level="1" hitPoints="90000" shieldPoints="90000" boostPercent="5" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" boostPercent="10" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" boostPercent="15" />
     </Tower>
-    <Tower slotId="4" type="LASER_LOW_RANGE" designId="6" name="South-East Laser Tower">
-      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
-      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
-      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
+    <Tower slotId="5" type="LASER_MID_RANGE" designId="5" name="South Tracking Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
     </Tower>
-    <Tower slotId="5" type="EXPERIENCE_BOOSTER" designId="11" name="South Experience Booster">
-      <Level level="1" hitPoints="90000" shieldPoints="90000" boostPercent="5" />
-      <Level level="10" hitPoints="120000" shieldPoints="120000" boostPercent="10" />
-      <Level level="16" hitPoints="150000" shieldPoints="150000" boostPercent="15" />
-    </Tower>
-    <Tower slotId="6" type="LASER_LOW_RANGE" designId="6" name="South-West Laser Tower">
-      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
-      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
-      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
+    <Tower slotId="6" type="ROCKET_MID_ACCURACY" designId="7" name="South-West Missile Tower">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1400" range="780" cooldownSeconds="2.0" missProbability="0.30" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="820" cooldownSeconds="1.8" missProbability="0.24" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2400" range="860" cooldownSeconds="1.6" missProbability="0.18" />
     </Tower>
     <Tower slotId="7" type="REPAIR" designId="3" name="West Repair Tower">
       <Level level="1" hitPoints="90000" shieldPoints="90000" repairAmount="5000" repairIntervalSeconds="10" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" repairAmount="7500" repairIntervalSeconds="10" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" repairAmount="10000" repairIntervalSeconds="10" />
     </Tower>
-    <Tower slotId="8" type="LASER_LOW_RANGE" designId="6" name="North-West Laser Tower">
+    <Tower slotId="8" type="LASER_LOW_RANGE" designId="6" name="North-West Pulse Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
+    </Tower>
+    <Tower slotId="9" type="LASER_HIGH_RANGE" designId="4" name="North Siege Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
+    </Tower>
+  </BattleStation>
+  <BattleStation mapId="16" name="Nhalia" x="30800" y="7600">
+    <Vulnerability start="12:30" end="13:00" />
+    <Vulnerability start="20:00" end="21:00" />
+    <Tower slotId="2" type="LASER_MID_RANGE" designId="6" name="North-East Tracking Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
+    </Tower>
+    <Tower slotId="3" type="EXPERIENCE_BOOSTER" designId="11" name="East Experience Booster">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" boostPercent="5" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" boostPercent="10" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" boostPercent="15" />
+    </Tower>
+    <Tower slotId="4" type="LASER_LOW_RANGE" designId="6" name="South-East Pulse Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
+    </Tower>
+    <Tower slotId="5" type="ROCKET_LOW_ACCURACY" designId="8" name="South Barrage Launcher">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1700" range="900" cooldownSeconds="2.4" missProbability="0.45" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="2200" range="940" cooldownSeconds="2.2" missProbability="0.40" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2700" range="980" cooldownSeconds="2.0" missProbability="0.35" />
+    </Tower>
+    <Tower slotId="6" type="LASER_HIGH_RANGE" designId="4" name="South-West Siege Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
+    </Tower>
+    <Tower slotId="7" type="REPAIR" designId="3" name="West Repair Tower">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" repairAmount="5000" repairIntervalSeconds="10" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" repairAmount="7500" repairIntervalSeconds="10" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" repairAmount="10000" repairIntervalSeconds="10" />
+    </Tower>
+    <Tower slotId="8" type="LASER_MID_RANGE" designId="5" name="North-West Tracking Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
     </Tower>
     <Tower slotId="9" type="ROCKET_MID_ACCURACY" designId="7" name="North Missile Tower">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1400" range="780" cooldownSeconds="2.0" missProbability="0.30" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="820" cooldownSeconds="1.8" missProbability="0.24" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2400" range="860" cooldownSeconds="1.6" missProbability="0.18" />
+    </Tower>
+  </BattleStation>
+  <BattleStation mapId="16" name="Vesperon" x="30800" y="18400">
+    <Vulnerability start="12:30" end="13:00" />
+    <Vulnerability start="20:00" end="21:00" />
+    <Tower slotId="2" type="ROCKET_MID_ACCURACY" designId="7" name="North-East Missile Tower">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1400" range="780" cooldownSeconds="2.0" missProbability="0.30" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="820" cooldownSeconds="1.8" missProbability="0.24" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2400" range="860" cooldownSeconds="1.6" missProbability="0.18" />
+    </Tower>
+    <Tower slotId="3" type="LASER_HIGH_RANGE" designId="4" name="East Siege Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
+    </Tower>
+    <Tower slotId="4" type="REPAIR" designId="3" name="South-East Repair Tower">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" repairAmount="5000" repairIntervalSeconds="10" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" repairAmount="7500" repairIntervalSeconds="10" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" repairAmount="10000" repairIntervalSeconds="10" />
+    </Tower>
+    <Tower slotId="5" type="LASER_LOW_RANGE" designId="6" name="South Pulse Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
+    </Tower>
+    <Tower slotId="6" type="HONOR_BOOSTER" designId="9" name="South-West Honour Booster">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" boostPercent="5" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" boostPercent="10" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" boostPercent="15" />
+    </Tower>
+    <Tower slotId="7" type="ROCKET_LOW_ACCURACY" designId="8" name="West Barrage Launcher">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1700" range="900" cooldownSeconds="2.4" missProbability="0.45" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="2200" range="940" cooldownSeconds="2.2" missProbability="0.40" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2700" range="980" cooldownSeconds="2.0" missProbability="0.35" />
+    </Tower>
+    <Tower slotId="8" type="LASER_MID_RANGE" designId="5" name="North-West Tracking Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
+    </Tower>
+    <Tower slotId="9" type="LASER_LOW_RANGE" designId="6" name="North Pulse Laser">
+      <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1000" range="590" cooldownSeconds="1.0" missProbability="0.10" />
+      <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
+      <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
     </Tower>
   </BattleStation>
 </BattleStations>
