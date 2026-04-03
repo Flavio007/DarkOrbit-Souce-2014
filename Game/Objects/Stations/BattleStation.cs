@@ -42,7 +42,8 @@ namespace Ow.Game.Objects.Stations
         public DateTime deflectorTime = DateTime.MinValue;
 
         private int capturingFactionId;
-        private DateTime captureStartedAt = DateTime.MinValue;
+        private int captureProgressPoints;
+        private DateTime lastCaptureProgressAt = DateTime.MinValue;
         private bool previousVulnerabilityState;
 
         public BattleStation(BattleStationDefinition definition, Spacemap spacemap)
@@ -71,7 +72,7 @@ namespace Ow.Game.Objects.Stations
             if (FactionId == 0)
                 ProcessCapture();
             else
-                ResetCapture();
+                ResetCaptureProgress();
 
             if (FactionId != 0 && wasVulnerable && !isVulnerable)
                 HandleVulnerabilitySurvived();
@@ -117,9 +118,12 @@ namespace Ow.Game.Objects.Stations
 
             if (FactionId == 0)
             {
-                var captureText = capturingFactionId == 0
-                    ? $"Neutral battle station. Stay within {Definition.CaptureRadius} units for {Definition.CaptureSeconds} seconds to capture it for your company."
-                    : $"Neutral battle station. {GetFactionName(capturingFactionId)} is capturing it.";
+                var captureState = GetCaptureState();
+                var captureText = captureState.Contested
+                    ? $"Neutral battle station. Capture progress is paused because multiple factions are within {Definition.CaptureRadius} units. Current progress: {GetFactionName(capturingFactionId)} {captureProgressPoints}/{GetCapturePointsRequired()}."
+                    : capturingFactionId == 0 || captureProgressPoints <= 0
+                        ? $"Neutral battle station. Each player within {Definition.CaptureRadius} units adds 1 capture point per second for their company, up to {GetMaxCapturePointsPerSecond()} per second. Reach {GetCapturePointsRequired()} points to capture it."
+                        : $"Neutral battle station. {GetFactionName(capturingFactionId)} has {captureProgressPoints}/{GetCapturePointsRequired()} capture points.";
                 player.SendPacket($"0|A|STD|{captureText}");
                 return;
             }
@@ -141,29 +145,33 @@ namespace Ow.Game.Objects.Stations
 
         private void ProcessCapture()
         {
-            var contenders = Spacemap.Characters.Values
-                .OfType<Player>()
-                .Where(player => !player.Destroyed && player.CurrentHitPoints > 0 && player.Position.DistanceTo(Position) <= Definition.CaptureRadius)
-                .GroupBy(player => player.FactionId)
-                .Where(group => group.Key > 0 && group.Count() >= Definition.MinPlayersToCapture)
-                .ToList();
+            var now = DateTime.Now;
 
-            if (contenders.Count != 1)
+            if (lastCaptureProgressAt == DateTime.MinValue)
             {
-                ResetCapture();
+                lastCaptureProgressAt = now;
                 return;
             }
 
-            var contenderFactionId = contenders[0].Key;
-            if (capturingFactionId != contenderFactionId)
-            {
-                capturingFactionId = contenderFactionId;
-                captureStartedAt = DateTime.Now;
+            var elapsedSeconds = (int)(now - lastCaptureProgressAt).TotalSeconds;
+            if (elapsedSeconds <= 0)
                 return;
-            }
 
-            if (captureStartedAt != DateTime.MinValue && captureStartedAt.AddSeconds(Definition.CaptureSeconds) <= DateTime.Now)
-                Claim(contenderFactionId);
+            lastCaptureProgressAt = lastCaptureProgressAt.AddSeconds(elapsedSeconds);
+
+            var captureState = GetCaptureState();
+            if (captureState.Contested || captureState.ActiveFactionId == 0 || captureState.PlayerCount <= 0)
+                return;
+
+            var pointsPerSecond = Math.Min(captureState.PlayerCount, GetMaxCapturePointsPerSecond());
+
+            for (var second = 0; second < elapsedSeconds; second++)
+            {
+                ApplyCaptureProgress(captureState.ActiveFactionId, pointsPerSecond);
+
+                if (FactionId != 0)
+                    break;
+            }
         }
 
         private void Claim(int factionId)
@@ -176,7 +184,7 @@ namespace Ow.Game.Objects.Stations
             SetUpgradeLevel(1, true);
 
             SpawnDefenseTowers();
-            ResetCapture();
+            ResetCaptureProgress();
             previousVulnerabilityState = IsCurrentlyVulnerable();
             UpdateShieldState(true);
 
@@ -193,8 +201,8 @@ namespace Ow.Game.Objects.Stations
             var previousAssetType = AssetTypeId;
 
             ClearStationVisualEffects();
-            RemoveDefenseTowers();
-            ResetCapture();
+            RemoveStationSatellites();
+            ResetCaptureProgress();
 
             FactionId = 0;
             Level = 0;
@@ -224,7 +232,7 @@ namespace Ow.Game.Objects.Stations
 
         private void SpawnDefenseTowers()
         {
-            RemoveDefenseTowers();
+            RemoveStationSatellites();
 
             foreach (var towerDefinition in Definition.Towers)
             {
@@ -247,10 +255,81 @@ namespace Ow.Game.Objects.Stations
             DefenseTowers.Clear();
         }
 
-        private void ResetCapture()
+        private void RemoveStationSatellites()
+        {
+            RemoveDefenseTowers();
+
+            if (Spacemap == null)
+                return;
+
+            foreach (var satellite in Spacemap.Activatables.Values.OfType<Satellite>().Where(x => x != null && x.BattleStation == this).ToList())
+            {
+                satellite.Remove(false, true, true);
+                Spacemap.Activatables.TryRemove(satellite.Id, out var removedSatellite);
+                GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(satellite.GetAssetType(), satellite.Id));
+            }
+
+            EquippedStationModule.Clear();
+        }
+
+        private void ResetCaptureProgress()
         {
             capturingFactionId = 0;
-            captureStartedAt = DateTime.MinValue;
+            captureProgressPoints = 0;
+            lastCaptureProgressAt = DateTime.MinValue;
+        }
+
+        private void ApplyCaptureProgress(int factionId, int points)
+        {
+            if (factionId <= 0 || points <= 0 || FactionId != 0)
+                return;
+
+            if (capturingFactionId == 0 || captureProgressPoints <= 0)
+            {
+                capturingFactionId = factionId;
+                captureProgressPoints = Math.Min(GetCapturePointsRequired(), points);
+            }
+            else if (capturingFactionId == factionId)
+            {
+                captureProgressPoints = Math.Min(GetCapturePointsRequired(), captureProgressPoints + points);
+            }
+            else
+            {
+                captureProgressPoints = Math.Max(0, captureProgressPoints - points);
+
+                if (captureProgressPoints == 0)
+                    capturingFactionId = 0;
+
+                return;
+            }
+
+            if (captureProgressPoints >= GetCapturePointsRequired())
+                Claim(factionId);
+        }
+
+        private int GetCapturePointsRequired()
+        {
+            return Definition?.CapturePointsRequired > 0 ? Definition.CapturePointsRequired : 100;
+        }
+
+        private int GetMaxCapturePointsPerSecond()
+        {
+            return Definition?.MaxCapturePointsPerSecond > 0 ? Definition.MaxCapturePointsPerSecond : 10;
+        }
+
+        private CaptureState GetCaptureState()
+        {
+            var contenders = Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => !player.Destroyed && player.CurrentHitPoints > 0 && player.FactionId > 0 && player.Position.DistanceTo(Position) <= Definition.CaptureRadius)
+                .GroupBy(player => player.FactionId)
+                .Select(group => new { FactionId = group.Key, PlayerCount = group.Count() })
+                .ToList();
+
+            if (contenders.Count != 1)
+                return new CaptureState(0, 0, contenders.Count > 1);
+
+            return new CaptureState(contenders[0].FactionId, contenders[0].PlayerCount, false);
         }
 
         private void ApplyLevelStats(bool restoreCurrent)
@@ -469,6 +548,20 @@ namespace Ow.Game.Objects.Stations
                 tower.RestoreFromDestroyedState();
         }
 
+        private class CaptureState
+        {
+            public int ActiveFactionId { get; private set; }
+            public int PlayerCount { get; private set; }
+            public bool Contested { get; private set; }
+
+            public CaptureState(int activeFactionId, int playerCount, bool contested)
+            {
+                ActiveFactionId = activeFactionId;
+                PlayerCount = playerCount;
+                Contested = contested;
+            }
+        }
+
         public BattleStationStatusCommand GetStatusCommand()
         {
             return new BattleStationStatusCommand(
@@ -478,15 +571,78 @@ namespace Ow.Game.Objects.Stations
                 DeflectorActive,
                 DeflectorSecondsLeft,
                 DeflectorSecondsMax,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
+                GetAttackRating(),
+                GetDefenceRating(),
+                GetRepairRating(),
+                GetHonorBoosterRating(),
+                GetExperienceBoosterRating(),
+                GetDamageBoosterRating(),
+                GetDeflectorShieldRate(),
+                Definition?.RepairPrice ?? 0,
                 new EquippedModulesModule(GetStatusModules()));
+        }
+
+        private IEnumerable<Satellite> GetActiveTowers()
+        {
+            return DefenseTowers.Where(x => x != null && !x.Destroyed && !x.IsDestroyedModuleState);
+        }
+
+        private BattleStationLevelDefinition GetTowerStats(Satellite tower)
+        {
+            if (tower == null || tower.TowerDefinition == null)
+                return null;
+
+            var towerLevel = tower.UpgradeLevel > 0 ? tower.UpgradeLevel : GetEffectiveLevel();
+            return tower.TowerDefinition.GetLevelDefinition(towerLevel);
+        }
+
+        private int GetAttackRating()
+        {
+            return GetActiveTowers()
+                .Where(x => x.Type == StationModuleModule.LASER_HIGH_RANGE
+                    || x.Type == StationModuleModule.LASER_MID_RANGE
+                    || x.Type == StationModuleModule.LASER_LOW_RANGE
+                    || x.Type == StationModuleModule.ROCKET_MID_ACCURACY
+                    || x.Type == StationModuleModule.ROCKET_LOW_ACCURACY)
+                .Sum(x => GetTowerStats(x)?.Damage ?? 0);
+        }
+
+        private int GetDefenceRating()
+        {
+            var stationDefence = Math.Max(0, MaxHitPoints) + Math.Max(0, MaxShieldPoints);
+            var towerDefence = GetActiveTowers().Sum(x => Math.Max(0, x.MaxHitPoints) + Math.Max(0, x.MaxShieldPoints));
+            return stationDefence + towerDefence;
+        }
+
+        private int GetRepairRating()
+        {
+            return GetActiveTowers()
+                .Where(x => x.Type == StationModuleModule.REPAIR)
+                .Sum(x => GetTowerStats(x)?.RepairAmount ?? 0);
+        }
+
+        private int GetHonorBoosterRating()
+        {
+            return GetBoostPercentage(BoostedAttributeType.HONOUR);
+        }
+
+        private int GetExperienceBoosterRating()
+        {
+            return GetBoostPercentage(BoostedAttributeType.EP);
+        }
+
+        private int GetDamageBoosterRating()
+        {
+            return GetBoostPercentage(BoostedAttributeType.DAMAGE);
+        }
+
+        private int GetDeflectorShieldRate()
+        {
+            if (DeflectorSecondsMax <= 0)
+                return DeflectorActive ? 100 : 0;
+
+            var rate = (int)Math.Round((double)Math.Max(0, DeflectorSecondsLeft) * 100 / DeflectorSecondsMax);
+            return Math.Max(0, Math.Min(100, rate));
         }
 
         public void SendStatusCommand(Player player)

@@ -103,9 +103,12 @@ namespace Ow.Game.Objects.Stations
         public short AsteroidAssetTypeId { get; set; }
         public int CaptureRadius { get; set; }
         public int CaptureSeconds { get; set; }
+        public int CapturePointsRequired { get; set; }
+        public int MaxCapturePointsPerSecond { get; set; }
         public int MinPlayersToCapture { get; set; }
         public int MaxHitPoints { get; set; }
         public int MaxShieldPoints { get; set; }
+        public int RepairPrice { get; set; }
         public List<BattleStationLevelDefinition> CenterLevels { get; set; }
         public List<BattleStationWindowDefinition> VulnerabilityWindows { get; set; }
         public List<BattleStationTowerDefinition> Towers { get; set; }
@@ -275,7 +278,7 @@ namespace Ow.Game.Objects.Stations
             File.WriteAllText(path,
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <BattleStations>
-    <Defaults stationAssetTypeId=""36"" asteroidAssetTypeId=""35"" captureRadius=""450"" captureSeconds=""10"" minPlayersToCapture=""1"" maxHitPoints=""250000"" maxShieldPoints=""250000"" towerAssetTypeId=""37"">
+    <Defaults stationAssetTypeId=""36"" asteroidAssetTypeId=""35"" captureRadius=""450"" captureSeconds=""10"" capturePointsRequired=""100"" maxCapturePointsPerSecond=""10"" minPlayersToCapture=""1"" maxHitPoints=""250000"" maxShieldPoints=""250000"" repairPrice=""0"" towerAssetTypeId=""37"">
         <CenterLevels>
             <Level level=""1"" hitPoints=""250000"" shieldPoints=""250000"" expansionStage=""1"" />
             <Level level=""10"" hitPoints=""325000"" shieldPoints=""325000"" expansionStage=""10"" />
@@ -348,9 +351,12 @@ namespace Ow.Game.Objects.Stations
                     AsteroidAssetTypeId = GetShortAttribute(stationElement, defaults, "asteroidAssetTypeId", AssetTypeModule.ASTEROID),
                     CaptureRadius = GetIntAttribute(stationElement, defaults, "captureRadius", 450),
                     CaptureSeconds = GetIntAttribute(stationElement, defaults, "captureSeconds", 10),
+                    CapturePointsRequired = Math.Max(1, GetIntAttribute(stationElement, defaults, "capturePointsRequired", 100)),
+                    MaxCapturePointsPerSecond = Math.Max(1, GetIntAttribute(stationElement, defaults, "maxCapturePointsPerSecond", 10)),
                     MinPlayersToCapture = GetIntAttribute(stationElement, defaults, "minPlayersToCapture", 1),
                     MaxHitPoints = GetIntAttribute(stationElement, defaults, "maxHitPoints", 250000),
                     MaxShieldPoints = GetIntAttribute(stationElement, defaults, "maxShieldPoints", 250000),
+                    RepairPrice = Math.Max(0, GetIntAttribute(stationElement, defaults, "repairPrice", 0)),
                     CenterLevels = ParseCenterLevels(stationElement, defaults),
                     VulnerabilityWindows = ParseWindows(stationElement),
                     Towers = ParseTowers(stationElement, defaults)
