@@ -511,7 +511,10 @@ namespace Ow.Game.Objects
             {
                 new CargoBox(Position, Spacemap, false, false);
                 if (npc is InstanceNpc instanceNpc)
+                {
                     EventManager.GalaxyGate?.HandleNpcDestroyed(instanceNpc);
+                    EventManager.GroupMap200?.HandleNpcDestroyed(instanceNpc);
+                }
                 else if (destroyer is Player tutorialDestroyer)
                     EventManager.Tutorial?.HandleNpcDestroyed(npc, tutorialDestroyer);
                 if (npc.Respawnable)

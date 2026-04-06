@@ -33,7 +33,7 @@ namespace Ow.Game.Objects.AI
         public void TickAI()
         {
             var now = DateTime.Now;
-            var ignoreDistanceForGalaxyGate = IsGalaxyGateNpc();
+            var ignoreDistanceForNpc = HasUnlimitedChaseRange();
             if (nextDecisionTime == DateTime.MinValue)
             {
                 decisionIntervalMs = Randoms.random.Next(850, 1350);
@@ -73,14 +73,14 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForGalaxyGate && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
+                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
                                     if (Npc.Ship.Id != 80 && Npc.Ship.Id != 481 && Npc.Ship.Id != 881)
                                         AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
                                 }
-                                else if (ignoreDistanceForGalaxyGate || Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
+                                else if (ignoreDistanceForNpc || Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
                                 {
                                     if (Npc.Aggressive && !player.Storage.IsInSafeZone)
                                         Npc.Attacking = true;
@@ -102,12 +102,12 @@ namespace Ow.Game.Objects.AI
                         }
                         break;
                     case NpcAIOption.FLY_TO_ENEMY:
-                        if (Npc.Selected != null && Npc.Selected is Player && CanChasePlayer(Npc.Selected as Player, ignoreDistanceForGalaxyGate))
+                        if (Npc.Selected != null && Npc.Selected is Player && CanChasePlayer(Npc.Selected as Player, ignoreDistanceForNpc))
                         {
                             var player = Npc.Selected as Player;
 
                             TryMoveToEnemy(player);
-                            AIOption = Npc.InRange(player, NPC_ATTACK_RANGE) ? NpcAIOption.WAIT_PLAYER_MOVE : NpcAIOption.FLY_TO_ENEMY;
+                            AIOption = IsWithinAttackRange(player) ? NpcAIOption.WAIT_PLAYER_MOVE : NpcAIOption.FLY_TO_ENEMY;
                             if (player.Storage.IsInSafeZone && player.Selected != Npc)
                             {
                                 Npc.Attacking = false;
@@ -122,11 +122,11 @@ namespace Ow.Game.Objects.AI
                         }
                         break;
                     case NpcAIOption.WAIT_PLAYER_MOVE:
-                        if (Npc.Selected != null && Npc.Selected is Player && CanChasePlayer(Npc.Selected as Player, ignoreDistanceForGalaxyGate))
+                        if (Npc.Selected != null && Npc.Selected is Player && CanChasePlayer(Npc.Selected as Player, ignoreDistanceForNpc))
                         {
                             var player = Npc.Selected as Player;
 
-                            if (!Npc.InRange(player, NPC_ATTACK_RANGE) || ShouldRefreshChaseDestination(player))
+                            if (!IsWithinAttackRange(player) || ShouldRefreshChaseDestination(player))
                                 AIOption = NpcAIOption.FLY_TO_ENEMY;
                         }
                         else
@@ -142,7 +142,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForGalaxyGate && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -166,7 +166,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForGalaxyGate && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -237,12 +237,22 @@ namespace Ow.Game.Objects.AI
             return Npc?.Spacemap != null && EventManager.GalaxyGate != null && EventManager.GalaxyGate.IsGalaxyGateMap(Npc.Spacemap.Id);
         }
 
-        private bool CanChasePlayer(Player player, bool ignoreDistanceForGalaxyGate)
+        private bool HasUnlimitedChaseRange()
+        {
+            return IsGalaxyGateNpc() || (Npc != null && Npc.AllMapRange && Npc.Spacemap != null && Npc.Spacemap.Options.RangeDisabled);
+        }
+
+        private bool CanChasePlayer(Player player, bool ignoreDistanceForNpc)
         {
             return player != null
                 && !player.Storage.IsInDemilitarizedZone
                 && !player.Invisible
-                && (ignoreDistanceForGalaxyGate || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
+                && (ignoreDistanceForNpc || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
+        }
+
+        private bool IsWithinAttackRange(Player player)
+        {
+            return player != null && Npc != null && Npc.Position.DistanceTo(player.Position) <= NPC_ATTACK_RANGE;
         }
 
         private bool ShouldRefreshChaseDestination(Player player)
@@ -256,7 +266,7 @@ namespace Ow.Game.Objects.AI
 
         private void TryMoveToEnemy(Player player)
         {
-            if (player == null || Npc.InRange(player, NPC_ATTACK_RANGE - 25))
+            if (player == null || Npc == null || Npc.Position.DistanceTo(player.Position) <= NPC_ATTACK_RANGE - 25)
                 return;
 
             if (!ShouldRefreshChaseDestination(player))

@@ -16,6 +16,9 @@ namespace Ow.Game.Objects
 {
     class Npc : Character
     {
+        private const int CenturyFalconWaveSize = 20;
+        private readonly List<Protegit> centuryFalconMinions = new List<Protegit>();
+
         public NpcAI NpcAI { get; set; }
         public bool Attacking = false;
         public bool Aggressive = false;
@@ -170,6 +173,56 @@ namespace Ow.Game.Objects
             minioncount++;
         }
 
+        private bool IsCenturyFalcon => Ship != null && Ship.Id == Ship.CENTURY_FALCON;
+
+        private void SpawnCenturyFalconWave(int count)
+        {
+            if (!IsCenturyFalcon)
+                return;
+
+            for (int index = 1; index < count; index++)
+            {
+                if (minioncount >= CenturyFalconWaveSize)
+                    break;
+
+                var vagrantShip = GameManager.GetShip(Ship.VAGRANT_NPC);
+                if (vagrantShip == null)
+                    break;
+
+                var minion = new Protegit(Randoms.CreateRandomID(), vagrantShip, Spacemap, Position.GetPosOnCircle(Position, 500), this);
+                centuryFalconMinions.Add(minion);
+                minioncount++;
+            }
+        }
+
+        private void CheckCenturyFalconWave(Character target)
+        {
+            if (!IsCenturyFalcon)
+                return;
+
+            centuryFalconMinions.RemoveAll(minion => minion == null || minion.Destroyed);
+
+            if (minioncount == 0)
+                SpawnCenturyFalconWave(CenturyFalconWaveSize);
+            else if (minioncount < CenturyFalconWaveSize / 2)
+                SpawnCenturyFalconWave(CenturyFalconWaveSize / 2);
+
+            foreach (var minion in centuryFalconMinions)
+            {
+                if (minion != null && !minion.Destroyed && !minion.underAttack)
+                    minion.FocusAttack(target);
+            }
+        }
+
+        public void DeleteGits(Protegit protegit)
+        {
+            if (!IsCenturyFalcon)
+                return;
+
+            if (centuryFalconMinions.Remove(protegit))
+                minioncount = Math.Max(0, minioncount - 1);
+        }
+
         public DateTime lastShieldRepairTime = new DateTime();
         private void CheckShieldPointsRepair()
         {
@@ -194,15 +247,25 @@ namespace Ow.Game.Objects
             Attackers.Clear();
             MainAttacker = null;
             Destroyed = false;
+            centuryFalconMinions.Clear();
+            minioncount = 0;
         }
 
         public void ProtegitCheck()
         {
             if (this is Protegit git)
             {
-                if (git.CubikonAlive && git.Mother.LastCombatTime.AddSeconds(20) <= DateTime.Now || git.lastAttackTime.AddSeconds(10) <= DateTime.Now && !git.CubikonAlive)
+                var mother = git.GetMother();
+                if (mother == null)
+                    return;
+
+                if (git.CubikonAlive && mother.LastCombatTime.AddSeconds(20) <= DateTime.Now || git.lastAttackTime.AddSeconds(10) <= DateTime.Now && !git.CubikonAlive)
                 {
-                    git.Mother.DeleteGits(git);
+                    if (git.Mother != null)
+                        git.Mother.DeleteGits(git);
+                    else
+                        mother.DeleteGits(git);
+
                     Spacemap.RemoveCharacter(git);
                     git.Destroyed = true;
                 }
@@ -213,13 +276,16 @@ namespace Ow.Game.Objects
         {
             Selected = character;
             Attacking = true;
+
+            if (IsCenturyFalcon)
+                CheckCenturyFalconWave(character);
         }
 
         public override int Speed
         {
             get
             {
-                var value = Ship.BaseSpeed;
+                var value = NpcSpecialBehavior.ResolveSpeed(Ship, SelectedCharacter, Attacking, Ship.BaseSpeed);
 
                 if (Storage.underR_IC3)
                     value -= value;
@@ -252,6 +318,17 @@ namespace Ow.Game.Objects
                 new List<VisualModifierCommand>(),
                 new class_11d(class_11d.DEFAULT)
                 );
+        }
+    }
+
+    internal static class NpcSpecialBehavior
+    {
+        public static int ResolveSpeed(Ship ship, Character target, bool attacking, int defaultSpeed)
+        {
+            if (ship != null && ship.Id == Ship.VAGRANT_NPC && attacking && target != null && !target.Destroyed)
+                return target.Speed + 15;
+
+            return defaultSpeed;
         }
     }
 }

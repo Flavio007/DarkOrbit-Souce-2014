@@ -108,6 +108,8 @@ namespace Ow.Game
         public static int VENGEANCE = 8;
         public static int BIGBOY = 9;
         public const int GOLIATH = 10;
+        public const int CENTURY_FALCON = 90;
+        public const int VAGRANT_NPC = 94;
 
         public static int SPACEBALL_SUMMER = 442;
         public static int SPACEBALL_WINTER = 443;

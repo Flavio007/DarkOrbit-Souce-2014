@@ -1,8 +1,1 @@
-[06.04.2026 10: 51:07] - [QueryManager.cs] GetPlayer(6) exception: System.NullReferenceException: Referência de objeto não definida para uma instância de um objeto.
-   em Ow.Game.Objects.Player.ChangeData(DataType dataType, Int32 amount, ChangeType changeType) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Player.cs:linha 1165
-   em Ow.Game.Objects.Players.Quests.ApplyReward(QuestDefinition quest) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Quests\Quests.cs:linha 204
-   em Ow.Game.Objects.Players.Quests.CompleteQuest(QuestDefinition quest, QuestProgressState progress, Boolean sendUpdate) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Quests\Quests.cs:linha 192
-   em Ow.Game.Objects.Players.Quests.SetQuestProgress(Int32 questId, Int32 newProgressValue, Boolean sendUpdate, Boolean allowDecrease) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Quests\Quests.cs:linha 179
-   em Ow.Game.Objects.Players.Quests..ctor(Player player) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Quests\Quests.cs:linha 70
-   em Ow.Game.Objects.Player..ctor(Int32 id, String name, Clan clan, Int32 factionId, Int32 rankId, Int32 warRank, Ship ship) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Player.cs:linha 176
-   em Ow.Managers.QueryManager.GetPlayer(Int32 playerId) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Managers\QueryManager.cs:linha 245
+[06.04.2026 15: 08:34] - [GroupMap200Manager.cs] Unable to resolve LoW ship for group 'marauder'.

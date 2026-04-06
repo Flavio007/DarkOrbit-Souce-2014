@@ -32,6 +32,8 @@ namespace Ow.Game.Objects
 
         public Cubikon Mother;
 
+        public Npc NpcMother;
+
         public bool CubikonAlive = false;
 
         public Protegit(int id, Ship ship, Spacemap spacemap, Position position, Cubikon Owner) : base(id, ship, spacemap, position, 0)
@@ -60,6 +62,38 @@ namespace Ow.Game.Objects
         Program.TickManager.AddTick(this);
         }
 
+        public Protegit(int id, Ship ship, Spacemap spacemap, Position position, Npc owner) : base(id, ship, spacemap, position, 0)
+        {
+            Spacemap.AddCharacter(this);
+
+            ShieldAbsorption = 0.5;
+
+            Damage = ship.Damage;
+            MaxHitPoints = ship.BaseHitpoints;
+            CurrentHitPoints = MaxHitPoints;
+            MaxShieldPoints = ship.BaseShieldPoints;
+            CurrentShieldPoints = MaxShieldPoints;
+
+            NpcAI = new NpcAI(this);
+            NpcAI.RespawnX = Position.X;
+            NpcAI.RespawnY = Position.Y;
+            NpcMother = owner;
+
+            CubikonAlive = true;
+
+            lastAttackTime = DateTime.Now.AddSeconds(2);
+
+            Program.TickManager.AddTick(this);
+        }
+
+        public Npc GetMother()
+        {
+            if (Mother != null)
+                return Mother;
+
+            return NpcMother;
+        }
+
         public void FocusAttack(Character target)
         {
             Selected = target;
@@ -76,7 +110,7 @@ namespace Ow.Game.Objects
         {
             get
             {
-                var value = Ship.BaseSpeed;
+                var value = NpcSpecialBehavior.ResolveSpeed(Ship, SelectedCharacter, Attacking, Ship.BaseSpeed);
 
                 if (Storage.underR_IC3)
                     value -= value;

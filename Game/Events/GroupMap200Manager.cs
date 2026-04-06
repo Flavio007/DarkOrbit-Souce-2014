@@ -1,6 +1,7 @@
 using Ow.Game.Movements;
 using Ow.Game.Objects;
 using Ow.Game.Objects.Players;
+using Ow.Game.Ticks;
 using Ow.Managers;
 using Ow.Net.netty;
 using Ow.Net.netty.commands;
@@ -12,8 +13,20 @@ using System.Threading.Tasks;
 
 namespace Ow.Game.Events
 {
-    class GroupMap200Manager
+    class GroupMap200Manager : Tick
     {
+        private sealed class LowNpcState
+        {
+            public string Key { get; set; }
+            public string DisplayName { get; set; }
+            public Position SpawnCenter { get; set; }
+            public int KillThreshold { get; set; }
+            public int ShipId { get; set; }
+            public Queue<int> PendingBatches { get; } = new Queue<int>();
+            public int AliveCount { get; set; }
+            public int KilledSinceLastSpawn { get; set; }
+        }
+
         private sealed class GroupMapInstance
         {
             public int Key { get; set; }
@@ -22,6 +35,11 @@ namespace Ow.Game.Events
             public GroupMapExitPortal ExitPortal { get; set; }
             public List<GroupMapRelayStation> Relays { get; } = new List<GroupMapRelayStation>();
             public int CurrentRelayIndex { get; set; }
+            public HashSet<string> TriggeredPois { get; } = new HashSet<string>();
+            public Dictionary<string, LowNpcState> NpcStates { get; } = new Dictionary<string, LowNpcState>();
+            public Dictionary<int, string> RuntimeNpcGroups { get; } = new Dictionary<int, string>();
+            public bool CenturyFalconVagrantsSpawned { get; set; }
+            public bool FinalTriggerActivated { get; set; }
         }
 
         public const int VisualMapId = 200;
@@ -29,17 +47,45 @@ namespace Ow.Game.Events
         private const int DynamicMapStartId = 20500;
         private const int FutureMinimumGroupMembers = 3;
         private const int FutureWaitingTimeSeconds = 294;
+        private const int CenturyFalconNpcId = 90;
+        private const int CorsairNpcId = 91;
+        private const int OutcastNpcId = 92;
+        private const int MarauderNpcId = 93;
+        private const int VagrantNpcId = 94;
+        private const int ConvictNpcId = 95;
+        private const int HooliganNpcId = 96;
+        private const int RavagerNpcId = 97;
+        private const string VagrantGroupKey = "vagrant";
+        private const string OutcastGroupKey = "outcast";
+        private const string CorsairGroupKey = "corsair";
+        private const string MarauderGroupKey = "marauder";
+        private const string HooliganGroupKey = "hooligan";
+        private const string ConvictGroupKey = "convict";
+        private const string RavagerGroupKey = "ravager";
+        private const string CenturyFalconGroupKey = "century_falcon";
+        private const string FalconVagrantGroupKey = "falcon_vagrants";
 
         private static readonly Position BasePortalPosition = new Position(Position.InvasionGatePosition.X, Position.InvasionGatePosition.Y);
         private static readonly Position InstanceSpawnPosition = new Position(1000, 12000);
         private static readonly Position ExitPortalPosition = new Position(1700, 12000);
         private static readonly Position OreTradePosition = new Position(10000, 5500);
+        private static readonly Position Wave1SpawnPosition = new Position(2400, 10000);
+        private static readonly Position Wave2SpawnPosition = new Position(2500, 5750);
+        private static readonly Position Wave3SpawnPosition = new Position(5200, 3500);
+        private static readonly Position Wave4SpawnPosition = new Position(11500, 5500);
+        private static readonly Position Relay2SpawnPosition = new Position(7600, 11200);
+        private static readonly Position Relay3SpawnPosition = new Position(16750, 11200);
+        private static readonly Position Relay4SpawnPosition = new Position(17100, 4500);
+        private static readonly Position Wave5SpawnPosition = new Position(12000, 9000);
+        private static readonly Position Wave7SpawnPosition = new Position(15250, 8050);
+        private static readonly Position Wave9SpawnPosition = new Position(15500, 2200);
+        private static readonly Position CenturyFalconSpawnPosition = new Position(11200, 6000);
         private static readonly Position[] RelayPositions =
         {
-            new Position(2750, 1750),
-            new Position(18250, 4200),
-            new Position(18250, 11750),
-            new Position(6000, 11750)
+            new Position(2750, 1750), // first relay (upper left)
+            new Position(6000, 11750), // second relay (lower left)
+            new Position(18250, 11750), // third relay (lower right)
+            new Position(18250, 4200) // final relay (upper right)
         };
 
         private readonly object instanceLock = new object();
@@ -58,8 +104,19 @@ namespace Ow.Game.Events
                 SpawnEntryPortal(1, 1);
                 SpawnEntryPortal(2, 5);
                 SpawnEntryPortal(3, 9);
+                Program.TickManager.AddTick(this);
                 initialized = true;
             }
+        }
+
+        public void Tick()
+        {
+            List<GroupMapInstance> snapshot;
+            lock (instanceLock)
+                snapshot = instancesByMap.Values.ToList();
+
+            foreach (var instance in snapshot)
+                ProcessInstance(instance);
         }
 
         public void PreparePlayerForLogin(Player player)
@@ -137,8 +194,8 @@ namespace Ow.Game.Events
             {
                 StarterMap = false,
                 PvpMap = false,
-                RangeDisabled = false,
-                CloakBlocked = false,
+                RangeDisabled = true,
+                CloakBlocked = true,
                 LogoutBlocked = false,
                 DeathLocationRepair = false
             };
@@ -188,10 +245,268 @@ namespace Ow.Game.Events
             for (var index = 0; index < RelayPositions.Length; index++)
             {
                 var relayPosition = RelayPositions[index];
-                instance.Relays.Add(new GroupMapRelayStation(this, instance.Spacemap, new Position(relayPosition.X, relayPosition.Y), index));
+                var relay = new GroupMapRelayStation(this, instance.Spacemap, new Position(relayPosition.X, relayPosition.Y), index);
+                if (index > 0)
+                    relay.Hide();
+
+                instance.Relays.Add(relay);
             }
 
             new GroupMapOreTradeStation(instance.Spacemap, new Position(OreTradePosition.X, OreTradePosition.Y));
+            RevealRelay(instance, 0, true);
+        }
+
+        private void ProcessInstance(GroupMapInstance instance)
+        {
+            if (instance?.Spacemap == null)
+                return;
+
+            TryStartPoiWave(instance, "Wave1Trigger", VagrantGroupKey, "Vagrant", Wave1SpawnPosition, 10, new[] { 12, 12, 13 }, VagrantNpcId, 0);
+            TryStartPoiWave(instance, "Wave2Trigger", OutcastGroupKey, "Outcast", Wave2SpawnPosition, 10, new[] { 10, 12, 12, 12 }, OutcastNpcId, 0);
+            TryStartPoiWave(instance, "Wave3Trigger", CorsairGroupKey, "Corsair", Wave3SpawnPosition, 8, new[] { 10, 10, 10 }, CorsairNpcId, 0);
+            TryStartPoiWave(instance, "Wave4Trigger", MarauderGroupKey, "Marauder", Wave4SpawnPosition, 10, new[] { 13, 13, 12, 13 }, MarauderNpcId, 0);
+            TryStartPoiWave(instance, "Wave5Trigger", HooliganGroupKey, "Hooligan", Wave5SpawnPosition, 8, new[] { 10, 10, 10, 10, 9 }, HooliganNpcId, 2);
+            TryStartPoiWave(instance, "Wave7Trigger", ConvictGroupKey, "Convict", Wave7SpawnPosition, 6, new[] { 7, 7, 6 }, ConvictNpcId, 3);
+            TryStartPoiWave(instance, "Wave9Trigger", RavagerGroupKey, "Ravager", Wave9SpawnPosition, 10, new[] { 13, 13, 13 }, RavagerNpcId, 3);
+            TryStartFinalTrigger(instance);
+            TryTriggerCenturyFalconSupport(instance);
+        }
+
+        private void TryStartPoiWave(GroupMapInstance instance, string poiId, string groupKey, string displayName, Position spawnCenter, int killThreshold, int[] batches, int shipId, int requiredRelayCount)
+        {
+            if (instance == null || string.IsNullOrEmpty(poiId) || string.IsNullOrEmpty(groupKey))
+                return;
+
+            lock (instanceLock)
+            {
+                if (instance.TriggeredPois.Contains(poiId) || instance.NpcStates.ContainsKey(groupKey))
+                    return;
+            }
+
+            if (!HasRequiredActiveRelays(instance, requiredRelayCount))
+                return;
+
+            if (!AnyPlayerInPoi(instance, poiId))
+                return;
+
+            lock (instanceLock)
+            {
+                if (instance.TriggeredPois.Contains(poiId) || instance.NpcStates.ContainsKey(groupKey))
+                    return;
+
+                instance.TriggeredPois.Add(poiId);
+                AddBatchesAndSpawn(instance, groupKey, displayName, spawnCenter, killThreshold, shipId, batches, true, $"LoW - {displayName}s detected.");
+            }
+        }
+
+        private bool HasRequiredActiveRelays(GroupMapInstance instance, int requiredRelayCount)
+        {
+            return instance != null && instance.CurrentRelayIndex >= requiredRelayCount;
+        }
+
+        private void TryStartFinalTrigger(GroupMapInstance instance)
+        {
+            if (instance == null)
+                return;
+
+            lock (instanceLock)
+            {
+                if (instance.FinalTriggerActivated)
+                    return;
+            }
+
+            if (!HasRequiredActiveRelays(instance, 3) || !AnyPlayerInPoi(instance, "Wave9Trigger"))
+                return;
+
+            lock (instanceLock)
+            {
+                if (instance.FinalTriggerActivated)
+                    return;
+
+                instance.FinalTriggerActivated = true;
+                AddBatchesAndSpawn(instance, ConvictGroupKey, "Convict", Wave9SpawnPosition, 6, ConvictNpcId, new[] { 7, 7 }, true, "LoW - Final assault detected.");
+                AddBatchesAndSpawn(instance, CenturyFalconGroupKey, "Century Falcon", CenturyFalconSpawnPosition, 9999, CenturyFalconNpcId, new[] { 1 }, true, "LoW - Century Falcon deployed.");
+            }
+        }
+
+        private void TryTriggerCenturyFalconSupport(GroupMapInstance instance)
+        {
+            if (instance == null || instance.Spacemap == null)
+                return;
+
+            lock (instanceLock)
+            {
+                if (instance.CenturyFalconVagrantsSpawned)
+                    return;
+
+                if (!instance.NpcStates.TryGetValue(CenturyFalconGroupKey, out var falconState) || falconState.AliveCount <= 0)
+                    return;
+            }
+
+            var falconNpc = GetAliveGroupNpc(instance, CenturyFalconGroupKey);
+            if (falconNpc == null)
+                return;
+
+            var shouldSpawn = instance.Spacemap.Characters.Values
+                .OfType<Player>()
+                .Any(player => player != null && !player.Destroyed && player.CurrentHitPoints > 0 && player.Position.DistanceTo(falconNpc.Position) <= 700);
+
+            if (!shouldSpawn)
+                return;
+
+            lock (instanceLock)
+            {
+                if (instance.CenturyFalconVagrantsSpawned)
+                    return;
+
+                instance.CenturyFalconVagrantsSpawned = true;
+                AddBatchesAndSpawn(instance, FalconVagrantGroupKey, "Vagrant", falconNpc.Position, 9999, VagrantNpcId, new[] { 30 }, true, "LoW - Century Falcon deployed reinforcements.");
+            }
+        }
+
+        private InstanceNpc GetAliveGroupNpc(GroupMapInstance instance, string groupKey)
+        {
+            if (instance?.Spacemap == null || string.IsNullOrEmpty(groupKey))
+                return null;
+
+            lock (instance.Spacemap.InstanceNpcs)
+            {
+                return instance.Spacemap.InstanceNpcs
+                    .FirstOrDefault(npc => npc != null && instance.RuntimeNpcGroups.TryGetValue(npc.Id, out var runtimeGroup) && runtimeGroup == groupKey && !npc.Destroyed);
+            }
+        }
+
+        private void AddBatchesAndSpawn(GroupMapInstance instance, string groupKey, string displayName, Position spawnCenter, int killThreshold, int shipId, int[] batches, bool spawnNow, string announcement)
+        {
+            if (instance == null || instance.Spacemap == null || batches == null || batches.Length == 0)
+                return;
+
+            if (!instance.NpcStates.TryGetValue(groupKey, out var state))
+            {
+                state = new LowNpcState
+                {
+                    Key = groupKey,
+                    DisplayName = displayName,
+                    SpawnCenter = new Position(spawnCenter.X, spawnCenter.Y),
+                    KillThreshold = killThreshold,
+                    ShipId = shipId
+                };
+
+                instance.NpcStates[groupKey] = state;
+            }
+            else
+            {
+                state.SpawnCenter = new Position(spawnCenter.X, spawnCenter.Y);
+                state.KillThreshold = killThreshold;
+                state.ShipId = shipId;
+            }
+
+            foreach (var batch in batches)
+            {
+                if (batch > 0)
+                    state.PendingBatches.Enqueue(batch);
+            }
+
+            if (!string.IsNullOrWhiteSpace(announcement))
+                GameManager.SendPacketToMap(instance.MapId, $"0|A|STD|{announcement}");
+
+            if (spawnNow)
+                SpawnNextBatch(instance, state);
+        }
+
+        private void SpawnNextBatch(GroupMapInstance instance, LowNpcState state)
+        {
+            if (instance == null || state == null || state.PendingBatches.Count <= 0)
+                return;
+
+            var ship = ResolveLowShip(state.ShipId);
+            if (ship == null)
+                return;
+
+            var batchSize = state.PendingBatches.Dequeue();
+            state.KilledSinceLastSpawn = 0;
+
+            SendMapPing(instance.MapId, state.SpawnCenter);
+
+            for (var index = 0; index < batchSize; index++)
+            {
+                var position = Position.GetPosOnCircle(state.SpawnCenter, 900 + (index % 4) * 150);
+                var npc = new InstanceNpc(
+                    Randoms.CreateRandomID(),
+                    ship,
+                    instance.Spacemap,
+                    position,
+                    0,
+                    1,
+                    " ~ LoW",
+                    ship.Id == Ship.CENTURY_FALCON);
+
+                lock (instance.Spacemap.InstanceNpcs)
+                    instance.Spacemap.InstanceNpcs.Add(npc);
+
+                instance.RuntimeNpcGroups[npc.Id] = state.Key;
+                state.AliveCount++;
+            }
+        }
+
+        private void RevealRelay(GroupMapInstance instance, int relayIndex, bool ping)
+        {
+            if (instance == null || relayIndex < 0 || relayIndex >= instance.Relays.Count)
+                return;
+
+            var relay = instance.Relays[relayIndex];
+            if (relay == null)
+                return;
+
+            relay.Show();
+
+            if (ping)
+                SendMapPing(instance.MapId, relay.Position);
+        }
+
+        private void SendMapPing(int mapId, Position position)
+        {
+            if (position == null)
+                return;
+
+            GameManager.SendCommandToMap(mapId, GroupPingCommand.write(position.X, position.Y));
+        }
+
+        private Ship ResolveLowShip(int shipId)
+        {
+            var ship = GameManager.GetShip(shipId);
+            if (ship == null)
+                Logger.Log("error_log", $"- [GroupMap200Manager.cs] Unable to resolve LoW ship id '{shipId}'.");
+
+            return ship;
+        }
+
+        private bool AnyPlayerInPoi(GroupMapInstance instance, string poiId)
+        {
+            if (instance?.Spacemap == null || string.IsNullOrEmpty(poiId))
+                return false;
+
+            if (!instance.Spacemap.POIs.TryGetValue(poiId, out var poi) || poi == null)
+                return false;
+
+            return instance.Spacemap.Characters.Values
+                .OfType<Player>()
+                .Any(player => player != null && !player.Destroyed && player.CurrentHitPoints > 0 && IsInsidePoi(poi, player.Position));
+        }
+
+        private bool IsInsidePoi(POI poi, Position position)
+        {
+            if (poi == null || position == null || poi.ShapeCords == null || poi.ShapeCords.Count == 0)
+                return false;
+
+            if (poi.Shape == POIShapes.CIRCLE && poi.ShapeCords.Count > 1)
+                return position.DistanceTo(poi.ShapeCords[0]) <= poi.ShapeCords[1].X;
+
+            var minX = poi.ShapeCords.Min(point => point.X);
+            var maxX = poi.ShapeCords.Max(point => point.X);
+            var minY = poi.ShapeCords.Min(point => point.Y);
+            var maxY = poi.ShapeCords.Max(point => point.Y);
+            return position.X >= minX && position.X <= maxX && position.Y >= minY && position.Y <= maxY;
         }
 
         private List<POI> CreatePois()
@@ -266,11 +581,34 @@ namespace Ow.Game.Events
                 }
 
                 player.Spacemap.AddAndInitPlayer(player);
+                EnforceLowMapRestrictions(player, targetMap);
                 targetMap.CheckActivatables(player);
             }
             finally
             {
                 player.Storage.Jumping = false;
+            }
+        }
+
+        private void EnforceLowMapRestrictions(Player player, Spacemap targetMap)
+        {
+            if (player == null || targetMap == null || !targetMap.Options.CloakBlocked)
+                return;
+
+            if (player.Invisible)
+            {
+                player.Invisible = false;
+                player.UpdateShipStatus();
+                var cloakPacket = $"0|n|INV|{player.Id}|0";
+                player.SendPacket(cloakPacket);
+                player.SendPacketToInRangePlayers(cloakPacket);
+                player.SettingsManager?.SendNewItemStatus(Objects.Players.Managers.CpuManager.CLK_XL);
+            }
+
+            if (player.Pet != null && player.Pet.Activated && player.Pet.Invisible)
+            {
+                player.Pet.Invisible = false;
+                player.Pet.SendPacketToInRangePlayers($"0|n|INV|{player.Pet.Id}|0");
             }
         }
 
@@ -311,6 +649,32 @@ namespace Ow.Game.Events
 
             instancesByKey.Remove(instance.Key);
             instancesByMap.Remove(instance.MapId);
+        }
+
+        public void HandleNpcDestroyed(InstanceNpc npc)
+        {
+            if (npc?.Spacemap == null)
+                return;
+
+            lock (instanceLock)
+            {
+                if (!instancesByMap.TryGetValue(npc.Spacemap.Id, out var instance) || instance == null)
+                    return;
+
+                if (!instance.RuntimeNpcGroups.TryGetValue(npc.Id, out var groupKey))
+                    return;
+
+                instance.RuntimeNpcGroups.Remove(npc.Id);
+
+                if (!instance.NpcStates.TryGetValue(groupKey, out var state) || state == null)
+                    return;
+
+                state.AliveCount = Math.Max(0, state.AliveCount - 1);
+                state.KilledSinceLastSpawn++;
+
+                if (state.PendingBatches.Count > 0 && state.KilledSinceLastSpawn >= state.KillThreshold)
+                    SpawnNextBatch(instance, state);
+            }
         }
 
         private Position ResolveLoginPosition(Player player)
@@ -375,9 +739,36 @@ namespace Ow.Game.Events
 
                 var chargeAmount = relay.Charge(amount);
                 if (relay.CurrentHitPoints >= relay.MaxHitPoints)
+                {
                     instance.CurrentRelayIndex++;
+                    HandleRelayActivated(instance, relay.ActivationOrder + 1);
+                }
 
                 return chargeAmount;
+            }
+        }
+
+        private void HandleRelayActivated(GroupMapInstance instance, int activatedRelayCount)
+        {
+            if (instance == null)
+                return;
+
+            RevealRelay(instance, activatedRelayCount, true);
+
+            switch (activatedRelayCount)
+            {
+                case 1:
+                    GameManager.SendPacketToMap(instance.MapId, "0|A|STD|LoW - First beacon activated.");
+                    break;
+                case 2:
+                    GameManager.SendPacketToMap(instance.MapId, "0|A|STD|LoW - Second beacon activated.");
+                    break;
+                case 3:
+                    GameManager.SendPacketToMap(instance.MapId, "0|A|STD|LoW - Third beacon activated.");
+                    break;
+                case 4:
+                    GameManager.SendPacketToMap(instance.MapId, "0|A|STD|LoW - Final beacon activated.");
+                    break;
             }
         }
 
@@ -463,6 +854,7 @@ namespace Ow.Game.Events
 
         public override int MinimumHitpoints => MaxCharge;
         public int ActivationOrder { get; }
+        public bool VisibleOnMap { get; private set; } = true;
 
         public override string Name { get; set; }
         public override Clan Clan { get; set; }
@@ -521,6 +913,26 @@ namespace Ow.Game.Events
         public int TryCharge(Player player, int amount)
         {
             return manager?.TryChargeRelay(this, player, amount) ?? 0;
+        }
+
+        public void Show()
+        {
+            if (VisibleOnMap || Spacemap == null)
+                return;
+
+            Spacemap.Activatables[Id] = this;
+            VisibleOnMap = true;
+            GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+        }
+
+        public void Hide()
+        {
+            if (!VisibleOnMap || Spacemap == null)
+                return;
+
+            Spacemap.Activatables.TryRemove(Id, out var removedRelay);
+            VisibleOnMap = false;
+            GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(GetAssetType(), Id));
         }
 
         public override int GetVisualDesignId()
