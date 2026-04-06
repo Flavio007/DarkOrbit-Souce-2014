@@ -420,39 +420,52 @@ namespace Ow.Game.Objects.Players.Managers
                 Player.SettingsManager.SendNewItemStatus(CpuManager.ROCKET_LAUNCHER);
             }
 
+            var volleyLoads = RocketLauncher.GetVolleyLoads(loadedRockets);
+            if (volleyLoads.Count == 0) return;
+
+            var launcherId = GetSelectedLauncherId();
+            var totalLoadedRockets = 0;
+            var totalDamage = 0;
+
             var damage = 0;
-            DamageType damageType = GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM ? DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM : DamageType.ROCKET;
+            DamageType damageType = launcherId == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM ? DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM : DamageType.ROCKET;
 
-            for (var i = 0; i < loadedRockets; i++)
+            foreach (var volleyLoad in volleyLoads)
             {
-                damage += RandomizeDamage(GetRocketLauncherRocketDamage(), Player.RocketMissProbability);
-            }
-
-            if (enemy.Invincible || (enemy is Satellite satellite && satellite.BattleStation.Invincible) || (enemy is Player && !(enemy as Player).Attackable()))
                 damage = 0;
 
-            var rocketLauncherPacket = "0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + loadedRockets + "|" + GetSelectedLauncherId() + (damage == 0 ? "|M" : "");
-            Player.SendPacket(rocketLauncherPacket);
-            Player.SendPacketToInRangePlayers(rocketLauncherPacket);
+                for (var i = 0; i < volleyLoad; i++)
+                    damage += RandomizeDamage(GetRocketLauncherRocketDamage(), Player.RocketMissProbability);
+
+                if (enemy.Invincible || (enemy is Satellite satellite && satellite.BattleStation.Invincible) || (enemy is Player && !(enemy as Player).Attackable()))
+                    damage = 0;
+
+                totalDamage += damage;
+                totalLoadedRockets += volleyLoad;
+
+                var rocketLauncherPacket = "0|RL|A|" + Player.Id + "|" + enemy.Id + "|" + volleyLoad + "|" + launcherId + (damage == 0 ? "|M" : "");
+                Player.SendPacket(rocketLauncherPacket);
+                Player.SendPacketToInRangePlayers(rocketLauncherPacket);
+            }
 
             Player.SendCooldown(AmmunitionManager.ROCKET_LAUNCHER, TimeManager.HELLSTROM);
             RocketLauncher.CooldownTime = DateTime.Now.AddSeconds(3);
-            Player.SubAmmo(Player.Settings.InGameSettings.selectedRocketLauncher, loadedRockets);
+            Player.SubAmmo(Player.Settings.InGameSettings.selectedRocketLauncher, totalLoadedRockets);
 
             RocketLauncher.ResetLoadAfterFire();
 
             await Task.Delay(1000);
 
-            if (damage != 0)
+            if (!enemy.Destroyed && totalDamage != 0)
             {
-                if (GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM || (GetSelectedLauncherId() == (int)DamageType.SHIELD_ABSORBER_ROCKET_CREDITS))
-                    Absorbation(Player, enemy, damageType, damage);
-                else if (GetSelectedLauncherId() != 14)
-                    Damage(Player, enemy, damageType, damage, 0);
+                if (launcherId == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM || launcherId == (int)DamageType.SHIELD_ABSORBER_ROCKET_CREDITS)
+                    Absorbation(Player, enemy, damageType, totalDamage);
+                else if (launcherId != 14)
+                    Damage(Player, enemy, damageType, totalDamage, 0);
                 else
                 {
-                    Damage(Player, enemy, damageType, damage, 0);
-                    Absorbation(Player, enemy, damageType, damage);
+                    Damage(Player, enemy, damageType, totalDamage, 0);
+                    Absorbation(Player, enemy, damageType, totalDamage);
                 }
             }
 

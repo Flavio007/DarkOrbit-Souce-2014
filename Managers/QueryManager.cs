@@ -521,6 +521,7 @@ namespace Ow.Managers
             var leonovlaser = new int[] { 0, 0 };
             var leonovshield = new int[] { 0, 0 };
             var rocketLauncherLoad = new int[] { 0, 0 };
+            var rocketLauncherLoads = new[] { new List<int>(), new List<int>() };
 
             player.equipedlasercount = 0;
             player.fulllf3 = true;
@@ -568,9 +569,11 @@ namespace Ow.Managers
                         break;
                     case LoadoutItemKind.Hst1:
                         rocketLauncherLoad[configIndex] += 3;
+                        rocketLauncherLoads[configIndex].Add(3);
                         break;
                     case LoadoutItemKind.Hst2:
                         rocketLauncherLoad[configIndex] += 5;
+                        rocketLauncherLoads[configIndex].Add(5);
                         break;
                     case LoadoutItemKind.Bo2:
                         shield[configIndex] += bo2Shield;
@@ -640,6 +643,7 @@ namespace Ow.Managers
             player.CurrentShieldAbsConfig1 = shieldabsorption[0] / (equipedshieldcount[0] == 0 ? 1 : equipedshieldcount[0]);
             player.CurrentShieldAbsConfig2 = shieldabsorption[1] / (equipedshieldcount[1] == 0 ? 1 : equipedshieldcount[1]);
             player.AttackManager.RocketLauncher.MaxLoad = rocketLauncherLoad[player.CurrentConfig == 2 ? 1 : 0];
+            player.AttackManager.RocketLauncher.SetLauncherLoads(rocketLauncherLoads[player.CurrentConfig == 2 ? 1 : 0]);
 
             var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
             var itemsBase = new ItemsBase(0);
