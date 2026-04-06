@@ -44,7 +44,11 @@ namespace Ow.Game.Objects
         public override double ShieldAbsorption { get; set; }
         public override double ShieldPenetration { get; set; }
 
-        public Activatable(Spacemap spacemap, int factionId, Position position, Clan clan, short assetTypeId = 0) : base(Randoms.CreateRandomID())
+        public Activatable(Spacemap spacemap, int factionId, Position position, Clan clan, short assetTypeId = 0) : this(Randoms.CreateRandomID(), spacemap, factionId, position, clan, assetTypeId)
+        {
+        }
+
+        public Activatable(int id, Spacemap spacemap, int factionId, Position position, Clan clan, short assetTypeId = 0) : base(id)
         {
             AssetTypeId = assetTypeId;
             Spacemap = spacemap;

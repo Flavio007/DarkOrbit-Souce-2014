@@ -15,6 +15,8 @@ namespace Ow.Game.Objects.AI
 
         public NpcAIOption AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
         private static int ALIEN_DISTANCE_TO_USER = 300;
+        private static int NPC_ATTACK_RANGE = 450;
+        private static int CHASE_REPATH_TOLERANCE = 125;
         private static int RANDOM_MOVE_RANGE = 250;
         public int RespawnX = 0;
         public int RespawnY = 0;
@@ -100,13 +102,13 @@ namespace Ow.Game.Objects.AI
                         }
                         break;
                     case NpcAIOption.FLY_TO_ENEMY:
-                        if (Npc.Selected != null && Npc.Selected is Player && !(Npc.Selected as Player).Storage.IsInDemilitarizedZone && (ignoreDistanceForGalaxyGate || Npc.Position.DistanceTo((Npc.Selected as Player).Position) < Npc.RenderRange))
+                        if (Npc.Selected != null && Npc.Selected is Player && CanChasePlayer(Npc.Selected as Player, ignoreDistanceForGalaxyGate))
                         {
                             var player = Npc.Selected as Player;
 
-                            Movement.Move(Npc, Position.GetPosOnCircle(player.Position, ALIEN_DISTANCE_TO_USER));
-                            AIOption = NpcAIOption.WAIT_PLAYER_MOVE;
-                            if ((player.Storage.IsInSafeZone && player.Selected != Npc))
+                            TryMoveToEnemy(player);
+                            AIOption = Npc.InRange(player, NPC_ATTACK_RANGE) ? NpcAIOption.WAIT_PLAYER_MOVE : NpcAIOption.FLY_TO_ENEMY;
+                            if (player.Storage.IsInSafeZone && player.Selected != Npc)
                             {
                                 Npc.Attacking = false;
                                 Npc.Selected = null;
@@ -120,11 +122,11 @@ namespace Ow.Game.Objects.AI
                         }
                         break;
                     case NpcAIOption.WAIT_PLAYER_MOVE:
-                        if (Npc.Selected != null && Npc.Selected is Player && !(Npc.Selected as Player).Storage.IsInDemilitarizedZone)
+                        if (Npc.Selected != null && Npc.Selected is Player && CanChasePlayer(Npc.Selected as Player, ignoreDistanceForGalaxyGate))
                         {
                             var player = Npc.Selected as Player;
 
-                            if (player.Moving && (!player.Storage.IsInSafeZone || (player.Selected == Npc)))
+                            if (!Npc.InRange(player, NPC_ATTACK_RANGE) || ShouldRefreshChaseDestination(player))
                                 AIOption = NpcAIOption.FLY_TO_ENEMY;
                         }
                         else
@@ -233,6 +235,52 @@ namespace Ow.Game.Objects.AI
         private bool IsGalaxyGateNpc()
         {
             return Npc?.Spacemap != null && EventManager.GalaxyGate != null && EventManager.GalaxyGate.IsGalaxyGateMap(Npc.Spacemap.Id);
+        }
+
+        private bool CanChasePlayer(Player player, bool ignoreDistanceForGalaxyGate)
+        {
+            return player != null
+                && !player.Storage.IsInDemilitarizedZone
+                && !player.Invisible
+                && (ignoreDistanceForGalaxyGate || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
+        }
+
+        private bool ShouldRefreshChaseDestination(Player player)
+        {
+            var desiredPosition = GetChasePosition(player);
+
+            return !Npc.Moving
+                || Npc.Destination == null
+                || Npc.Destination.DistanceTo(desiredPosition) > CHASE_REPATH_TOLERANCE;
+        }
+
+        private void TryMoveToEnemy(Player player)
+        {
+            if (player == null || Npc.InRange(player, NPC_ATTACK_RANGE - 25))
+                return;
+
+            if (!ShouldRefreshChaseDestination(player))
+                return;
+
+            Movement.Move(Npc, GetChasePosition(player));
+        }
+
+        private Position GetChasePosition(Player player)
+        {
+            if (player == null)
+                return Npc.Position;
+
+            var distanceToPlayer = Npc.Position.DistanceTo(player.Position);
+            if (distanceToPlayer <= 0)
+                return new Position(player.Position.X + ALIEN_DISTANCE_TO_USER, player.Position.Y);
+
+            var directionX = Npc.Position.X - player.Position.X;
+            var directionY = Npc.Position.Y - player.Position.Y;
+            var scale = ALIEN_DISTANCE_TO_USER / distanceToPlayer;
+
+            return new Position(
+                player.Position.X + (int)Math.Round(directionX * scale),
+                player.Position.Y + (int)Math.Round(directionY * scale));
         }
     }
 }

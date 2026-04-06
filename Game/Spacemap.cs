@@ -108,6 +108,8 @@ namespace Ow.Game
             Limits[0] = new Position(0, 0);
             if (effectiveMapId == 16 || effectiveMapId == 29)
                 Limits[1] = new Position(41800, 26000);
+            else if (effectiveMapId == 200)
+                Limits[1] = new Position(21000, 13500);
             else if (effectiveMapId == 255)
                 Limits[1] = new Position(10450, 6500);
             else Limits[1] = new Position(20800, 12800);
@@ -495,6 +497,8 @@ namespace Ow.Game
 
             if (effectiveMapId == 255)
                 inRadiationZone = positionX < 0 || positionX > 10450 || positionY < 0 || positionY > 6500;
+            else if (effectiveMapId == 200)
+                inRadiationZone = positionX < 0 || positionX > 21000 || positionY < 0 || positionY > 13500;
             else if (effectiveMapId == 16 || effectiveMapId == 29 || effectiveMapId == 42)
                 inRadiationZone = positionX < 0 || positionX > 41800 || positionY < 0 || positionY > 26000;
             else

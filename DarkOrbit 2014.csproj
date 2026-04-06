@@ -69,6 +69,7 @@
     <Compile Include="Game\Events\Achievements.cs" />
     <Compile Include="Game\Events\JackpotBattle.cs" />
     <Compile Include="Game\Events\Scoremageddon.cs" />
+    <Compile Include="Game\Events\GroupMap200Manager.cs" />
     <Compile Include="Game\Events\InvasionGate.cs" />
     <Compile Include="Game\Events\Spaceball.cs" />
     <Compile Include="Game\Events\TutorialManager.cs" />

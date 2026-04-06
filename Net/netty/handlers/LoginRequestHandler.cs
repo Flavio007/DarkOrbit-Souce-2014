@@ -99,6 +99,7 @@ namespace Ow.Net.netty.handlers
                 }
 
                 EventManager.Tutorial?.PreparePlayerForLogin(Player);
+                EventManager.GroupMap200?.PreparePlayerForLogin(Player);
 
                 Program.TickManager.AddTick(Player);
 

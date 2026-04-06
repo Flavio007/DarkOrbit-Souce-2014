@@ -960,7 +960,7 @@ namespace Ow.Game.Objects
                 {
                     var asset = Storage.InRangeAssets.Values.Where(x => x.Id == entityId).FirstOrDefault();
 
-                    if (asset != null && (asset is BattleStation || asset is Satellite) && !asset.Destroyed)
+                    if (asset != null && (asset is BattleStation || asset is Satellite || asset is GroupMapRelayStation) && !asset.Destroyed)
                     {
                         Selected = asset;
 

@@ -21,6 +21,7 @@ namespace Ow.Game.Objects
         public const int DEFAULT_MAX_GROUP_SIZE = 9;
 
         public int Id { get; }
+        public int GroupMapInstanceKey { get; set; }
         public Player Leader { get; set; }
         public ConcurrentDictionary<int, Player> Members = new ConcurrentDictionary<int, Player>();
         public bool LeaderInvitesOnly { get; set; }
@@ -125,9 +126,15 @@ namespace Ow.Game.Objects
 
                 foreach (var groupMember in player.Group?.Members.Values)
                 {
+                    var selectedTarget = groupMember.Selected == null
+                        ? nonSelected
+                        : new GroupPlayerTargetModule(
+                            new GroupPlayerShipModule(groupMember.Selected is Player selectedPlayer ? selectedPlayer.Ship.GroupShipId : GroupPlayerShipModule.WRECK),
+                            groupMember.Selected.Name,
+                            new GroupPlayerInformationsModule(groupMember.Selected.CurrentHitPoints, groupMember.Selected.MaxHitPoints, groupMember.Selected.CurrentShieldPoints, groupMember.Selected.MaxShieldPoints, 0, 0));
+
                     groupMembers.Add(new GroupPlayerModule(groupMember.Name, groupMember.Id, new GroupPlayerInformationsModule(groupMember.CurrentHitPoints, groupMember.MaxHitPoints, groupMember.CurrentShieldPoints, groupMember.MaxShieldPoints, groupMember.CurrentNanoHull, groupMember.MaxNanoHull), new GroupPlayerLocationModule(groupMember.Spacemap.Id, groupMember.Position.X, groupMember.Position.Y), groupMember.Level,
-                        true, groupMember.Invisible, groupMember.AttackingOrUnderAttack(), (!GameManager.GameSessions.ContainsKey(groupMember.Id) || groupMember.Destroyed), true, new GroupPlayerClanModule(groupMember.Clan.Id, groupMember.Clan.Tag), new FactionModule((short)groupMember.FactionId), groupMember.Selected == null ? nonSelected : new GroupPlayerTargetModule(new GroupPlayerShipModule(groupMember.SelectedCharacter.Ship.GroupShipId), groupMember.SelectedCharacter.Name,
-                        new GroupPlayerInformationsModule(groupMember.Selected.CurrentHitPoints, groupMember.Selected.MaxHitPoints, groupMember.Selected.CurrentShieldPoints, groupMember.Selected.MaxShieldPoints, 0, 0)), new GroupPlayerShipModule(groupMember.Ship.GroupShipId), new GroupPlayerHadesGateModule(false, 0)));
+                        true, groupMember.Invisible, groupMember.AttackingOrUnderAttack(), (!GameManager.GameSessions.ContainsKey(groupMember.Id) || groupMember.Destroyed), true, new GroupPlayerClanModule(groupMember.Clan.Id, groupMember.Clan.Tag), new FactionModule((short)groupMember.FactionId), selectedTarget, new GroupPlayerShipModule(groupMember.Ship.GroupShipId), new GroupPlayerHadesGateModule(false, 0)));
                 }
 
                 player.SendCommand(GroupInitializationCommand.write(player.Id, 0, player.Group.Leader.Id, groupMembers, new GroupInvitationBehaviorModule(GroupInvitationBehaviorModule.OFF)));

@@ -1,3 +1,4 @@
+using Ow.Game.Events;
 using Ow.Game.Objects;
 using Ow.Game.Objects.Players.Techs;
 using Ow.Game.Objects.Stations;
@@ -663,6 +664,34 @@ namespace Ow.Game.Objects.Players.Managers
 
         public void Damage(Player attacker, Attackable target, DamageType damageType, int damage, double shieldPenetration, bool deactiveCloak = true)
         {
+            if (target is GroupMapRelayStation relayTarget)
+            {
+                if (damageType != DamageType.LASER)
+                    return;
+
+                if (attacker.Invincible)
+                    attacker.Storage.DeactiveInvincibilityEffect();
+
+                if (deactiveCloak)
+                    Player.CpuManager.DisableCloak();
+
+                var laserRunCommand = AttackLaserRunCommand.write(Player.Id, target.Id, (!Player.fulllf3 && GetSelectedLaser() <= 2) ? 0 : GetSelectedLaser() == 0 ? 1 : GetSelectedLaser(), target.ShieldMechanics(), Player.GetBountyHunter());
+                Player.SendCommand(laserRunCommand);
+                Player.SendCommandToInRangePlayers(laserRunCommand);
+
+                var chargeAmount = relayTarget.TryCharge(Player, GetDamageMultiplier());
+                if (chargeAmount > 0)
+                {
+                    QueueDamageHit(target, DamageType.LASER, chargeAmount);
+                    UpdateAttacker(target, Player);
+                }
+                else
+                    AttackMissed(target, DamageType.LASER);
+
+                target.UpdateStatus();
+                return;
+            }
+
             if (damageType == DamageType.MINE && target.Invincible) return;
 
             if (damageType == DamageType.LASER && Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.SAB_50)
@@ -830,6 +859,9 @@ namespace Ow.Game.Objects.Players.Managers
 
         public static void Damage(Player attacker, Attackable target, DamageType damageType, int damage, bool toDestroy, bool toHp, bool toShd, bool missedEffect = true)
         {
+            if (target is GroupMapRelayStation)
+                return;
+
             if (damageType == DamageType.MINE && target.Invincible) return;
 
             if (attacker.Invincible && damageType != DamageType.RADIATION)
