@@ -12,12 +12,17 @@ namespace Ow.Game.Objects.Players.Skills
 {
     class DrawFire : Skill
     {
+        private const int AbilityEffectId = 102;
+        private readonly List<int> affectedTargetIds = new List<int>();
+
         public override string LootId { get => SkillManager.CITADEL_DRAW_FIRE; }
 
         public override int Duration { get => TimeManager.CITADEL_DRAWFIRE_DURATION; }
         public override int Cooldown { get => TimeManager.CITADEL_DRAWFIRE_COOLDOWN; }
 
         public DrawFire(Player player) : base(player) { }
+
+        public List<int> targetIds = new List<int>();
 
         public override void Tick()
         {
@@ -30,11 +35,14 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            var citadelIds = new List<int> { 69 };
+            var citadelIds = new List<int> { Ship.CITADEL, Ship.CITADEL_VETERAN, Ship.CITADEL_ELITE, Ship.CITADEL_PLUS };
 
             if (citadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
             {
                 Active = true;
+                targetIds.Clear();
+                affectedTargetIds.Clear();
+                var effectTargetIds = new List<int> { Player.Id };
 
                 Player.AddVisualModifier(VisualModifierCommand.DRAW_FIRE_OWNER, 0, "", 0, true);
 
@@ -50,11 +58,13 @@ namespace Ow.Game.Objects.Players.Skills
 
                     if (character.Position.DistanceTo(Player.Position) < 500)
                     {
+                        affectedTargetIds.Add(character.Id);
                         character.AddVisualModifier(VisualModifierCommand.DRAW_FIRE_TARGET, 0, "", 0, true);
                         character.Deselection();
 
                         if (character is Player player)
                         {
+                            targetIds.Add(player.Id);
                             player.Storage.underDrawFire = true;
                             player.Storage.underDrawFireTime = DateTime.Now;
                             player.SelectEntity(Player.Id);
@@ -64,6 +74,11 @@ namespace Ow.Game.Objects.Players.Skills
                             character.Selected = Player;
                     }
                 }
+
+                var abilityEffectActivationCommand = AbilityEffectActivationCommand.write(AbilityEffectId, Player.Id, effectTargetIds);
+
+                Player.SendCommand(abilityEffectActivationCommand);
+                Player.SendCommandToInRangePlayers(abilityEffectActivationCommand);
 
                 Player.SendCooldown(LootId, Duration, true);
                 Player.CpuManager.DisableCloak();
@@ -77,6 +92,29 @@ namespace Ow.Game.Objects.Players.Skills
             Active = false;
             Player.SendCooldown(LootId, Cooldown);
             Player.RemoveVisualModifier(VisualModifierCommand.DRAW_FIRE_OWNER);
+            var effectTargetIds = new List<int> { Player.Id };
+
+            foreach (var targetId in affectedTargetIds)
+            {
+                if (!Player.Spacemap.Characters.TryGetValue(targetId, out var target))
+                    continue;
+
+                if (target is Player targetPlayer)
+                    targetPlayer.Storage.DeactiveDrawFireEffect();
+                else
+                    target.RemoveVisualModifier(VisualModifierCommand.DRAW_FIRE_TARGET);
+            }
+
+            var abilityStopCommand = AbilityStopCommand.write(AbilityEffectId, Player.Id, effectTargetIds);
+            var abilityEffectDeActivationCommand = AbilityEffectDeActivationCommand.write(AbilityEffectId, Player.Id, effectTargetIds);
+
+            Player.SendCommand(abilityStopCommand);
+            Player.SendCommand(abilityEffectDeActivationCommand);
+            Player.SendCommandToInRangePlayers(abilityStopCommand);
+            Player.SendCommandToInRangePlayers(abilityEffectDeActivationCommand);
+
+            affectedTargetIds.Clear();
+            targetIds.Clear();
         }
     }
 }

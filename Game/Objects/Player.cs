@@ -113,6 +113,8 @@ namespace Ow.Game.Objects
         public int CargoInUse => Math.Max(0, Prometium + Endurium + Terbium + Prometid + Duranium + Promerium + Xenomit + Seprom + Palladium);
         public int FreeCargo => Math.Max(0, CargoCapacity - CargoInUse);
 
+        public override int RenderRange => Storage != null && Storage.SpearheadRecon ? 4000 : base.RenderRange;
+
         public bool fulllf3 = true;
 
         public int equipedlasercount = 0;
@@ -377,6 +379,12 @@ namespace Ow.Game.Objects
 
                 if (Storage.Lightning)
                     value += Maths.GetPercentage(value, 30);
+
+                if (Storage.CitadelFortify)
+                    return 200;
+
+                if (Storage.CitadelTravel)
+                    return TimeManager.CITADEL_TRAVEL_SPEED;
 
                 value += Storage.SpeedBoost;
 
@@ -1010,6 +1018,10 @@ namespace Ow.Game.Objects
 
         public async void Jump(int mapId, Position targetPosition)
         {
+            Storage.Skills.TryGetValue(SkillManager.SPEARHEAD_ULTIMATE_CLOAK, out var ultimateCloakSkill);
+            if (ultimateCloakSkill != null && ultimateCloakSkill.Active)
+                ultimateCloakSkill.Disable();
+
             Storage.Jumping = true;
             await Task.Delay(Portal.JUMP_DELAY);
 

@@ -68,6 +68,7 @@ namespace Ow.Game.Objects
                 if (!CanInteract(player)) return;
                 if (!Working || GameManager.GetSpacemap(TargetSpaceMapId) == null || TargetPosition == null) return;
                 if (player.Storage.Jumping) return;
+                if (player.Storage.CitadelFortify) return;
 
                 player.Storage.Jumping = true;
 

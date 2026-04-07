@@ -279,7 +279,11 @@ namespace Ow.Game
             {
                 foreach (var otherCharacter in Characters.Values.Where(x => x.Id != character.Id && !x.Equals(character)))
                 {
-                    if (character.InRange(otherCharacter, otherCharacter.RenderRange) || character.AllMapRange)
+                    var loadRange = character.RenderRange;
+                    if (otherCharacter.RenderRange > loadRange)
+                        loadRange = otherCharacter.RenderRange;
+
+                    if (character.InRange(otherCharacter, loadRange) || character.AllMapRange)
                         character.AddInRangeCharacter(otherCharacter);
                     else if (!character.AllMapRange || character.SelectedCharacter == null || (character.SelectedCharacter != null && !character.SelectedCharacter.Equals(otherCharacter)))
                         character.RemoveInRangeCharacter(otherCharacter);

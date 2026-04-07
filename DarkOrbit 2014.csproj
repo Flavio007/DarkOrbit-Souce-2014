@@ -97,6 +97,13 @@
     <Compile Include="Game\Objects\Players\Group.cs" />
     <Compile Include="Game\Objects\Players\Managers\AbstractManager.cs" />
     <Compile Include="Game\Objects\Players\Skills\DrawFire.cs" />
+    <Compile Include="Game\Objects\Players\Skills\Fortify.cs" />
+    <Compile Include="Game\Objects\Players\Skills\Protection.cs" />
+    <Compile Include="Game\Objects\Players\Skills\Travel.cs" />
+    <Compile Include="Game\Objects\Players\Skills\TargetMarker.cs" />
+    <Compile Include="Game\Objects\Players\Skills\UltimateCloak.cs" />
+    <Compile Include="Game\Objects\Players\Skills\JamX.cs" />
+    <Compile Include="Game\Objects\Players\Skills\Recon.cs" />
     <Compile Include="Game\Objects\Players\Skills\AegisRepairPod.cs" />
     <Compile Include="Game\Objects\Players\Skills\AegisShieldRepair.cs" />
     <Compile Include="Game\Objects\Players\Skills\Afterburner.cs" />
@@ -186,6 +193,7 @@
     <Compile Include="Net\mysql\TransactionException.cs" />
     <Compile Include="Net\mysql\TransactionQueryReactor.cs" />
     <Compile Include="Net\netty\commands\AbilityEffectDeActivationCommand.cs" />
+    <Compile Include="Net\netty\commands\AbilityStartCommand.cs" />
     <Compile Include="Net\netty\commands\AbilityStopCommand.cs" />
     <Compile Include="Net\netty\commands\AbilityEffectActivationCommand.cs" />
     <Compile Include="Net\netty\commands\AssetRemoveCommand.cs" />

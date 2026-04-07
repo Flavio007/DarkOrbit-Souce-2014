@@ -29,8 +29,6 @@ namespace Ow.Game.Objects.Players.Skills
         {
             if (Player.Ship.Id == Ship.VENGEANCE_LIGHTNING && cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode)
             {
-                Player.SkillManager.DisableAllSkills();
-
                 Player.Storage.Lightning = true;
                 Player.SendCommand(SetSpeedCommand.write(Player.Speed, Player.Speed));
 

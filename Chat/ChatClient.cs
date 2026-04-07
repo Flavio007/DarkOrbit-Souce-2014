@@ -117,6 +117,7 @@ namespace Ow.Chat
         public int UserId { get; set; }
         public Permissions Permission { get; set; }
         public List<Int32> ChatsJoined = new List<Int32>();
+        private readonly HashSet<int> activeTestSkillIds = new HashSet<int>();
 
         public static List<string> Filter = new List<string>
         {
@@ -433,6 +434,70 @@ namespace Ow.Chat
                 {
                     Send("dq%PK failed: game socket is not connected.#");
                 }
+            }
+            else if (cmd == "/skill" && Permission == Permissions.ADMINISTRATOR)
+            {
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/skill <id>'.#");
+                    return;
+                }
+
+                if (!int.TryParse(args[1], out var abilityId))
+                {
+                    Send($"dq%Invalid skill id '{args[1]}'.#");
+                    return;
+                }
+
+                var targetIds = new List<int> { gameSession.Player.Id };
+                var command = AbilityEffectActivationCommand.write(abilityId, gameSession.Player.Id, targetIds);
+
+                gameSession.Player.SendCommand(command);
+                gameSession.Player.SendCommandToInRangePlayers(command);
+                activeTestSkillIds.Add(abilityId);
+                Send($"dq%AbilityEffectActivationCommand sent. SkillId={abilityId}, ActivatorId={gameSession.Player.Id}, Targets={targetIds.Count}.#");
+            }
+            else if (cmd == "/off" && Permission == Permissions.ADMINISTRATOR)
+            {
+                var args = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (args.Length < 2)
+                {
+                    Send("dq%Use '/off all' or '/off <id>'.#");
+                    return;
+                }
+
+                List<int> abilityIds;
+                if (args[1].Equals("all", StringComparison.OrdinalIgnoreCase))
+                {
+                    abilityIds = activeTestSkillIds.ToList();
+                    if (abilityIds.Count == 0)
+                    {
+                        Send("dq%No tracked test skills to disable. Use '/off <id>' or activate one first with '/skill <id>'.#");
+                        return;
+                    }
+                }
+                else
+                {
+                    if (!int.TryParse(args[1], out var abilityId))
+                    {
+                        Send($"dq%Invalid skill id '{args[1]}'.#");
+                        return;
+                    }
+
+                    abilityIds = new List<int> { abilityId };
+                }
+
+                var targetIds = new List<int> { gameSession.Player.Id };
+                foreach (var abilityId in abilityIds)
+                {
+                    var command = AbilityEffectDeActivationCommand.write(abilityId, gameSession.Player.Id, targetIds);
+                    gameSession.Player.SendCommand(command);
+                    gameSession.Player.SendCommandToInRangePlayers(command);
+                    activeTestSkillIds.Remove(abilityId);
+                }
+
+                Send($"dq%AbilityEffectDeActivationCommand sent for {abilityIds.Count} skill(s): {string.Join(", ", abilityIds)}.#");
             }
             else if (cmd == "/destroy" && Permission == Permissions.ADMINISTRATOR)
             {

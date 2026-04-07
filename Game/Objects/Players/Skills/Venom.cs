@@ -40,8 +40,6 @@ namespace Ow.Game.Objects.Players.Skills
                 if (target == null) return;
                 if (!Player.TargetDefinition(target, false)) return;
 
-                Player.SkillManager.DisableAllSkills();
-
                 Damage = 1500;
                 Player.Storage.Venom = true;
                 Player.Storage.UnderVenomEntity = target;

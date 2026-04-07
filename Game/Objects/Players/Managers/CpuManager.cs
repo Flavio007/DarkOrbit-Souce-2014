@@ -972,6 +972,9 @@ namespace Ow.Game.Objects.Players.Managers
             if (!EnsureCpuEquipped(CLOAK_XL_CPU, "CL04K-XL"))
                 return;
 
+            if (Player.Storage.Skills.TryGetValue(SkillManager.SPEARHEAD_ULTIMATE_CLOAK, out var ultimateCloakSkill) && ultimateCloakSkill.Active)
+                ultimateCloakSkill.Disable();
+
             if (Player.Spacemap.Options.CloakBlocked || Player.Invisible) return;
             var consumedCharge = TryConsumeCpuCharge(CLOAK_XL_CPU);
 
@@ -1033,6 +1036,12 @@ namespace Ow.Game.Objects.Players.Managers
                 Player.SendPacket(cloakPacket);
                 Player.SendPacketToInRangePlayers(cloakPacket);
                 Player.SettingsManager.SendNewItemStatus(CLK_XL);
+            }
+
+            if (Player.Pet != null && Player.Pet.Activated && Player.Pet.Invisible)
+            {
+                Player.Pet.Invisible = false;
+                Player.Pet.SendPacketToInRangePlayers("0|n|INV|" + Player.Pet.Id + "|0");
             }
         }
 

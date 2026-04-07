@@ -113,6 +113,20 @@ namespace Ow.Game.Objects
         public bool underDrawFire = false;
         public DateTime underDrawFireTime = new DateTime();
 
+        public bool CitadelFortify = false;
+        public bool CitadelTravel = false;
+
+        public bool underProtection = false;
+        public DateTime underProtectionTime = new DateTime();
+        public int protectedByCitadelId = 0;
+
+        public bool SpearheadUltimateCloak = false;
+        public bool SpearheadRecon = false;
+        public bool underSpearheadTargetMarker = false;
+        public DateTime underSpearheadTargetMarkerTime = new DateTime();
+        public int markedBySpearheadId = 0;
+        public DateTime skillsBlockedUntil = new DateTime();
+
         public DateTime lastChangeShipTime = new DateTime();
 
         public bool GroupCombatSituation = false;
@@ -138,6 +152,10 @@ namespace Ow.Game.Objects
                 DeactiveWizardEffect();
             if (underDrawFire && underDrawFireTime.AddMilliseconds(TimeManager.CITADEL_DRAWFIRE_DURATION) < DateTime.Now)
                 DeactiveDrawFireEffect();
+            if (underProtection && underProtectionTime.AddMilliseconds(TimeManager.CITADEL_PROTECTION_DURATION) < DateTime.Now)
+                DeactiveProtectionEffect();
+            if (underSpearheadTargetMarker && underSpearheadTargetMarkerTime.AddMilliseconds(TimeManager.SPEARHEAD_TARGET_MARKER_DURATION) < DateTime.Now)
+                DeactiveSpearheadTargetMarkerEffect();
 
             if (Character is Player player && player.Group != null)
             {
@@ -256,6 +274,30 @@ namespace Ow.Game.Objects
                 underDrawFire = false;
                 Character.RemoveVisualModifier(VisualModifierCommand.DRAW_FIRE_TARGET);
             }
+        }
+
+        public void DeactiveProtectionEffect()
+        {
+            if (underProtection)
+            {
+                underProtection = false;
+                protectedByCitadelId = 0;
+                Character.RemoveVisualModifier(VisualModifierCommand.PROTECTION_TARGET);
+            }
+        }
+
+        public void DeactiveSpearheadTargetMarkerEffect()
+        {
+            if (underSpearheadTargetMarker)
+            {
+                underSpearheadTargetMarker = false;
+                markedBySpearheadId = 0;
+            }
+        }
+
+        public bool AreSkillsBlocked()
+        {
+            return skillsBlockedUntil > DateTime.Now;
         }
     }
 }

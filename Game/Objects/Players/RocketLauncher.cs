@@ -12,6 +12,9 @@ namespace Ow.Game.Objects.Players
         private const int HST1_MAX_LOAD = 3;
         private const int HST2_MAX_LOAD = 5;
         private readonly List<int> launcherLoads = new List<int>();
+        private int? lastSentLauncherType;
+        private int? lastSentLauncherId;
+        private int? lastSentStatusLoad;
 
         public Player Player { get; set; }
 
@@ -66,11 +69,23 @@ namespace Ow.Game.Objects.Players
             return GetStatusMaxLoad() <= HST1_MAX_LOAD ? 1 : 2;
         }
 
-        public void SendStatus()
+        public void SendStatus(bool force = false)
         {
             var launcherType = GetLauncherTypeForStatus();
+            var launcherId = Player.AttackManager.GetSelectedLauncherId();
             var statusLoad = Math.Min(CurrentLoad, GetStatusMaxLoad());
-            Player.SendPacket($"0|RL|S|{launcherType}|{Player.AttackManager.GetSelectedLauncherId()}|{statusLoad}");
+
+            if (!force &&
+                lastSentLauncherType == launcherType &&
+                lastSentLauncherId == launcherId &&
+                lastSentStatusLoad == statusLoad)
+                return;
+
+            lastSentLauncherType = launcherType;
+            lastSentLauncherId = launcherId;
+            lastSentStatusLoad = statusLoad;
+
+            Player.SendPacket($"0|RL|S|{launcherType}|{launcherId}|{statusLoad}");
         }
 
         public List<int> GetVolleyLoads(int loadedRockets)

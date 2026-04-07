@@ -587,12 +587,8 @@ namespace Ow.Game.Objects.Players.Managers
         {
             SkillManager.SPECTRUM, SkillManager.VENOM, SkillManager.SENTINEL, SkillManager.SOLACE, SkillManager.DIMINISHER,
             SkillManager.LIGHTNING, SkillManager.AEGIS_HP_REPAIR, SkillManager.AEGIS_SHIELD_REPAIR, SkillManager.AEGIS_REPAIR_POD,
-            SkillManager.CITADEL_DRAW_FIRE
-            /*
-                SkillManager.CITADEL_FORTIFY, SkillManager.CITADEL_PROTECTION, SkillManager.CITADEL_TRAVEL, SkillManager.DIMINISHER,
-                SkillManager.LIGHTNING, SkillManager.SENTINEL, SkillManager.SOLACE, SkillManager.SPEARHEAD_DOUBLE_MINIMAP,
-                SkillManager.SPEARHEAD_JAM_X, SkillManager.SPEARHEAD_TARGET_MARKER, SkillManager.SPEARHEAD_ULTIMATE_CLOAK,
-                SkillManager.SPECTRUM, SkillManager.VENOM*/
+            SkillManager.CITADEL_DRAW_FIRE, SkillManager.CITADEL_FORTIFY, SkillManager.CITADEL_PROTECTION, SkillManager.CITADEL_TRAVEL,
+            SkillManager.SPEARHEAD_TARGET_MARKER, SkillManager.SPEARHEAD_ULTIMATE_CLOAK, SkillManager.SPEARHEAD_JAM_X, SkillManager.SPEARHEAD_DOUBLE_MINIMAP
 
         };
 
@@ -659,7 +655,7 @@ namespace Ow.Game.Objects.Players.Managers
             leftItems.Add("log", "title_log");
             leftItems.Add("refinement", "title_refinement");
             leftItems.Add("quests", "title_quests");
-            leftItems.Add("achievement", "title_achievement");
+            //leftItems.Add("achievement", "title_achievement");
             /*if (Player.Pet != null)
                 leftItems.Add("pet", "title_pet");*/
             if (EventManager.Spaceball.Active)
@@ -1401,6 +1397,20 @@ namespace Ow.Game.Objects.Players.Managers
 
                 case SkillManager.CITADEL_DRAW_FIRE:
                     return new CooldownTypeModule(CooldownTypeModule.short_255);
+                case SkillManager.CITADEL_FORTIFY:
+                    return new CooldownTypeModule(CooldownTypeModule.CITADEL_FORTIFY);
+                case SkillManager.CITADEL_PROTECTION:
+                    return new CooldownTypeModule(CooldownTypeModule.CITADEL_PROTECTION);
+                case SkillManager.CITADEL_TRAVEL:
+                    return new CooldownTypeModule(CooldownTypeModule.CITADEL_TRAVEL);
+                case SkillManager.SPEARHEAD_TARGET_MARKER:
+                    return new CooldownTypeModule(CooldownTypeModule.SPEARHEAD_TARGET_MARKER);
+                case SkillManager.SPEARHEAD_ULTIMATE_CLOAK:
+                    return new CooldownTypeModule(CooldownTypeModule.SPEARHEAD_ULTIMATE_CLOAK);
+                case SkillManager.SPEARHEAD_JAM_X:
+                    return new CooldownTypeModule(CooldownTypeModule.SPEARHEAD_JAM_X);
+                case SkillManager.SPEARHEAD_DOUBLE_MINIMAP:
+                    return new CooldownTypeModule(CooldownTypeModule.SPEARHEAD_RECON);
 
                 case AmmunitionManager.R_IC3:
                     return new CooldownTypeModule(CooldownTypeModule.short_1789);
@@ -1530,6 +1540,13 @@ namespace Ow.Game.Objects.Players.Managers
                 case SkillManager.AEGIS_SHIELD_REPAIR:
                 case SkillManager.AEGIS_REPAIR_POD:
                 case SkillManager.CITADEL_DRAW_FIRE:
+                case SkillManager.CITADEL_FORTIFY:
+                case SkillManager.CITADEL_PROTECTION:
+                case SkillManager.CITADEL_TRAVEL:
+                case SkillManager.SPEARHEAD_TARGET_MARKER:
+                case SkillManager.SPEARHEAD_ULTIMATE_CLOAK:
+                case SkillManager.SPEARHEAD_JAM_X:
+                case SkillManager.SPEARHEAD_DOUBLE_MINIMAP:
                     if (Player.Storage.Skills.ContainsKey(pItemId))
                     {
                         var cooldown = (DateTime.Now - Player.Storage.Skills[pItemId].cooldown).TotalMilliseconds;
@@ -2119,7 +2136,12 @@ namespace Ow.Game.Objects.Players.Managers
             else if (AbilitiesCategory.Contains(pItemId))
             {
                 if (Player.Storage.Skills.ContainsKey(pItemId))
+                {
+                    if (Player.Storage.AreSkillsBlocked())
+                        return;
+
                     Player.Storage.Skills[pItemId].Send();
+                }
             }
             else
             {

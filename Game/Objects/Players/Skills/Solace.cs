@@ -24,8 +24,6 @@ namespace Ow.Game.Objects.Players.Skills
         {
             if (Player.Ship.Id == Ship.GOLIATH_SOLACE && cooldown.AddMilliseconds(Cooldown) < DateTime.Now || Player.Storage.GodMode)
             {
-                Player.SkillManager.DisableAllSkills();
-
                 ExecuteHeal();
 
                 string packet = "0|SD|A|R|1|" + Player.Id + "";

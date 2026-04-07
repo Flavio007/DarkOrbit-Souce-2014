@@ -55,6 +55,13 @@ namespace Ow.Net.netty.commands
         public static short short_1428 = 27;
         public static short SPEED_BUFF = 35;
         public static short short_1439 = 3;
+        public static short CITADEL_FORTIFY = short_317;
+        public static short CITADEL_PROTECTION = short_2738;
+        public static short CITADEL_TRAVEL = short_2642;
+        public static short SPEARHEAD_TARGET_MARKER = short_378;
+        public static short SPEARHEAD_ULTIMATE_CLOAK = SPEED_LEECH;
+        public static short SPEARHEAD_JAM_X = short_918;
+        public static short SPEARHEAD_RECON = short_899;
 
         public short var_1413 = 0;
 

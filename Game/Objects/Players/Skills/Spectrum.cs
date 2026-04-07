@@ -30,8 +30,6 @@ namespace Ow.Game.Objects.Players.Skills
         {
             if (Ship.SPECTRUMS.Contains(Player.Ship.Id) && cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode)
             {
-                Player.SkillManager.DisableAllSkills();
-
                 Player.Storage.Spectrum = true;
 
                 Player.AddVisualModifier(VisualModifierCommand.PRISMATIC_SHIELD, 0, "", 0, true);

@@ -17,10 +17,10 @@ namespace Ow.Net.netty.commands
         public const short BATTLE_REPAIR_BOT = 53;
         public const short varl1M = 47;
         public const short DAMAGE_ICON = 43;
-        public const short varsy = 38;
+        public const short SPIN = 38;
         public const short ENERGY_LEECH_ARRAY = 52;
-        public const short vard2V = 39;
-        public const short PROTECT_OWNER = 3;
+        public const short EMP_INVISIBILITY = 39;
+        public const short PROTECTION_OWNER = 3;
         public const short ULTIMATE_EMP_TARGET = 7;
         public const short varR4L = 49;
         public const short DRAW_FIRE_OWNER = 5;
@@ -42,7 +42,6 @@ namespace Ow.Net.netty.commands
         public const short varN2t = 42;
         public const short BLOCKED_ZONE_EXPLOSION = 33;
         public const short GENERIC_GLOW = 24;
-        public const short BATTLESTATION_INSTALLING = 29;
         public const short PRISMATIC_SHIELD = 10;
         public const short BATTLESTATION_DEFLECTOR = 27;
         public const short SINGULARITY = 13;
@@ -53,7 +52,7 @@ namespace Ow.Net.netty.commands
         public const short BATTLESTATION_CONSTRUCTING = 30;
         public const short WEAKEN_SHIELDS = 11;
         public const short HEALING_POD = 1;
-        public const short PROTECT_TARGET = 4;
+        public const short PROTECTION_TARGET = 4;
         public const short FORTRESS = 9;
         public const short STICKY_BOMB = 21;
         public const short DRAW_FIRE_TARGET = 6;

@@ -1,5 +1,6 @@
 ﻿using Ow.Game.Movements;
 using Ow.Game.Objects.Collectables;
+using Ow.Game.Objects.Players.Managers;
 using Ow.Game.Ticks;
 using Ow.Managers;
 using Ow.Net.netty;
@@ -94,8 +95,8 @@ namespace Ow.Game.Objects
                 //player.SendPacket($"0|LM|ST|SLC");
                 player.SendPacket(packet);
             }
-            else if (Character is Pet pet)
-                pet.SendPacketToInRangePlayers(packet);
+            else if (Character is Pet petCharacter)
+                petCharacter.SendPacketToInRangePlayers(packet);
 
             if (this is GreenBooty && Character is Player && (Character as Player).Equipment.Items.BootyKeys <= 0)
                 (Character as Player).SendPacket("0|A|STM|msg_booty-key-green_auto_buy_not_active");
@@ -109,20 +110,23 @@ namespace Ow.Game.Objects
         {
             if (Disposed) return;
 
+            var player = character is Pet pet ? pet.Owner : character as Player;
+            if (player != null && player.Storage.Skills.TryGetValue(SkillManager.SPEARHEAD_ULTIMATE_CLOAK, out var ultimateCloakSkill) && ultimateCloakSkill.Active)
+                ultimateCloakSkill.Disable();
+
             Character = character;
             Character.Collecting = true;
             Character.Moving = false;
             collectTime = DateTime.Now;
 
             var packet = $"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.ASSEMBLE_COLLECTION_BEAM_ACTIVE}|{(Character is Pet ? 1 : 0)}|{Character.Id}|{Seconds}";
-
-            if (Character is Player player)
+            if (Character is Player)
             {
                 //player.SendPacket($"0|LM|ST|SLA|{Seconds}");
                 player.SendPacket(packet);
             }
-            else if (Character is Pet pet)
-                pet.SendPacketToInRangePlayers(packet);
+            else if (Character is Pet npet)
+                npet.SendPacketToInRangePlayers(packet);
 
             Program.TickManager.AddTick(this);
         }

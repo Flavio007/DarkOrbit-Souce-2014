@@ -28,8 +28,6 @@ namespace Ow.Game.Objects.Players.Skills
         {
             if (Ship.SENTINELS.Contains(Player.Ship.Id) && cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode)
             {
-                Player.SkillManager.DisableAllSkills();
-
                 Player.Storage.Sentinel = true;
 
                 Player.AddVisualModifier(VisualModifierCommand.FORTRESS, 0, "", 0, true);

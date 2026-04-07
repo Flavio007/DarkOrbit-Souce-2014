@@ -1,5 +1,6 @@
 using Ow.Game.Events;
 using Ow.Game.Objects;
+using Ow.Game.Objects.Players.Skills;
 using Ow.Game.Objects.Players.Techs;
 using Ow.Game.Objects.Stations;
 using Ow.Game.Ticks;
@@ -8,6 +9,7 @@ using Ow.Net.netty.commands;
 using Ow.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ow.Game.Objects.Players.Managers
@@ -517,7 +519,7 @@ namespace Ow.Game.Objects.Players.Managers
                     {
                         if (otherPlayer.Position.DistanceTo(Player.Position) > 700) continue;
 
-                        if (otherPlayer.FactionId != Player.FactionId)
+                        if (otherPlayer.FactionId != Player.FactionId && !otherPlayer.Storage.SpearheadUltimateCloak)
                             otherPlayer.CpuManager.DisableCloak();
                     }
                 }
@@ -713,6 +715,27 @@ namespace Ow.Game.Objects.Players.Managers
                 return;
             }
 
+            if (target is Player targetPlayer)
+            {
+                if (targetPlayer.Storage.CitadelFortify)
+                    damage -= Maths.GetPercentage(damage, 80);
+
+                if (targetPlayer.Storage.underSpearheadTargetMarker && targetPlayer.Storage.markedBySpearheadId > 0)
+                {
+                    var markerPlayer = GameManager.GetPlayerById(targetPlayer.Storage.markedBySpearheadId);
+                    if (markerPlayer?.Group != null && attacker != null && attacker.Group == markerPlayer.Group)
+                    {
+                        var memberCount = markerPlayer.Group.Members.Values.Where(member => member != null && !member.Destroyed).Count();
+                        if (memberCount > 0)
+                            damage += Maths.GetPercentage(damage, memberCount * 5);
+                    }
+                }
+
+                if (Protection.TryRedirectDamage(attacker, targetPlayer, damageType, ref damage, shieldPenetration))
+                {
+                }
+            }
+
             int damageShd = 0, damageHp = 0;
 
             if (attacker.Invincible)
@@ -755,6 +778,9 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (deactiveCloak)
                 Player.CpuManager.DisableCloak();
+
+            if (Player.Storage.Skills.TryGetValue(SkillManager.SPEARHEAD_ULTIMATE_CLOAK, out var ultimateCloakSkill) && ultimateCloakSkill.Active)
+                ultimateCloakSkill.Disable();
 
             if (damageType == DamageType.LASER)
             {
@@ -811,12 +837,12 @@ namespace Ow.Game.Objects.Players.Managers
 
                 var attackHitCommand = damage > damageShd ? damage : damageShd;
 
-                if (target is Player targetPlayer && attacker != null && attacker.Id != targetPlayer.Id)
+                if (target is Player queuedTargetPlayer && attacker != null && attacker.Id != queuedTargetPlayer.Id)
                 {
                     if (!ShouldAggregateIncomingDamage(target, damageType, attacker))
                         QueueDamageHit(target, damageType, attackHitCommand, target.Id);
 
-                    targetPlayer.AttackManager.QueueIncomingDamageHit(attacker, targetPlayer, damageType, attackHitCommand, ShouldAggregateIncomingDamage(target, damageType, attacker));
+                    queuedTargetPlayer.AttackManager.QueueIncomingDamageHit(attacker, queuedTargetPlayer, damageType, attackHitCommand, ShouldAggregateIncomingDamage(target, damageType, attacker));
                 }
                 else
                     QueueDamageHit(target, damageType, attackHitCommand);
@@ -841,8 +867,8 @@ namespace Ow.Game.Objects.Players.Managers
             if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
             {
                 FlushPendingDamageHitsForTarget(target);
-                if (target is Player targetPlayer)
-                    targetPlayer.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(attacker);
+                if (target is Player destroyedTargetPlayer)
+                    destroyedTargetPlayer.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(attacker);
                 target.Destroy(Player, DestructionType.PLAYER);
             }
             else
@@ -870,7 +896,7 @@ namespace Ow.Game.Objects.Players.Managers
             target.UpdateStatus();
         }
 
-        public static void Damage(Player attacker, Attackable target, DamageType damageType, int damage, bool toDestroy, bool toHp, bool toShd, bool missedEffect = true)
+        public static void Damage(Player attacker, Attackable target, DamageType damageType, int damage, bool toDestroy, bool toHp, bool toShd, bool missedEffect = true, bool skipCitadelProtectionRedirect = false)
         {
             if (target is GroupMapRelayStation)
                 return;
@@ -879,6 +905,26 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (attacker.Invincible && damageType != DamageType.RADIATION)
                 attacker.Storage.DeactiveInvincibilityEffect();
+
+            if (target is Player targetPlayer)
+            {
+                if (targetPlayer.Storage.CitadelFortify)
+                    damage -= Maths.GetPercentage(damage, 80);
+
+                if (targetPlayer.Storage.underSpearheadTargetMarker && targetPlayer.Storage.markedBySpearheadId > 0)
+                {
+                    var markerPlayer = GameManager.GetPlayerById(targetPlayer.Storage.markedBySpearheadId);
+                    if (markerPlayer?.Group != null && attacker != null && attacker.Group == markerPlayer.Group)
+                    {
+                        var memberCount = markerPlayer.Group.Members.Values.Where(member => member != null && !member.Destroyed).Count();
+                        if (memberCount > 0)
+                            damage += Maths.GetPercentage(damage, memberCount * 5);
+                    }
+                }
+
+                if (!skipCitadelProtectionRedirect)
+                    Protection.TryRedirectDamage(attacker, targetPlayer, damageType, ref damage, 0);
+            }
 
             if (target is Player && !(target as Player).Attackable())
             {
@@ -928,14 +974,14 @@ namespace Ow.Game.Objects.Players.Managers
 
             if (attacker.AttackManager != null)
             {
-                if (target is Player targetPlayer && attacker.Id != targetPlayer.Id)
+                if (target is Player queuedStaticTargetPlayer && attacker.Id != queuedStaticTargetPlayer.Id)
                 {
                     var aggregate = attacker.AttackManager.ShouldAggregateIncomingDamage(target, damageType, attacker);
 
                     if (!aggregate)
                         attacker.AttackManager.QueueDamageHit(target, damageType, damage, target.Id);
 
-                    targetPlayer.AttackManager.QueueIncomingDamageHit(attacker, targetPlayer, damageType, damage, aggregate);
+                    queuedStaticTargetPlayer.AttackManager.QueueIncomingDamageHit(attacker, queuedStaticTargetPlayer, damageType, damage, aggregate);
                 }
                 else
                     attacker.AttackManager.QueueDamageHit(target, damageType, damage);

@@ -36,8 +36,6 @@ namespace Ow.Game.Objects.Players.Skills
                 if (target == null) return;
                 if (!Player.TargetDefinition(target, false)) return;
 
-                Player.SkillManager.DisableAllSkills();
-
                 Player.Storage.Diminisher = true;
                 Player.Storage.UnderDiminisherEntity = target;
 

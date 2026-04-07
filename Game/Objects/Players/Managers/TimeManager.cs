@@ -48,6 +48,22 @@ namespace Ow.Game.Objects.Players.Managers
 
         public const int CITADEL_DRAWFIRE_DURATION = 5000;
         public const int CITADEL_DRAWFIRE_COOLDOWN = 40000;
+        public const int CITADEL_FORTIFY_DURATION = 10000;
+        public const int CITADEL_FORTIFY_COOLDOWN = 360000;
+        public const int CITADEL_PROTECTION_DURATION = 10000;
+        public const int CITADEL_PROTECTION_COOLDOWN = 60000;
+        public const int CITADEL_TRAVEL_DURATION = 5000;
+        public const int CITADEL_TRAVEL_COOLDOWN = 60000;
+        public const int CITADEL_TRAVEL_SPEED = 700;
+
+        public const int SPEARHEAD_TARGET_MARKER_DURATION = 15000;
+        public const int SPEARHEAD_TARGET_MARKER_COOLDOWN = 90000;
+        public const int SPEARHEAD_ULTIMATE_CLOAK_DURATION = 30000;
+        public const int SPEARHEAD_ULTIMATE_CLOAK_COOLDOWN = 300000;
+        public const int SPEARHEAD_JAM_X_DURATION = 8000;
+        public const int SPEARHEAD_JAM_X_COOLDOWN = 180000;
+        public const int SPEARHEAD_RECON_DURATION = 30000;
+        public const int SPEARHEAD_RECON_COOLDOWN = 90000;
 
         public const int SOLACE_COOLDOWN = 900000;
 
