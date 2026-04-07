@@ -49,7 +49,6 @@ namespace Ow.Game.Events
         private readonly object stateLock = new object();
         private readonly Dictionary<int, Dictionary<int, int>> tierScores = new Dictionary<int, Dictionary<int, int>>();
         private readonly Dictionary<int, Dictionary<int, int>> tierHonorRemainders = new Dictionary<int, Dictionary<int, int>>();
-        private readonly Dictionary<int, int> tierCurrentWave = new Dictionary<int, int>();
         private readonly Dictionary<int, int> mapWaveQuarterProgress = new Dictionary<int, int>();
 
         private const float Portal1ForceMultiplier = 0.5f;
@@ -66,14 +65,12 @@ namespace Ow.Game.Events
             {
                 tierScores.Clear();
                 tierHonorRemainders.Clear();
-                tierCurrentWave.Clear();
                 mapWaveQuarterProgress.Clear();
 
                 for (var tier = 1; tier <= 3; tier++)
                 {
                     tierScores[tier] = new Dictionary<int, int> { { 1, 0 }, { 2, 0 }, { 3, 0 } };
                     tierHonorRemainders[tier] = new Dictionary<int, int> { { 1, 0 }, { 2, 0 }, { 3, 0 } };
-                    tierCurrentWave[tier] = 1;
                 }
 
                 MmoScore = 0;
@@ -132,30 +129,85 @@ namespace Ow.Game.Events
             npc.Uridium = Convert.ToInt32(npc.Uridium * dropRatio);
         }
 
+        private Spacemap GetMapByFactionAndTier(int factionId, int tier)
+        {
+            switch (tier)
+            {
+                case 1:
+                    if (factionId == 1) return SpacemapMMO1;
+                    if (factionId == 2) return SpacemapEIC1;
+                    if (factionId == 3) return SpacemapVRU1;
+                    break;
+                case 2:
+                    if (factionId == 1) return SpacemapMMO2;
+                    if (factionId == 2) return SpacemapEIC2;
+                    if (factionId == 3) return SpacemapVRU2;
+                    break;
+                case 3:
+                    if (factionId == 1) return SpacemapMMO3;
+                    if (factionId == 2) return SpacemapEIC3;
+                    if (factionId == 3) return SpacemapVRU3;
+                    break;
+            }
+
+            return null;
+        }
+
+        private int GetCurrentWaveForFactionAndTier(int factionId, int tier)
+        {
+            var map = GetMapByFactionAndTier(factionId, tier);
+            return map != null ? map.Curwave + 1 : 1;
+        }
+
+        public int GetCurrentWaveForFactionAndLevel(int factionId, int level)
+        {
+            var tier = GetPortalTierByLevel(level);
+            if (tier <= 0) return 1;
+
+            return GetCurrentWaveForFactionAndTier(factionId, tier);
+        }
+
+        public string GetSocketStatus(int factionId, int level)
+        {
+            var tier = GetPortalTierByLevel(level);
+            Dictionary<int, int> scores;
+
+            lock (stateLock)
+            {
+                if (tier <= 0 || !tierScores.ContainsKey(tier))
+                    scores = new Dictionary<int, int> { { 1, 0 }, { 2, 0 }, { 3, 0 } };
+                else
+                    scores = new Dictionary<int, int>(tierScores[tier]);
+            }
+
+            var wave = GetCurrentWaveForFactionAndLevel(factionId, level);
+            return $"{scores[1]}:{scores[2]}:{scores[3]}:{wave}";
+        }
+
         private void SyncLegacyFieldsForTier(int tier)
         {
-            if (!tierScores.ContainsKey(tier) || !tierCurrentWave.ContainsKey(tier))
+            if (!tierScores.ContainsKey(tier))
                 return;
 
             MmoScore = tierScores[tier][1];
             EicScore = tierScores[tier][2];
             VruScore = tierScores[tier][3];
-            CurrentWave = tierCurrentWave[tier];
+            CurrentWave = GetCurrentWaveForFactionAndTier(1, tier);
         }
 
         private void SendTierState(Player player, int tier)
         {
             if (player == null || tier <= 0) return;
-            if (!tierScores.ContainsKey(tier) || !tierCurrentWave.ContainsKey(tier)) return;
+            if (!tierScores.ContainsKey(tier)) return;
 
             Dictionary<int, int> scores;
-            int wave;
 
             lock (stateLock)
             {
                 scores = new Dictionary<int, int>(tierScores[tier]);
-                wave = tierCurrentWave[tier];
             }
+
+            var wave = GetCurrentWaveForFactionAndTier(player.FactionId, tier);
 
             player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.INIT_INVASION_SCOREBOARD}|{scores[1]}|{scores[2]}|{scores[3]}|{wave}");
             player.SendPacket($"0|n|{Ow.Net.netty.ServerCommands.SET_INVASION_SCORE}|1|{scores[1]}");
@@ -345,10 +397,7 @@ namespace Ow.Game.Events
             if (tier > 0)
             {
                 lock (stateLock)
-                {
-                    tierCurrentWave[tier] = map.Curwave + 1;
                     SyncLegacyFieldsForTier(tier);
-                }
                 BroadcastTierState(tier);
             }
 

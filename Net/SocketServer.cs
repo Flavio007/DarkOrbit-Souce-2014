@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using Ow.Chat;
 using Ow.Game;
+using Ow.Game.Events;
 using Ow.Game.Objects;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Managers;
@@ -10,6 +11,7 @@ using Ow.Net.netty.commands;
 using Ow.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -190,6 +192,26 @@ class SocketServer
                 break;
             case "SellDrone":
                 SellDrone(GameManager.GetPlayerById(Int(parameters["UserId"])), Int(parameters["DroneId"]));
+                break;
+            case "GetActiveEvent":
+                if (EventManager.InvasionGate.Started)
+                    Send(handler, "InvasionGate");
+                else if (EventManager.Spaceball.Active)
+                    Send(handler, "Spaceball");
+                else if (EventManager.Scoremageddon.Active)
+                    Send(handler, "Scoremageddon");
+                else
+                    Send(handler, "None");
+                break;
+            case "GetEventStatus":
+                var eventName = String(parameters["EventName"]);
+                if (eventName == "InvasionGate")
+                {
+                    var factionId = Int(parameters["FactionId"]);
+                    var playerLevel = Int(parameters["PlayerLevel"]);
+                    Send(handler, EventManager.InvasionGate.GetSocketStatus(factionId, playerLevel));
+                    break;
+                }
                 break;
         }
     }

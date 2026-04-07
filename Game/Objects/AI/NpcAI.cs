@@ -11,6 +11,11 @@ namespace Ow.Game.Objects.AI
 {
     class NpcAI
     {
+        private const int DefaultDecisionIntervalMinMs = 850;
+        private const int DefaultDecisionIntervalMaxMs = 1350;
+        private const int ChaseDecisionIntervalMinMs = 350;
+        private const int ChaseDecisionIntervalMaxMs = 550;
+
         public Npc Npc { get; set; }
 
         public NpcAIOption AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
@@ -36,7 +41,7 @@ namespace Ow.Game.Objects.AI
             var ignoreDistanceForNpc = HasUnlimitedChaseRange();
             if (nextDecisionTime == DateTime.MinValue)
             {
-                decisionIntervalMs = Randoms.random.Next(850, 1350);
+                decisionIntervalMs = GetNextDecisionIntervalMs();
                 nextDecisionTime = now.AddMilliseconds(Randoms.random.Next(0, decisionIntervalMs));
             }
 
@@ -57,12 +62,12 @@ namespace Ow.Game.Objects.AI
             if (TryFleeToGalaxyGateCorner())
             {
                 lastMovement = now;
-                decisionIntervalMs = Randoms.random.Next(850, 1350);
+                decisionIntervalMs = GetNextDecisionIntervalMs();
                 nextDecisionTime = now.AddMilliseconds(decisionIntervalMs);
                 return;
             }
 
-            if (lastMovement.AddSeconds(1) < now)
+            if (lastMovement.AddMilliseconds(GetMovementDecisionCooldownMs()) < now)
             {
                 switch (AIOption)
                 {
@@ -196,9 +201,28 @@ namespace Ow.Game.Objects.AI
                 }
 
                 lastMovement = now;
-                decisionIntervalMs = Randoms.random.Next(850, 1350);
+                decisionIntervalMs = GetNextDecisionIntervalMs();
                 nextDecisionTime = now.AddMilliseconds(decisionIntervalMs);
             }
+        }
+
+        private int GetNextDecisionIntervalMs()
+        {
+            return IsActivelyChasingTarget()
+                ? Randoms.random.Next(ChaseDecisionIntervalMinMs, ChaseDecisionIntervalMaxMs)
+                : Randoms.random.Next(DefaultDecisionIntervalMinMs, DefaultDecisionIntervalMaxMs);
+        }
+
+        private int GetMovementDecisionCooldownMs()
+        {
+            return IsActivelyChasingTarget() ? ChaseDecisionIntervalMinMs : 1000;
+        }
+
+        private bool IsActivelyChasingTarget()
+        {
+            return Npc != null
+                && Npc.Selected is Player
+                && (AIOption == NpcAIOption.FLY_TO_ENEMY || AIOption == NpcAIOption.WAIT_PLAYER_MOVE);
         }
 
         private double DegreeToRadian(double angle)
