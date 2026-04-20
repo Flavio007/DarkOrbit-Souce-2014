@@ -28,7 +28,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (!SpearheadIds.Contains(Player.Ship.Id) || !(cooldown.AddMilliseconds(Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (!SpearheadIds.Contains(Player.Ship.Id) || !(cooldown.AddMilliseconds(EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
                 return;
 
             jammedTargetIds.Clear();
@@ -62,7 +62,7 @@ namespace Ow.Game.Objects.Players.Skills
             Player.SendCommand(abilityEffectDeActivationCommand);
             Player.SendCommandToInRangePlayers(abilityEffectDeActivationCommand);
 
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Player.CpuManager.DisableCloak();
 
             Active = true;

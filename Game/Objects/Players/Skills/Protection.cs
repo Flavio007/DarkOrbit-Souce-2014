@@ -32,7 +32,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (CitadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (CitadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
                 Active = true;
                 protectedTargetIds.Clear();
@@ -86,7 +86,7 @@ namespace Ow.Game.Objects.Players.Skills
             Player.SendCommandToInRangePlayers(abilityStopCommand);
             Player.SendCommandToInRangePlayers(abilityEffectDeActivationCommand);
 
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Active = false;
         }
 

@@ -209,6 +209,7 @@ namespace Ow.Game.Objects.Players.Managers
             if (regenerationCooldown.AddSeconds(1) >= DateTime.Now || Player.Settings.InGameSettings.selectedFormation != DIAMOND_FORMATION || Player.CurrentShieldPoints >= Player.MaxShieldPoints) return;
 
             int regeneration = Maths.GetPercentage(Player.MaxShieldPoints, (Player.Settings.InGameSettings.selectedFormation == DIAMOND_FORMATION ? 1 : 0));
+            regeneration += Maths.GetPercentage(regeneration, Player.BoosterManager.GetPercentage(BoostedAttributeType.SHIELDRECHARGE));
 
             Player.CurrentShieldPoints += (regeneration > 5000 ? 5000 : regeneration);
             Player.UpdateStatus();

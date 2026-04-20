@@ -27,7 +27,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (Player.Ship.Id == Ship.VENGEANCE_LIGHTNING && cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode)
+            if (Player.Ship.Id == Ship.VENGEANCE_LIGHTNING && cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode)
             {
                 Player.Storage.Lightning = true;
                 Player.SendCommand(SetSpeedCommand.write(Player.Speed, Player.Speed));
@@ -47,7 +47,7 @@ namespace Ow.Game.Objects.Players.Skills
 
             Player.RemoveVisualModifier(VisualModifierCommand.TRAVEL_MODE);
 
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Active = false;
         }
     }

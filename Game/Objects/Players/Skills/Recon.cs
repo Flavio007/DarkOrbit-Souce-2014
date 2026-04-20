@@ -25,7 +25,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (!SpearheadIds.Contains(Player.Ship.Id) || !(cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (!SpearheadIds.Contains(Player.Ship.Id) || !(cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
                 return;
 
             Player.Storage.SpearheadRecon = true;
@@ -54,7 +54,7 @@ namespace Ow.Game.Objects.Players.Skills
             Player.SendCommandToInRangePlayers(abilityStopCommand);
             Player.SendCommandToInRangePlayers(abilityEffectDeActivationCommand);
 
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Active = false;
         }
     }

@@ -34,7 +34,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (Player.Ship.Id == Ship.GOLIATH_VENOM && cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode)
+            if (Player.Ship.Id == Ship.GOLIATH_VENOM && cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode)
             {
                 var target = Player.Selected;
                 if (target == null) return;
@@ -65,7 +65,7 @@ namespace Ow.Game.Objects.Players.Skills
             if (target != null)
                 target.RemoveVisualModifier(VisualModifierCommand.SINGULARITY);
 
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Active = false;
         }
 

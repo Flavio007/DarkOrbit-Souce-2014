@@ -37,7 +37,7 @@ namespace Ow.Game.Objects.Collectables
 
             if (Spaceball)
             {
-                experience = player.Ship.GetExperienceBoost(Randoms.random.Next(2500, 25600));
+                experience = player.GetBoostedExperience(Randoms.random.Next(2500, 25600), true);
                 honor = player.Ship.GetHonorBoost(Randoms.random.Next(25, 256));
                 uridium = Randoms.random.Next(25, 256);
                 credits = Randoms.random.Next(150, 15000);
@@ -55,6 +55,7 @@ namespace Ow.Game.Objects.Collectables
                 Palladium = 9;
 
                 var tractorBeam = player.GetSkillPercentage("Tractor Beam I");
+                var resourceBooster = player.BoosterManager.GetPercentage(BoostedAttributeType.RESOURCE);
                 Prometium += Maths.GetPercentage(Prometium, tractorBeam);
                 Endurium += Maths.GetPercentage(Endurium, tractorBeam);
                 Terbium += Maths.GetPercentage(Terbium, tractorBeam);
@@ -64,6 +65,15 @@ namespace Ow.Game.Objects.Collectables
                 Xenomit += Maths.GetPercentage(Xenomit, tractorBeam);
                 Seprom += Maths.GetPercentage(Seprom, tractorBeam);
                 Palladium += Maths.GetPercentage(Palladium, tractorBeam);
+                Prometium += Maths.GetPercentage(Prometium, resourceBooster);
+                Endurium += Maths.GetPercentage(Endurium, resourceBooster);
+                Terbium += Maths.GetPercentage(Terbium, resourceBooster);
+                Prometid += Maths.GetPercentage(Prometid, resourceBooster);
+                Duranium += Maths.GetPercentage(Duranium, resourceBooster);
+                Promerium += Maths.GetPercentage(Promerium, resourceBooster);
+                Xenomit += Maths.GetPercentage(Xenomit, resourceBooster);
+                Seprom += Maths.GetPercentage(Seprom, resourceBooster);
+                Palladium += Maths.GetPercentage(Palladium, resourceBooster);
             }
 
             if(experience > 0)

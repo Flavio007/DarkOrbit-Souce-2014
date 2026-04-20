@@ -33,6 +33,7 @@ namespace Ow.Game.Events
             public int MapId { get; set; }
             public Spacemap Spacemap { get; set; }
             public GroupMapExitPortal ExitPortal { get; set; }
+            public GroupMapOreTradeStation OreTradeStation { get; set; }
             public List<GroupMapRelayStation> Relays { get; } = new List<GroupMapRelayStation>();
             public int CurrentRelayIndex { get; set; }
             public HashSet<string> TriggeredPois { get; } = new HashSet<string>();
@@ -40,6 +41,10 @@ namespace Ow.Game.Events
             public Dictionary<int, string> RuntimeNpcGroups { get; } = new Dictionary<int, string>();
             public bool CenturyFalconVagrantsSpawned { get; set; }
             public bool FinalTriggerActivated { get; set; }
+            public bool FalconDestroyed { get; set; }
+            public bool ShutdownScheduled { get; set; }
+            public DateTime ShutdownAt { get; set; }
+            public bool ShutdownInProgress { get; set; }
         }
 
         public const int VisualMapId = 200;
@@ -47,6 +52,7 @@ namespace Ow.Game.Events
         private const int DynamicMapStartId = 20500;
         private const int FutureMinimumGroupMembers = 3;
         private const int FutureWaitingTimeSeconds = 294;
+        private const int FalconShutdownDelaySeconds = 60;
         private const int CenturyFalconNpcId = 90;
         private const int CorsairNpcId = 91;
         private const int OutcastNpcId = 92;
@@ -252,7 +258,7 @@ namespace Ow.Game.Events
                 instance.Relays.Add(relay);
             }
 
-            new GroupMapOreTradeStation(instance.Spacemap, new Position(OreTradePosition.X, OreTradePosition.Y));
+            instance.OreTradeStation = new GroupMapOreTradeStation(instance.Spacemap, new Position(OreTradePosition.X, OreTradePosition.Y));
             RevealRelay(instance, 0, true);
         }
 
@@ -268,8 +274,9 @@ namespace Ow.Game.Events
             TryStartPoiWave(instance, "Wave5Trigger", HooliganGroupKey, "Hooligan", Wave5SpawnPosition, 8, new[] { 10, 10, 10, 10, 9 }, HooliganNpcId, 2);
             TryStartPoiWave(instance, "Wave7Trigger", ConvictGroupKey, "Convict", Wave7SpawnPosition, 6, new[] { 7, 7, 6 }, ConvictNpcId, 3);
             TryStartPoiWave(instance, "Wave9Trigger", RavagerGroupKey, "Ravager", Wave9SpawnPosition, 10, new[] { 13, 13, 13 }, RavagerNpcId, 3);
-            TryStartFinalTrigger(instance);
             TryTriggerCenturyFalconSupport(instance);
+            instance.OreTradeStation?.ProcessRepairAura();
+            ProcessScheduledShutdown(instance);
         }
 
         private void TryStartPoiWave(GroupMapInstance instance, string poiId, string groupKey, string displayName, Position spawnCenter, int killThreshold, int[] batches, int shipId, int requiredRelayCount)
@@ -304,29 +311,54 @@ namespace Ow.Game.Events
             return instance != null && instance.CurrentRelayIndex >= requiredRelayCount;
         }
 
-        private void TryStartFinalTrigger(GroupMapInstance instance)
+        private void StartFinalEncounter(GroupMapInstance instance)
         {
             if (instance == null)
                 return;
 
-            lock (instanceLock)
-            {
-                if (instance.FinalTriggerActivated)
-                    return;
-            }
-
-            if (!HasRequiredActiveRelays(instance, 3) || !AnyPlayerInPoi(instance, "Wave9Trigger"))
+            if (instance.FinalTriggerActivated)
                 return;
 
-            lock (instanceLock)
-            {
-                if (instance.FinalTriggerActivated)
-                    return;
+            instance.FinalTriggerActivated = true;
+            instance.OreTradeStation?.SetRepairAuraActive(true);
+            AddBatchesAndSpawn(instance, ConvictGroupKey, "Convict", Wave9SpawnPosition, 6, ConvictNpcId, new[] { 7, 7 }, true, "LoW - Final assault detected.");
+            AddBatchesAndSpawn(instance, CenturyFalconGroupKey, "Century Falcon", CenturyFalconSpawnPosition, 9999, CenturyFalconNpcId, new[] { 1 }, true, "LoW - Century Falcon deployed.");
+        }
 
-                instance.FinalTriggerActivated = true;
-                AddBatchesAndSpawn(instance, ConvictGroupKey, "Convict", Wave9SpawnPosition, 6, ConvictNpcId, new[] { 7, 7 }, true, "LoW - Final assault detected.");
-                AddBatchesAndSpawn(instance, CenturyFalconGroupKey, "Century Falcon", CenturyFalconSpawnPosition, 9999, CenturyFalconNpcId, new[] { 1 }, true, "LoW - Century Falcon deployed.");
-            }
+        private void ProcessScheduledShutdown(GroupMapInstance instance)
+        {
+            if (instance == null || !instance.ShutdownScheduled || instance.ShutdownInProgress || instance.ShutdownAt > DateTime.Now)
+                return;
+
+            instance.ShutdownInProgress = true;
+            _ = CloseInstanceToBase(instance);
+        }
+
+        private void ScheduleShutdown(GroupMapInstance instance)
+        {
+            if (instance == null || instance.ShutdownScheduled)
+                return;
+
+            instance.FalconDestroyed = true;
+            instance.ShutdownScheduled = true;
+            instance.ShutdownAt = DateTime.Now.AddSeconds(FalconShutdownDelaySeconds);
+            GameManager.SendPacketToMap(instance.MapId, $"0|A|STD|LoW - Century Falcon destroyed. The map will close in {FalconShutdownDelaySeconds} seconds.");
+        }
+
+        private async Task CloseInstanceToBase(GroupMapInstance instance)
+        {
+            if (instance?.Spacemap == null)
+                return;
+
+            var players = instance.Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => player != null && !player.Destroyed)
+                .ToList();
+
+            foreach (var player in players)
+                await JumpPlayer(player, player.GetBaseMapId(), player.GetBasePosition(), instance.ExitPortal?.Id ?? 0, VisualMapId);
+
+            CleanupIfEmpty(instance);
         }
 
         private void TryTriggerCenturyFalconSupport(GroupMapInstance instance)
@@ -440,6 +472,8 @@ namespace Ow.Game.Events
                     1,
                     " ~ LoW",
                     ship.Id == Ship.CENTURY_FALCON);
+
+                npc.UseMapWideChaseRange = false;
 
                 lock (instance.Spacemap.InstanceNpcs)
                     instance.Spacemap.InstanceNpcs.Add(npc);
@@ -633,6 +667,8 @@ namespace Ow.Game.Events
 
             instance.ExitPortal?.Remove();
             instance.ExitPortal = null;
+            instance.OreTradeStation?.SetRepairAuraActive(false);
+            instance.OreTradeStation = null;
 
             if (instance.Spacemap != null)
             {
@@ -671,6 +707,9 @@ namespace Ow.Game.Events
 
                 state.AliveCount = Math.Max(0, state.AliveCount - 1);
                 state.KilledSinceLastSpawn++;
+
+                if (groupKey == CenturyFalconGroupKey && state.AliveCount <= 0)
+                    ScheduleShutdown(instance);
 
                 if (state.PendingBatches.Count > 0 && state.KilledSinceLastSpawn >= state.KillThreshold)
                     SpawnNextBatch(instance, state);
@@ -768,6 +807,7 @@ namespace Ow.Game.Events
                     break;
                 case 4:
                     GameManager.SendPacketToMap(instance.MapId, "0|A|STD|LoW - Final beacon activated.");
+                    StartFinalEncounter(instance);
                     break;
             }
         }
@@ -954,6 +994,12 @@ namespace Ow.Game.Events
     {
         public const int OreTradeAssetId = 150000145;
         private const short NeutralOreTradeAssetType = 52;
+        private const int RepairAuraAmount = 5000;
+        private const int RepairAuraIntervalSeconds = 10;
+        private const int RepairAuraRange = 700;
+
+        private readonly Dictionary<int, Player> activeRepairTargets = new Dictionary<int, Player>();
+        private DateTime lastRepairTick = DateTime.MinValue;
 
         public override string Name { get; set; }
         public override Clan Clan { get; set; }
@@ -989,9 +1035,108 @@ namespace Ow.Game.Events
         }
 
         public bool ShowBubble { get; }
+        public bool RepairAuraActive { get; private set; }
 
         public override void Tick()
         {
+        }
+
+        public void SetRepairAuraActive(bool active)
+        {
+            if (RepairAuraActive == active)
+                return;
+
+            RepairAuraActive = active;
+
+            if (RepairAuraActive)
+                AddVisualModifier(VisualModifierCommand.EMERGENCY_REPAIR_EFFECT, 0, "", 0, true);
+            else
+            {
+                RemoveVisualModifier(VisualModifierCommand.EMERGENCY_REPAIR_EFFECT);
+                ClearRepairEffects();
+            }
+        }
+
+        public void ProcessRepairAura()
+        {
+            if (!RepairAuraActive || Spacemap == null)
+                return;
+
+            var now = DateTime.Now;
+            var repairTargets = GetRepairTargets(now).ToList();
+            SyncRepairEffects(repairTargets);
+
+            if (lastRepairTick.AddSeconds(RepairAuraIntervalSeconds) >= now)
+                return;
+
+            var repairedAnyTarget = false;
+            foreach (var repairTarget in repairTargets)
+                repairedAnyTarget = TryRepairTarget(repairTarget, RepairAuraAmount) || repairedAnyTarget;
+
+            if (repairedAnyTarget)
+                lastRepairTick = now;
+        }
+
+        private IEnumerable<Player> GetRepairTargets(DateTime now)
+        {
+            return Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => player != null
+                    && !player.Destroyed
+                    && player.CurrentHitPoints > 0
+                    && player.Position.DistanceTo(Position) <= RepairAuraRange
+                    && player.LastCombatTime.AddSeconds(10) < now
+                    && (player.CurrentHitPoints < player.MaxHitPoints || player.CurrentShieldPoints < player.MaxShieldPoints))
+                .ToList();
+        }
+
+        private void SyncRepairEffects(IEnumerable<Player> repairTargets)
+        {
+            var desiredTargets = repairTargets.ToDictionary(player => player.Id, player => player);
+
+            foreach (var activeTarget in activeRepairTargets.Where(x => !desiredTargets.ContainsKey(x.Key)).ToList())
+            {
+                activeTarget.Value.RemoveVisualModifier(VisualModifierCommand.HEAL_EFFECT);
+                activeRepairTargets.Remove(activeTarget.Key);
+            }
+
+            foreach (var desiredTarget in desiredTargets)
+            {
+                if (!desiredTarget.Value.VisualModifiers.ContainsKey(VisualModifierCommand.HEAL_EFFECT))
+                    desiredTarget.Value.AddVisualModifier(VisualModifierCommand.HEAL_EFFECT, 0, "", 0, true);
+
+                activeRepairTargets[desiredTarget.Key] = desiredTarget.Value;
+            }
+        }
+
+        private void ClearRepairEffects()
+        {
+            foreach (var activeTarget in activeRepairTargets.Values.ToList())
+                activeTarget.RemoveVisualModifier(VisualModifierCommand.HEAL_EFFECT);
+
+            activeRepairTargets.Clear();
+        }
+
+        private static bool TryRepairTarget(Player player, int repairAmount)
+        {
+            if (player == null || repairAmount <= 0)
+                return false;
+
+            var repaired = false;
+
+            if (player.CurrentHitPoints < player.MaxHitPoints)
+            {
+                player.Heal(repairAmount);
+                repaired = true;
+            }
+
+            if (player.CurrentShieldPoints < player.MaxShieldPoints)
+            {
+                player.Heal(repairAmount, 0, HealType.SHIELD);
+                repaired = true;
+            }
+
+            return repaired;
         }
 
         public override void Click(GameSession gameSession)
@@ -1010,7 +1155,7 @@ namespace Ow.Game.Events
                 0, "", Id, 0, 0,
                 Position.X, Position.Y, 0, false, false, true, ShowBubble,
                 new ClanRelationModule(clanRelationModule),
-                new List<VisualModifierCommand>());
+                VisualModifiers.Values.ToList());
         }
     }
 }

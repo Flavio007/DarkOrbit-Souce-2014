@@ -43,7 +43,7 @@ namespace Ow.Game.Objects.Players.Skills
                 else
                     ExecuteHeal();
             }
-            else if (!Player.VisualModifiers.ContainsKey(VisualModifierCommand.HEALING_POD) && cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now)
+            else if (!Player.VisualModifiers.ContainsKey(VisualModifierCommand.HEALING_POD) && cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now)
                 Player.AddVisualModifier(VisualModifierCommand.HEALING_POD, 0, "", 0, true);
         }
 
@@ -51,7 +51,7 @@ namespace Ow.Game.Objects.Players.Skills
         {
             var aegisIds = new List<int> { Ship.AEGIS, Ship.AEGIS_VETERAN, Ship.AEGIS_ELITE };
 
-            if (aegisIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (aegisIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
                 Active = true;
 
@@ -75,7 +75,7 @@ namespace Ow.Game.Objects.Players.Skills
                 Pod = null;
             }
 
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
         }
 
         public DateTime HealTime = new DateTime();

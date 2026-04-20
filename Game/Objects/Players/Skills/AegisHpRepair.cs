@@ -48,7 +48,7 @@ namespace Ow.Game.Objects.Players.Skills
         {
             var aegisIds = new List<int> { Ship.AEGIS, Ship.AEGIS_VETERAN, Ship.AEGIS_ELITE };
 
-            if (aegisIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (aegisIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
                 Active = true;
 
@@ -73,7 +73,7 @@ namespace Ow.Game.Objects.Players.Skills
         {
             Active = false;
             targetIds.Clear();
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
 
             var abilityStopCommand = AbilityStopCommand.write(101, Player.Id, targetIds);
             var abilityEffectDeActivationCommand = AbilityEffectDeActivationCommand.write(101, Player.Id, targetIds);

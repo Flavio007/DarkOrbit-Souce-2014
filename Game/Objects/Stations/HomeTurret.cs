@@ -6,7 +6,7 @@ namespace Ow.Game.Objects.Stations
 {
     class HomeTurret : Asset
     {
-        public int FactionId { get; }
+        public new int FactionId { get; }
 
         public HomeTurret(Spacemap spacemap, int factionId, Position position, short assetTypeId) : base(spacemap, position, assetTypeId)
         {

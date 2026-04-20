@@ -137,7 +137,8 @@ class SocketServer
                 BanUser(GameManager.GetPlayerById(Int(parameters["UserId"])));
                 break;
             case "BuyItem":
-                BuyItem(GameManager.GetPlayerById(Int(parameters["UserId"])), String(parameters["ItemType"]), (DataType)Short(parameters["DataType"]), Int(parameters["Amount"]));
+                var buyItemUserId = Int(parameters["UserId"]);
+                BuyItem(buyItemUserId, GameManager.GetPlayerById(buyItemUserId), String(parameters["ItemType"]), (DataType)Short(parameters["DataType"]), Int(parameters["Amount"]), parameters);
                 break;
             case "BuyAmmo":
                 BuyAmmo(
@@ -304,8 +305,7 @@ class SocketServer
                     var boosters = JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(equipmentRow["boosters"].ToString());
                     if (boosters != null)
                     {
-                        player.BoosterManager.Boosters = boosters;
-                        player.BoosterManager.Update();
+                        player.BoosterManager.Load(boosters);
                     }
                 }
             }
@@ -552,15 +552,30 @@ class SocketServer
         GameManager.SendChatSystemMessage($"{player.Name} has banned.");
     }
 
-    public static void BuyItem(Player player, string itemType, DataType dataType, int amount)
+    public static void BuyItem(int userId, Player player, string itemType, DataType dataType, int amount, JObject parameters = null)
     {
+        if (string.Equals(itemType, "booster", StringComparison.InvariantCultureIgnoreCase)
+            && TryGetBoosterPurchaseDetails(parameters, out var boosterType, out var hours))
+        {
+            AddBoosterToDatabase(userId, boosterType, hours);
+
+            if (player?.GameSession != null)
+                RefreshPlayerData(player);
+
+            if (player != null)
+            {
+                if (player.GameSession != null)
+                    player.SendPacket($"0|LM|ST|{(dataType == DataType.URIDIUM ? "URI" : "CRE")}|-{amount}|{(dataType == DataType.URIDIUM ? player.Data.uridium : player.Data.credits)}");
+
+                ReloadBoostersFromDatabase(player);
+            }
+
+            return;
+        }
+
         if (player?.GameSession != null)
         {
-            using (var mySqlClient = SqlDatabaseManager.GetClient())
-            {
-                var result = mySqlClient.ExecuteQueryRow($"SELECT data FROM player_accounts WHERE userId = {player.Id}");
-                player.Data = JsonConvert.DeserializeObject<DataBase>(result["data"].ToString());
-            }
+            RefreshPlayerData(player);
 
             player.SendPacket($"0|LM|ST|{(dataType == DataType.URIDIUM ? "URI" : "CRE")}|-{amount}|{(dataType == DataType.URIDIUM ? player.Data.uridium : player.Data.credits)}");
 
@@ -570,19 +585,140 @@ class SocketServer
                     player.DroneManager.UpdateDrones(true);
                     break;
                 case "booster":
-                    var oldBoosters = player.BoosterManager.Boosters;
-
-                    using (var mySqlClient = SqlDatabaseManager.GetClient())
-                    {
-                        var result = mySqlClient.ExecuteQueryRow($"SELECT boosters FROM player_equipment WHERE userId = {player.Id}");
-                        var newBoosters = JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(result["boosters"].ToString());
-                        player.BoosterManager.Boosters = newBoosters.Concat(oldBoosters).GroupBy(b => b.Key).ToDictionary(b => b.Key, b => b.First().Value);
-                    }
-
-                    player.BoosterManager.Update();
+                    ReloadBoostersFromDatabase(player);
                     break;
             }
         }
+    }
+
+    private static void RefreshPlayerData(Player player)
+    {
+        if (player == null)
+            return;
+
+        using (var mySqlClient = SqlDatabaseManager.GetClient())
+        {
+            var result = mySqlClient.ExecuteQueryRow($"SELECT data FROM player_accounts WHERE userId = {player.Id}");
+            player.Data = JsonConvert.DeserializeObject<DataBase>(result["data"].ToString());
+        }
+    }
+
+    private static void AddBoosterToDatabase(int userId, BoosterType boosterType, int hours)
+    {
+        if (userId <= 0 || hours <= 0)
+            return;
+
+        using (var mySqlClient = SqlDatabaseManager.GetClient())
+        {
+            var result = mySqlClient.ExecuteQueryRow($"SELECT boosters FROM player_equipment WHERE userId = {userId}");
+            var boostersJson = result != null && result.Table.Columns.Contains("boosters") && result["boosters"] != DBNull.Value
+                ? result["boosters"].ToString()
+                : string.Empty;
+
+            var databaseBoosters = string.IsNullOrWhiteSpace(boostersJson)
+                ? new Dictionary<short, List<BoosterBase>>()
+                : JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(boostersJson);
+
+            var boostedAttributeType = BoosterManager.GetBoostedAttributeType((short)boosterType);
+            if (boostedAttributeType == 0)
+                return;
+
+            if (!databaseBoosters.ContainsKey(boostedAttributeType))
+                databaseBoosters[boostedAttributeType] = new List<BoosterBase>();
+
+            var seconds = (int)TimeSpan.FromHours(hours).TotalSeconds;
+            var currentBooster = databaseBoosters[boostedAttributeType].FirstOrDefault(x => x.Type == (short)boosterType);
+
+            if (currentBooster == null)
+                databaseBoosters[boostedAttributeType].Add(new BoosterBase((short)boosterType, seconds));
+            else
+                currentBooster.Seconds += seconds;
+
+            var normalizedBoosters = BoosterManager.Merge(databaseBoosters, null);
+            var normalizedBoostersJson = JsonConvert.SerializeObject(normalizedBoosters).Replace("'", "''");
+            mySqlClient.ExecuteNonQuery($"UPDATE player_equipment SET boosters = '{normalizedBoostersJson}' WHERE userId = {userId}");
+        }
+    }
+
+    private static void ReloadBoostersFromDatabase(Player player)
+    {
+        if (player?.BoosterManager == null)
+            return;
+
+        using (var mySqlClient = SqlDatabaseManager.GetClient())
+        {
+            var result = mySqlClient.ExecuteQueryRow($"SELECT boosters FROM player_equipment WHERE userId = {player.Id}");
+            var boostersJson = result != null && result.Table.Columns.Contains("boosters") && result["boosters"] != DBNull.Value
+                ? result["boosters"].ToString()
+                : string.Empty;
+
+            var databaseBoosters = string.IsNullOrWhiteSpace(boostersJson)
+                ? new Dictionary<short, List<BoosterBase>>()
+                : JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(boostersJson);
+
+            var mergedBoosters = BoosterManager.Merge(player.BoosterManager.Boosters, databaseBoosters);
+            player.BoosterManager.Load(mergedBoosters);
+            QueryManager.SavePlayer.Boosters(player);
+        }
+    }
+
+    private static bool TryGetBoosterPurchaseDetails(JObject parameters, out BoosterType boosterType, out int hours)
+    {
+        boosterType = BoosterType.DMG_B01;
+        hours = 0;
+
+        var boosterValue = ReadFirstParameter(parameters,
+            "BoosterType",
+            "BoosterId",
+            "BoosterCode",
+            "Booster",
+            "ItemCode",
+            "Code",
+            "LootId",
+            "ItemName",
+            "Name");
+
+        if (!BoosterManager.TryParseBoosterType(boosterValue, out boosterType))
+            return false;
+
+        hours = ReadFirstPositiveInt(parameters,
+            "Hours",
+            "BoosterHours",
+            "DurationHours",
+            "Duration",
+            "Time");
+
+        return hours > 0;
+    }
+
+    private static string ReadFirstParameter(JObject parameters, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (parameters[key] == null)
+                continue;
+
+            var value = String(parameters[key]);
+            if (!string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+
+        return string.Empty;
+    }
+
+    private static int ReadFirstPositiveInt(JObject parameters, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (parameters[key] == null)
+                continue;
+
+            var value = Int(parameters[key]);
+            if (value > 0)
+                return value;
+        }
+
+        return 0;
     }
 
     public static void BuyAmmo(Player player, string ammoCode, int ammoAmount, DataType dataType, int priceAmount)

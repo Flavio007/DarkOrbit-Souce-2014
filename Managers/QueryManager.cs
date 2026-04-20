@@ -80,7 +80,11 @@ namespace Ow.Managers
             public static void Boosters(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
-                    mySqlClient.ExecuteNonQuery($"UPDATE player_equipment SET boosters = '{JsonConvert.SerializeObject(player.BoosterManager.Boosters)}' WHERE userId = {player.Id}");
+                {
+                    var boostersJson = JsonConvert.SerializeObject(player.BoosterManager?.Boosters ?? new Dictionary<short, List<BoosterBase>>());
+                    boostersJson = boostersJson.Replace("'", "''");
+                    mySqlClient.ExecuteNonQuery($"UPDATE player_equipment SET boosters = '{boostersJson}' WHERE userId = {player.Id}");
+                }
             }
 
             public static void Position(Player player)
@@ -305,7 +309,11 @@ namespace Ow.Managers
                     var equipment = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_equipment WHERE userId = {playerId}");
                     foreach (DataRow row in equipment.Rows)
                     {
-                        player.BoosterManager.Boosters = JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(row["boosters"].ToString());
+                        var boostersJson = row.Table.Columns.Contains("boosters") && row["boosters"] != DBNull.Value ? row["boosters"].ToString() : string.Empty;
+                        var boosters = string.IsNullOrWhiteSpace(boostersJson)
+                            ? new Dictionary<short, List<BoosterBase>>()
+                            : JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(boostersJson);
+                        player.BoosterManager.Load(boosters, false);
                         player.Storage.BattleStationModules = JsonConvert.DeserializeObject<List<ModuleBase>>(row["modules"].ToString());
                         player.SkillTree = JsonConvert.DeserializeObject<SkillTreeBase>(row["skill_points"].ToString());
 

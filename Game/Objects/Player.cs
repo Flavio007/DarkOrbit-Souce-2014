@@ -113,6 +113,19 @@ namespace Ow.Game.Objects
         public int CargoInUse => Math.Max(0, Prometium + Endurium + Terbium + Prometid + Duranium + Promerium + Xenomit + Seprom + Palladium);
         public int FreeCargo => Math.Max(0, CargoCapacity - CargoInUse);
 
+        public int GetBoostedExperience(int experience, bool includeShipBoost = false, bool includeNpcSkill = false)
+        {
+            var value = includeShipBoost ? Ship.GetExperienceBoost(experience) : experience;
+
+            value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.EP));
+            value += Maths.GetPercentage(value, BattleStation.GetFactionBoostPercentage(FactionId, BoostedAttributeType.EP));
+
+            if (includeNpcSkill)
+                value += Maths.GetPercentage(value, GetSkillPercentage("Tactics"));
+
+            return value;
+        }
+
         public override int RenderRange => Storage != null && Storage.SpearheadRecon ? 4000 : base.RenderRange;
 
         public bool fulllf3 = true;
@@ -255,6 +268,7 @@ namespace Ow.Game.Objects
                 || Settings.InGameSettings.selectedFormation == DroneManager.WHEEL_FORMATION) return;
 
             int repairShield = MaxShieldPoints / 25;
+            repairShield += Maths.GetPercentage(repairShield, BoosterManager.GetPercentage(BoostedAttributeType.SHIELDRECHARGE));
             CurrentShieldPoints += repairShield;
             UpdateStatus();
 
@@ -982,6 +996,26 @@ namespace Ow.Game.Objects
                             asset.MaxShieldPoints > 0 ? true : false,
                             asset.CurrentShieldPoints,
                             asset.MaxShieldPoints
+                            ));
+                    }
+                }
+                else
+                {
+                    var relay = Spacemap?.GetActivatableMapEntity(entityId) as GroupMapRelayStation;
+                    if (relay != null && relay.VisibleOnMap && !relay.Destroyed)
+                    {
+                        Selected = relay;
+
+                        SendCommand(AssetInfoCommand.write(
+                            relay.Id,
+                            relay.GetAssetType(),
+                            relay.GetVisualDesignId(),
+                            relay.GetVisualExpansionStage(),
+                            relay.CurrentHitPoints,
+                            relay.MaxHitPoints,
+                            relay.MaxShieldPoints > 0 ? true : false,
+                            relay.CurrentShieldPoints,
+                            relay.MaxShieldPoints
                             ));
                     }
                 }

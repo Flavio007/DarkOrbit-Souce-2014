@@ -127,7 +127,7 @@ namespace Ow.Game.Events
             Program.TickManager.RemoveTick(this);
 
             player.ChangeData(DataType.URIDIUM, 250000);
-            player.ChangeData(DataType.EXPERIENCE, 2500000);
+            player.ChangeData(DataType.EXPERIENCE, player.GetBoostedExperience(2500000));
             player.ChangeData(DataType.HONOR, 25000);
 
             GameManager.SendPacketToAll($"0|A|STD|{player.Name} has won the Jacpot Battle!");

@@ -37,7 +37,7 @@ namespace Ow.Game.Objects.Players.Skills
         {
             var citadelIds = new List<int> { Ship.CITADEL, Ship.CITADEL_VETERAN, Ship.CITADEL_ELITE, Ship.CITADEL_PLUS };
 
-            if (citadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (citadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
                 Active = true;
                 targetIds.Clear();
@@ -90,7 +90,7 @@ namespace Ow.Game.Objects.Players.Skills
         public override void Disable()
         {
             Active = false;
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Player.RemoveVisualModifier(VisualModifierCommand.DRAW_FIRE_OWNER);
             var effectTargetIds = new List<int> { Player.Id };
 

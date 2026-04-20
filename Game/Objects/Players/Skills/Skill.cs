@@ -1,4 +1,6 @@
-﻿using Ow.Game.Ticks;
+﻿using Ow.Game;
+using Ow.Game.Ticks;
+using Ow.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,8 @@ namespace Ow.Game.Objects.Players.Skills
 
         public bool Active = false;
         public DateTime cooldown = new DateTime();
+
+        protected int EffectiveCooldown => Cooldown - Maths.GetPercentage(Cooldown, Player.BoosterManager.GetPercentage(BoostedAttributeType.ABILITY_COOLDOWN));
 
         public Skill(Player player)
         {

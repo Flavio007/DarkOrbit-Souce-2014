@@ -263,7 +263,7 @@ namespace Ow.Game.Objects.AI
 
         private bool HasUnlimitedChaseRange()
         {
-            return IsGalaxyGateNpc() || (Npc != null && Npc.AllMapRange && Npc.Spacemap != null && Npc.Spacemap.Options.RangeDisabled);
+            return IsGalaxyGateNpc() || (Npc != null && Npc.UseMapWideChaseRange && Npc.AllMapRange && Npc.Spacemap != null && Npc.Spacemap.Options.RangeDisabled);
         }
 
         private bool CanChasePlayer(Player player, bool ignoreDistanceForNpc)

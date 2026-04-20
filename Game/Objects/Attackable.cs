@@ -197,7 +197,32 @@ namespace Ow.Game.Objects
                     player.SendCommand(command);
         }
 
-        private bool DistributeRewardsEvenly(IEnumerable<Player> players, int credits, int experience, int honor, int uridium, ChangeType changeType)
+        private void ApplyRewards(Player player, int credits, int experience, int honor, int uridium, ChangeType changeType, bool isNpc)
+        {
+            if (player == null)
+                return;
+
+            var finalCredits = credits;
+            var finalExperience = player.GetBoostedExperience(experience, true, isNpc);
+            var finalHonor = player.GetHonorBoost(player.Ship.GetHonorBoost(honor));
+
+            finalHonor += Maths.GetPercentage(finalHonor, player.BoosterManager.GetPercentage(BoostedAttributeType.HONOUR));
+            finalHonor += Maths.GetPercentage(finalHonor, BattleStation.GetFactionBoostPercentage(player.FactionId, BoostedAttributeType.HONOUR));
+            finalHonor += Maths.GetPercentage(finalHonor, player.GetSkillPercentage("Cruelty"));
+
+            if (isNpc)
+                finalCredits += Maths.GetPercentage(finalCredits, player.GetSkillPercentage("Greed"));
+
+            player.ChangeData(DataType.CREDITS, finalCredits);
+            player.ChangeData(DataType.EXPERIENCE, finalExperience);
+            player.ChangeData(DataType.HONOR, finalHonor, changeType);
+            player.ChangeData(DataType.URIDIUM, uridium, changeType);
+
+            if (changeType == ChangeType.INCREASE)
+                EventManager.InvasionGate?.AddHonorContribution(player, Spacemap, finalHonor);
+        }
+
+        private bool DistributeRewardsEvenly(IEnumerable<Player> players, int credits, int experience, int honor, int uridium, ChangeType changeType, bool isNpc)
         {
             var validPlayers = players?.Where(x => x != null).Distinct().ToList();
             if (validPlayers == null || validPlayers.Count == 0) return false;
@@ -208,20 +233,12 @@ namespace Ow.Game.Objects
             var uridiumShare = uridium / validPlayers.Count;
 
             foreach (var player in validPlayers)
-            {
-                player.ChangeData(DataType.CREDITS, creditsShare);
-                player.ChangeData(DataType.EXPERIENCE, experienceShare);
-                player.ChangeData(DataType.HONOR, honorShare, changeType);
-                player.ChangeData(DataType.URIDIUM, uridiumShare, changeType);
-
-                if (changeType == ChangeType.INCREASE)
-                    EventManager.InvasionGate?.AddHonorContribution(player, Spacemap, honorShare);
-            }
+                ApplyRewards(player, creditsShare, experienceShare, honorShare, uridiumShare, changeType, isNpc);
 
             return true;
         }
 
-        private bool DistributeRewardsByDamage(System.Collections.Concurrent.ConcurrentDictionary<int, long> contributors, int credits, int experience, int honor, int uridium, ChangeType changeType)
+        private bool DistributeRewardsByDamage(System.Collections.Concurrent.ConcurrentDictionary<int, long> contributors, int credits, int experience, int honor, int uridium, ChangeType changeType, bool isNpc)
         {
             if (contributors == null || contributors.Count == 0) return false;
 
@@ -266,15 +283,7 @@ namespace Ow.Game.Objects
             rewardsByPlayer[topContributor][3] += uridium - distributedUridium;
 
             foreach (var reward in rewardsByPlayer)
-            {
-                reward.Key.ChangeData(DataType.CREDITS, reward.Value[0]);
-                reward.Key.ChangeData(DataType.EXPERIENCE, reward.Value[1]);
-                reward.Key.ChangeData(DataType.HONOR, reward.Value[2], changeType);
-                reward.Key.ChangeData(DataType.URIDIUM, reward.Value[3], changeType);
-
-                if (changeType == ChangeType.INCREASE)
-                    EventManager.InvasionGate?.AddHonorContribution(reward.Key, Spacemap, reward.Value[2]);
-            }
+                ApplyRewards(reward.Key, reward.Value[0], reward.Value[1], reward.Value[2], reward.Value[3], changeType, isNpc);
 
             return true;
         }
@@ -388,8 +397,8 @@ namespace Ow.Game.Objects
 
                 if (this is Character)
                 {
-                    experience = destroyerPlayer.Ship.GetExperienceBoost((this as Character).Ship.Rewards.Experience);
-                    honor = destroyerPlayer.GetHonorBoost(destroyerPlayer.Ship.GetHonorBoost((this as Character).Ship.Rewards.Honor));
+                    experience = (this as Character).Ship.Rewards.Experience;
+                    honor = (this as Character).Ship.Rewards.Honor;
                     uridium = (this as Character).Ship.Rewards.Uridium;
                     credits = (this as Character).Ship.Rewards.Credits;
 
@@ -411,17 +420,6 @@ namespace Ow.Game.Objects
                     uridium = 512;
                 }
 
-                experience += Maths.GetPercentage(experience, destroyerPlayer.BoosterManager.GetPercentage(BoostedAttributeType.EP));
-                experience += Maths.GetPercentage(experience, BattleStation.GetFactionBoostPercentage(destroyerPlayer.FactionId, BoostedAttributeType.EP));
-                honor += Maths.GetPercentage(honor, destroyerPlayer.BoosterManager.GetPercentage(BoostedAttributeType.HONOUR));
-                honor += Maths.GetPercentage(honor, BattleStation.GetFactionBoostPercentage(destroyerPlayer.FactionId, BoostedAttributeType.HONOUR));
-                honor += Maths.GetPercentage(honor, destroyerPlayer.GetSkillPercentage("Cruelty"));
-                if (this is Npc)
-                {
-                    experience += Maths.GetPercentage(experience, destroyerPlayer.GetSkillPercentage("Tactics"));
-                    credits += Maths.GetPercentage(credits, destroyerPlayer.GetSkillPercentage("Greed"));
-                }
-
                 if (reward)
                 {
                     if (this is Npc)
@@ -435,33 +433,28 @@ namespace Ow.Game.Objects
 
                     var groupMembers = destroyerPlayer.Group?.Members.Values.Where(x => x.AttackingOrUnderAttack());
                     var customDistributionApplied = false;
+                    var isNpcReward = this is Npc;
 
                     if (this is SolarLordakium Lord && Lord.challengers != null)
                     {
-                        customDistributionApplied = DistributeRewardsEvenly(Lord.challengers, credits, experience, honor, uridium, changeType);
+                        customDistributionApplied = DistributeRewardsEvenly(Lord.challengers, credits, experience, honor, uridium, changeType, isNpcReward);
                     }
                     else if (this is InstanceNpc instNpc)
                     {
-                        customDistributionApplied = DistributeRewardsByDamage(instNpc.DamageContributors, credits, experience, honor, uridium, changeType);
+                        customDistributionApplied = DistributeRewardsByDamage(instNpc.DamageContributors, credits, experience, honor, uridium, changeType, isNpcReward);
                         if (!customDistributionApplied && instNpc.challengers != null)
-                            customDistributionApplied = DistributeRewardsEvenly(instNpc.challengers, credits, experience, honor, uridium, changeType);
+                            customDistributionApplied = DistributeRewardsEvenly(instNpc.challengers, credits, experience, honor, uridium, changeType, isNpcReward);
                     }
                     else if (this is Escort escortNpc)
                     {
-                        customDistributionApplied = DistributeRewardsByDamage(escortNpc.DamageContributors, credits, experience, honor, uridium, changeType);
+                        customDistributionApplied = DistributeRewardsByDamage(escortNpc.DamageContributors, credits, experience, honor, uridium, changeType, isNpcReward);
                         if (!customDistributionApplied && escortNpc.challengers != null)
-                            customDistributionApplied = DistributeRewardsEvenly(escortNpc.challengers, credits, experience, honor, uridium, changeType);
+                            customDistributionApplied = DistributeRewardsEvenly(escortNpc.challengers, credits, experience, honor, uridium, changeType, isNpcReward);
                     }
 
                     if (!customDistributionApplied && (destroyerPlayer.Group == null || (destroyerPlayer.Group != null && groupMembers.Count() == 0)))
                     {
-                        destroyerPlayer.ChangeData(DataType.CREDITS, credits);
-                        destroyerPlayer.ChangeData(DataType.EXPERIENCE, experience);
-                        destroyerPlayer.ChangeData(DataType.HONOR, honor, changeType);
-                        destroyerPlayer.ChangeData(DataType.URIDIUM, uridium, changeType);
-
-                        if (changeType == ChangeType.INCREASE)
-                            EventManager.InvasionGate?.AddHonorContribution(destroyerPlayer, Spacemap, honor);
+                        ApplyRewards(destroyerPlayer, credits, experience, honor, uridium, changeType, isNpcReward);
                     }
                     else if (!customDistributionApplied && this is Npc && destroyerPlayer.Group != null)
                     {
@@ -471,16 +464,11 @@ namespace Ow.Game.Objects
                         uridium = uridium / groupMembers.Count();
 
                         foreach (var member in groupMembers)
-                        {
-                            member.ChangeData(DataType.CREDITS, credits);
-                            member.ChangeData(DataType.EXPERIENCE, experience);
-                            member.ChangeData(DataType.HONOR, honor, changeType);
-                            member.ChangeData(DataType.URIDIUM, uridium, changeType);
-
-                            if (changeType == ChangeType.INCREASE)
-                                EventManager.InvasionGate?.AddHonorContribution(member, Spacemap, honor);
-                        }
+                            ApplyRewards(member, credits, experience, honor, uridium, changeType, isNpcReward);
                     }
+
+                    if (this is Npc killedNpc)
+                        destroyerPlayer.BoosterManager?.TryRewardNpcDrop(killedNpc);
                 }
 
                 if (this is Player)

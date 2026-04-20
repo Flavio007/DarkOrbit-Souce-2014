@@ -22,7 +22,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (Player.Ship.Id == Ship.GOLIATH_SOLACE && cooldown.AddMilliseconds(Cooldown) < DateTime.Now || Player.Storage.GodMode)
+            if (Player.Ship.Id == Ship.GOLIATH_SOLACE && cooldown.AddMilliseconds(EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode)
             {
                 ExecuteHeal();
 
@@ -30,7 +30,7 @@ namespace Ow.Game.Objects.Players.Skills
                 Player.SendPacket(packet);
                 Player.SendPacketToInRangePlayers(packet);
 
-                Player.SendCooldown(LootId, Cooldown);
+                Player.SendCooldown(LootId, EffectiveCooldown);
                 cooldown = DateTime.Now;
             }
         }

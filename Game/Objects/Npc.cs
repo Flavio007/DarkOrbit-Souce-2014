@@ -17,12 +17,19 @@ namespace Ow.Game.Objects
     class Npc : Character
     {
         private const int CenturyFalconWaveSize = 20;
+        private const int CenturyFalconLaserId = 3;
+        private const int CenturyFalconLaserMultiplier = 4;
+        private const int CenturyFalconRocketLauncherId = 7;
+        private const int CenturyFalconRocketCount = 10;
+        private const int CenturyFalconRocketDamage = 4000;
+        private const int CenturyFalconRocketCooldownSeconds = 20;
         private readonly List<Protegit> centuryFalconMinions = new List<Protegit>();
 
         public NpcAI NpcAI { get; set; }
         public bool Attacking = false;
         public bool Aggressive = false;
         public bool Respawnable = true;
+        public bool UseMapWideChaseRange = false;
         //public bool Minion = false;
         public int MotherShipId = 0;
         public int minioncount = 0;
@@ -69,9 +76,9 @@ namespace Ow.Game.Objects
 
 
         public DateTime lastAttackTime = new DateTime();
+        public DateTime lastRocketLauncherAttackTime = new DateTime();
         public void Attack()
         {
-            var damage = AttackManager.RandomizeDamage(Damage, (Storage.underPLD8 ? 0.5 : 0.1));
             var target = SelectedCharacter;
 
             if (!TargetDefinition(target, false)) return;
@@ -82,87 +89,146 @@ namespace Ow.Game.Objects
                 return;
             }
 
+            if (IsCenturyFalcon)
+            {
+                if (lastAttackTime.AddSeconds(1) < DateTime.Now)
+                {
+                    var laserDamage = AttackManager.RandomizeDamage(Damage * CenturyFalconLaserMultiplier, (Storage.underPLD8 ? 0.5 : 0.1));
+                    ApplyAttack(target, laserDamage, DamageType.LASER, false, () =>
+                    {
+                        var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, CenturyFalconLaserId, false, false);
+                        SendCommandToInRangePlayers(laserRunCommand);
+                    });
+                }
+
+                if (SelectedCharacter != null && !SelectedCharacter.Destroyed && lastRocketLauncherAttackTime.AddSeconds(CenturyFalconRocketCooldownSeconds) < DateTime.Now)
+                    AttackCenturyFalcon(SelectedCharacter);
+
+                return;
+            }
+
             if (lastAttackTime.AddSeconds(1) < DateTime.Now)
             {
-                if (target is Player && (target as Player).Storage.Spectrum)
-                    damage -= Maths.GetPercentage(damage, 50);
-
-                int damageShd = 0, damageHp = 0;
-
-                double shieldAbsorb = System.Math.Abs(target.ShieldAbsorption - 0);
-
-                if (shieldAbsorb > 1)
-                    shieldAbsorb = 1;
-
-                if ((target.CurrentShieldPoints - damage) >= 0)
+                var damage = AttackManager.RandomizeDamage(Damage, (Storage.underPLD8 ? 0.5 : 0.1));
+                ApplyAttack(target, damage, DamageType.LASER, false, () =>
                 {
-                    damageShd = (int)(damage * shieldAbsorb);
-                    damageHp = damage - damageShd;
-                }
+                    var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
+                    SendCommandToInRangePlayers(laserRunCommand);
+                });
+            }
+        }
+
+        private void AttackCenturyFalcon(Character target)
+        {
+            var totalDamage = 0;
+            for (var rocketIndex = 0; rocketIndex < CenturyFalconRocketCount; rocketIndex++)
+                totalDamage += AttackManager.RandomizeDamage(CenturyFalconRocketDamage, (Storage.underPLD8 ? 0.5 : 0.1));
+
+            ApplyAttack(target, totalDamage, DamageType.ROCKET, true, () =>
+            {
+                var rocketLauncherPacket = $"0|RL|A|{Id}|{target.Id}|{CenturyFalconRocketCount}|{CenturyFalconRocketLauncherId}";
+                SendPacketToInRangePlayers(rocketLauncherPacket);
+            });
+
+            lastRocketLauncherAttackTime = DateTime.Now;
+        }
+
+        private void ApplyAttack(Character target, int damage, DamageType damageType, bool sendMissedPacket, Action sendAttackVisual)
+        {
+            if (target is Player targetPlayer && targetPlayer.Storage.Spectrum)
+                damage -= Maths.GetPercentage(damage, 50);
+
+            int damageShd = 0, damageHp = 0;
+
+            double shieldAbsorb = System.Math.Abs(target.ShieldAbsorption - 0);
+
+            if (shieldAbsorb > 1)
+                shieldAbsorb = 1;
+
+            if ((target.CurrentShieldPoints - damage) >= 0)
+            {
+                damageShd = (int)(damage * shieldAbsorb);
+                damageHp = damage - damageShd;
+            }
+            else
+            {
+                int newDamage = damage - target.CurrentShieldPoints;
+                damageShd = target.CurrentShieldPoints;
+                damageHp = (int)(newDamage + (damageShd * shieldAbsorb));
+            }
+
+            if ((target.CurrentHitPoints - damageHp) < 0)
+                damageHp = target.CurrentHitPoints;
+
+            if (target is Player player && !player.Attackable())
+            {
+                damage = 0;
+                damageShd = 0;
+                damageHp = 0;
+            }
+
+            if (target is Player shieldedPlayer && shieldedPlayer.Storage.Sentinel)
+                damageShd -= Maths.GetPercentage(damageShd, 30);
+
+            damageHp = target.ClampHitpointDamage(damageHp);
+            damage = damageHp + damageShd;
+
+            sendAttackVisual?.Invoke();
+
+            if (damage == 0)
+            {
+                if (sendMissedPacket)
+                    SendMissedAttack(target, damageType);
+            }
+            else
+            {
+                var attackHitDamage = damage > damageShd ? damage : damageShd;
+                var attackHitCommand =
+                    AttackHitCommand.write(new AttackTypeModule((short)damageType), Id,
+                        target.Id, target.CurrentHitPoints,
+                        target.CurrentShieldPoints, target.CurrentNanoHull,
+                        attackHitDamage, false);
+
+                foreach (var character in InRangeCharacters.Values)
+                    if (character is Player inRangePlayer && (!(target is Player currentTargetPlayer) || inRangePlayer.Id != currentTargetPlayer.Id))
+                        inRangePlayer.SendCommand(attackHitCommand);
+
+                if (target is Player attackedPlayer)
+                    attackedPlayer.AttackManager.QueueIncomingDamageHit(Id, damageType, attackHitDamage);
+            }
+
+            if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
+            {
+                if (target is Player attackedPlayer)
+                    attackedPlayer.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);
+
+                target.Destroy(this, DestructionType.NPC);
+            }
+            else
+                target.CurrentHitPoints -= damageHp;
+
+            target.CurrentShieldPoints -= damageShd;
+            target.LastCombatTime = DateTime.Now;
+
+            lastAttackTime = DateTime.Now;
+
+            target.UpdateStatus();
+        }
+
+        private void SendMissedAttack(Character target, DamageType damageType)
+        {
+            var missedAttackForTarget = AttackMissedCommand.write(new AttackTypeModule((short)damageType), target.Id, 0);
+            var missedAttackForInRangePlayers = AttackMissedCommand.write(new AttackTypeModule((short)damageType), target.Id, 1);
+
+            foreach (var character in InRangeCharacters.Values)
+            {
+                if (!(character is Player inRangePlayer))
+                    continue;
+
+                if (target is Player targetPlayer && inRangePlayer.Id == targetPlayer.Id)
+                    inRangePlayer.SendCommand(missedAttackForTarget);
                 else
-                {
-                    int newDamage = damage - target.CurrentShieldPoints;
-                    damageShd = target.CurrentShieldPoints;
-                    damageHp = (int)(newDamage + (damageShd * shieldAbsorb));
-                }
-
-                if ((target.CurrentHitPoints - damageHp) < 0)
-                {
-                    damageHp = target.CurrentHitPoints;
-                }
-
-                if (target is Player && !(target as Player).Attackable())
-                {
-                    damage = 0;
-                    damageShd = 0;
-                    damageHp = 0;
-                }
-
-                if (target is Player && (target as Player).Storage.Sentinel)
-                    damageShd -= Maths.GetPercentage(damageShd, 30);
-
-                damageHp = target.ClampHitpointDamage(damageHp);
-                damage = damageHp + damageShd;
-
-                var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
-                SendCommandToInRangePlayers(laserRunCommand);
-
-                if (damage == 0)
-                {
-                }
-                else
-                {
-                    var attackHitDamage = damage > damageShd ? damage : damageShd;
-                    var attackHitCommand =
-                        AttackHitCommand.write(new AttackTypeModule(AttackTypeModule.LASER), Id,
-                             target.Id, target.CurrentHitPoints,
-                             target.CurrentShieldPoints, target.CurrentNanoHull,
-                             attackHitDamage, false);
-
-                    foreach (var character in InRangeCharacters.Values)
-                        if (character is Player inRangePlayer && (!(target is Player targetPlayer) || inRangePlayer.Id != targetPlayer.Id))
-                            inRangePlayer.SendCommand(attackHitCommand);
-
-                    if (target is Player playerTarget)
-                        playerTarget.AttackManager.QueueIncomingDamageHit(Id, DamageType.LASER, attackHitDamage);
-                }
-
-                if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
-                {
-                    if (target is Player playerTarget)
-                        playerTarget.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);
-
-                    target.Destroy(this, DestructionType.NPC);
-                }
-                else
-                    target.CurrentHitPoints -= damageHp;
-
-                target.CurrentShieldPoints -= damageShd;
-                target.LastCombatTime = DateTime.Now;
-
-                lastAttackTime = DateTime.Now;
-
-                target.UpdateStatus();
+                    inRangePlayer.SendCommand(missedAttackForInRangePlayers);
             }
         }
 

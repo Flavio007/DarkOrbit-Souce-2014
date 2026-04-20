@@ -31,6 +31,7 @@ namespace Ow.Game.Objects
             Respawnable = false;
             Suffix = suffix;
             AllMapRange = true;
+            UseMapWideChaseRange = true;
             Aggressive = true;
             KeyNpc = Key;
 

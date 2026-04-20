@@ -24,7 +24,7 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Send()
         {
-            if (CitadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + Cooldown) < DateTime.Now || Player.Storage.GodMode))
+            if (CitadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
                 Player.Storage.CitadelFortify = true;
                 Player.SendCommand(SetSpeedCommand.write(Player.Speed, Player.Speed));
@@ -41,7 +41,7 @@ namespace Ow.Game.Objects.Players.Skills
             Player.Storage.CitadelFortify = false;
             Player.SendCommand(SetSpeedCommand.write(Player.Speed, Player.Speed));
             Player.RemoveVisualModifier(VisualModifierCommand.FORTIFY);
-            Player.SendCooldown(LootId, Cooldown);
+            Player.SendCooldown(LootId, EffectiveCooldown);
             Active = false;
         }
     }
