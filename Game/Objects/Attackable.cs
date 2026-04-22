@@ -207,7 +207,7 @@ namespace Ow.Game.Objects
             var finalHonor = player.GetHonorBoost(player.Ship.GetHonorBoost(honor));
 
             finalHonor += Maths.GetPercentage(finalHonor, player.BoosterManager.GetPercentage(BoostedAttributeType.HONOUR));
-            finalHonor += Maths.GetPercentage(finalHonor, BattleStation.GetFactionBoostPercentage(player.FactionId, BoostedAttributeType.HONOUR));
+            finalHonor += Maths.GetPercentage(finalHonor, BattleStation.GetPlayerBoostPercentage(player, BoostedAttributeType.HONOUR));
             finalHonor += Maths.GetPercentage(finalHonor, player.GetSkillPercentage("Cruelty"));
 
             if (isNpc)
@@ -583,12 +583,24 @@ namespace Ow.Game.Objects
                     }
                 }
 
-                if ((target is BattleStation || target is Satellite) && target.FactionId != 0 && target.FactionId == FactionId)
+                var targetBattleStation = target as BattleStation ?? (target as Satellite)?.BattleStation;
+
+                if (targetBattleStation != null && targetBattleStation.IsFactionBattleStation && target.FactionId != 0 && target.FactionId == FactionId)
                 {
                     player.DisableAttack(player.Settings.InGameSettings.selectedLaser);
 
                     if (sendMessage)
                         player.SendPacket("0|A|STD|You can't attack assets of your own company!");
+
+                    return false;
+                }
+
+                if (targetBattleStation != null && targetBattleStation.IsClanBattleStation && targetBattleStation.IsFriendlyTo(player))
+                {
+                    player.DisableAttack(player.Settings.InGameSettings.selectedLaser);
+
+                    if (sendMessage)
+                        player.SendPacket("0|A|STD|You can't attack clan battle station assets of your clan, allied clans or NAP clans!");
 
                     return false;
                 }
@@ -623,9 +635,18 @@ namespace Ow.Game.Objects
             }
             else if (this is Satellite)
             {
-                var sameClan = Clan != null && Clan.Id != 0 && target.Clan != null && target.Clan.Id == Clan.Id;
-                if (relationType != ClanRelationModule.AT_WAR && (target.FactionId == FactionId || sameClan || relationType == ClanRelationModule.ALLIED || relationType == ClanRelationModule.NON_AGGRESSION_PACT))
-                    return false;
+                var satellite = this as Satellite;
+                if (satellite?.BattleStation != null && satellite.BattleStation.IsClanBattleStation)
+                {
+                    if (satellite.BattleStation.IsFriendlyTo(target))
+                        return false;
+                }
+                else
+                {
+                    var sameClan = Clan != null && Clan.Id != 0 && target.Clan != null && target.Clan.Id == Clan.Id;
+                    if (relationType != ClanRelationModule.AT_WAR && (target.FactionId == FactionId || sameClan || relationType == ClanRelationModule.ALLIED || relationType == ClanRelationModule.NON_AGGRESSION_PACT))
+                        return false;
+                }
             }
 
             var range = this is Player ? (isPlayerRocketAttack ? (this as Player).AttackManager.GetRocketRange() : AttackRange) : this is Satellite ? (this as Satellite).GetRange() : this is Npc ? 450 : AttackRange;

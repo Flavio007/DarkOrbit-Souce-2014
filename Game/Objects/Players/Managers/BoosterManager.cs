@@ -511,16 +511,10 @@ namespace Ow.Game.Objects.Players.Managers
 
         private int GetCurrentMapStationBoostPercentage(BoostedAttributeType boostedAttributeType)
         {
-            if (Player.Spacemap == null || Player.FactionId <= 0)
+            if (Player == null)
                 return 0;
 
-            return GameManager.BattleStations.Values
-                .Where(x => x != null
-                    && !x.Destroyed
-                    && x.FactionId == Player.FactionId
-                    && x.Spacemap != null
-                    && x.Spacemap.Id == Player.Spacemap.Id)
-                .Sum(x => x.GetBoostPercentage(boostedAttributeType));
+            return BattleStation.GetPlayerBoostPercentage(Player, boostedAttributeType);
         }
 
         public static short GetBoostedAttributeType(short boosterType)

@@ -23,10 +23,11 @@ namespace Ow.Game.Objects.Stations
         public int MaxHitPoints { get; set; }
         public int CurrentShieldPoints { get; set; }
         public int MaxShieldPoints { get; set; }
+        public int UpgradeLevel { get; set; }
         public int InstallationSecondsLeft { get; set; }
         public bool Installed { get; set; }
 
-        public SatelliteBase(int ownerId, int itemId, int slotId, int designId, short type, int currentHp, int maxHp, int currentShd, int maxShd, int installationSecondsLeft, bool installed)
+        public SatelliteBase(int ownerId, int itemId, int slotId, int designId, short type, int currentHp, int maxHp, int currentShd, int maxShd, int upgradeLevel, int installationSecondsLeft, bool installed)
         {
             OwnerId = ownerId;
             ItemId = itemId;
@@ -37,6 +38,7 @@ namespace Ow.Game.Objects.Stations
             MaxHitPoints = maxHp;
             CurrentShieldPoints = currentShd;
             MaxShieldPoints = maxShd;
+            UpgradeLevel = upgradeLevel;
             InstallationSecondsLeft = installationSecondsLeft;
             Installed = installed;
         }
@@ -60,7 +62,7 @@ namespace Ow.Game.Objects.Stations
         public int OwnerId { get; set; }
         public bool IsStaticDefenseTower { get; private set; }
         public bool IsDestroyedModuleState { get; private set; }
-        public int UpgradeLevel => BattleStation?.UpgradeLevel ?? 0;
+        public int UpgradeLevel { get; set; }
 
         public bool EmergencyRepairActive = false;
         public bool Installed = false;
@@ -80,6 +82,7 @@ namespace Ow.Game.Objects.Stations
             ItemId = itemId;
             SlotId = slotId;
             Type = type;
+            UpgradeLevel = 0;
 
             MaxHitPoints = 100000;
             CurrentHitPoints = MaxHitPoints;
@@ -103,6 +106,7 @@ namespace Ow.Game.Objects.Stations
             Type = towerDefinition.Type;
             IsStaticDefenseTower = true;
             Installed = true;
+            UpgradeLevel = battleStation?.UpgradeLevel ?? 0;
             ApplyLevelStats(true);
 
             Program.TickManager.AddTick(this);
@@ -284,7 +288,7 @@ namespace Ow.Game.Objects.Stations
 
         private IEnumerable<Player> GetAlliedPlayersInRepairRange()
         {
-            if (BattleStation == null || Spacemap == null || BattleStation.FactionId == 0)
+            if (BattleStation == null || Spacemap == null || !BattleStation.IsOwned)
                 return Enumerable.Empty<Player>();
 
             return Spacemap.Characters.Values
@@ -292,7 +296,7 @@ namespace Ow.Game.Objects.Stations
                 .Where(player => player != null
                     && !player.Destroyed
                     && player.CurrentHitPoints > 0
-                    && player.FactionId == BattleStation.FactionId
+                    && BattleStation.IsFriendlyTo(player)
                     && player.Position.DistanceTo(BattleStation.Position) <= AlliedRepairRange)
                 .ToList();
         }
@@ -442,35 +446,35 @@ namespace Ow.Game.Objects.Stations
                 return;
             }
 
-            var player = GameManager.GetPlayerById(OwnerId);
-
-            if (player != null)
+            if (BattleStation.Clan != null && BattleStation.Clan.Id != 0 && BattleStation.EquippedStationModule.ContainsKey(BattleStation.Clan.Id))
             {
-                var module = player.Storage.BattleStationModules.Where(x => x.Id == ItemId).FirstOrDefault();
+                BattleStation.EquippedStationModule[BattleStation.Clan.Id].Remove(this);
 
-                if (module != null)
-                {
-                    if (deleteModule)
-                        player.Storage.BattleStationModules.Remove(module);
-                    else
-                    {
-                        BattleStation.EquippedStationModule[player.Clan.Id].Remove(this);
-
-                        if (removeList)
-                        {
-                            if (BattleStation.EquippedStationModule[player.Clan.Id].Count == 0)
-                                BattleStation.EquippedStationModule.Remove(player.Clan.Id);
-                        }
-
-                        module.InUse = false;
-                    }
-
-                    if (closeUI)
-                        player.SendCommand(OutOfBattleStationRangeCommand.write(BattleStation.Id));
-
-                    QueryManager.SavePlayer.Modules(player);
-                }
+                if (removeList && BattleStation.EquippedStationModule[BattleStation.Clan.Id].Count == 0)
+                    BattleStation.EquippedStationModule.Remove(BattleStation.Clan.Id);
             }
+
+            var module = BattleStation.Clan?.BattleStationInventory?.FirstOrDefault(x => x.ItemId == ItemId);
+
+            if (deleteModule)
+            {
+                if (module != null)
+                    BattleStation.Clan.BattleStationInventory.Remove(module);
+            }
+            else
+            {
+                if (module != null)
+                    module.InUse = false;
+            }
+
+            var player = GameManager.GetPlayerById(OwnerId);
+            if (closeUI && player != null)
+                player.SendCommand(OutOfBattleStationRangeCommand.write(BattleStation.Id));
+
+            if (BattleStation.Clan != null)
+                QueryManager.SaveClanBattleStationInventory(BattleStation.Clan);
+
+            BattleStation?.UpdateClanModuleUsage(ItemId, false);
 
             Program.TickManager.RemoveTick(this);
         }
@@ -509,7 +513,7 @@ namespace Ow.Game.Objects.Stations
 
         public int GetBoostPercentage(BoostedAttributeType boostedAttributeType)
         {
-            if (!IsStaticDefenseTower || BattleStation == null || BattleStation.FactionId == 0)
+            if (BattleStation == null || !BattleStation.IsOwned)
                 return 0;
 
             if (boostedAttributeType == BoostedAttributeType.DAMAGE && Type == StationModuleModule.DAMAGE_BOOSTER)

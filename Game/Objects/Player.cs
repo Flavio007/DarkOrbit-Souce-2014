@@ -118,7 +118,7 @@ namespace Ow.Game.Objects
             var value = includeShipBoost ? Ship.GetExperienceBoost(experience) : experience;
 
             value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.EP));
-            value += Maths.GetPercentage(value, BattleStation.GetFactionBoostPercentage(FactionId, BoostedAttributeType.EP));
+            value += Maths.GetPercentage(value, BattleStation.GetPlayerBoostPercentage(this, BoostedAttributeType.EP));
 
             if (includeNpcSkill)
                 value += Maths.GetPercentage(value, GetSkillPercentage("Tactics"));
@@ -251,7 +251,7 @@ namespace Ow.Game.Objects
                 RepairBot(true);
 
             //int repairHitpoints = MaxHitPoints / 40;
-            int repairHitpoints = RepairBotId == 1 ? 1000 : RepairBotId == 2 ? 2000 : RepairBotId == 3 ? 3000: RepairBotId == 4 ? 4000 : 500;
+            int repairHitpoints = RepairBotId == 1 ? 1000 : RepairBotId == 2 ? 2000 : RepairBotId == 3 ? 4000: RepairBotId == 4 ? 6000 : 500;
             repairHitpoints += Maths.GetPercentage(repairHitpoints, BoosterManager.GetPercentage(BoostedAttributeType.REPAIR));
             repairHitpoints += Maths.GetPercentage(repairHitpoints, GetSkillPercentage("Engineering"));
 
@@ -577,7 +577,7 @@ namespace Ow.Game.Objects
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
                 value += Maths.GetPercentage(value, 60); //seprom
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
-                value += Maths.GetPercentage(value, BattleStation.GetFactionBoostPercentage(FactionId, BoostedAttributeType.DAMAGE));
+                value += Maths.GetPercentage(value, BattleStation.GetPlayerBoostPercentage(this, BoostedAttributeType.DAMAGE));
 
                 if (Selected != null && Selected.FactionId != 0)
                 {

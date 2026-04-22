@@ -315,6 +315,8 @@ namespace Ow.Managers
                             : JsonConvert.DeserializeObject<Dictionary<short, List<BoosterBase>>>(boostersJson);
                         player.BoosterManager.Load(boosters, false);
                         player.Storage.BattleStationModules = JsonConvert.DeserializeObject<List<ModuleBase>>(row["modules"].ToString());
+                        if (player.Storage.BattleStationModules == null)
+                            player.Storage.BattleStationModules = new List<ModuleBase>();
                         player.SkillTree = JsonConvert.DeserializeObject<SkillTreeBase>(row["skill_points"].ToString());
 
                         dynamic items = JsonConvert.DeserializeObject(row["items"].ToString());
@@ -1543,18 +1545,97 @@ namespace Ow.Managers
         {
             public static void BattleStation(BattleStation battleStation)
             {
-                // Faction battle stations are configuration-driven for now.
+                if (battleStation == null || !battleStation.IsClanBattleStation)
+                    return;
+
+                var sanitizedName = battleStation.Name.Replace("'", "''");
+                var visualModifiers = JsonConvert.SerializeObject(battleStation.VisualModifiers.Values.ToList()).Replace("'", "''");
+                var modules = JsonConvert.SerializeObject(battleStation.GetPersistedModules()).Replace("'", "''");
+                var clanId = battleStation.Clan != null ? battleStation.Clan.Id : 0;
+                var buildTimeValue = battleStation.buildTime == DateTime.MinValue ? "0000-00-00 00:00:00" : battleStation.buildTime.ToString("yyyy-MM-dd HH:mm:ss");
+                var deflectorTimeValue = battleStation.deflectorTime == DateTime.MinValue ? "0001-01-01 00:00:00" : battleStation.deflectorTime.ToString("yyyy-MM-dd HH:mm:ss");
+                var isActive = battleStation.AssetTypeId == AssetTypeModule.BATTLESTATION ? 1 : 0;
+
+                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                {
+                    mySqlClient.ExecuteNonQuery(
+                        "INSERT INTO server_battlestations (id, name, mapId, clanId, positionX, positionY, inBuildingState, buildTimeInMinutes, buildTime, deflectorActive, deflectorSecondsLeft, deflectorTime, visualModifiers, modules, active) " +
+                        $"VALUES ({battleStation.Id}, '{sanitizedName}', {battleStation.Spacemap.Id}, {clanId}, {battleStation.Position.X}, {battleStation.Position.Y}, {(battleStation.InBuildingState ? 1 : 0)}, {battleStation.BuildTimeInMinutes}, '{buildTimeValue}', {(battleStation.DeflectorActive ? 1 : 0)}, {battleStation.DeflectorSecondsLeft}, '{deflectorTimeValue}', '{visualModifiers}', '{modules}', {isActive}) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "name = VALUES(name), mapId = VALUES(mapId), clanId = VALUES(clanId), positionX = VALUES(positionX), positionY = VALUES(positionY), inBuildingState = VALUES(inBuildingState), buildTimeInMinutes = VALUES(buildTimeInMinutes), buildTime = VALUES(buildTime), deflectorActive = VALUES(deflectorActive), deflectorSecondsLeft = VALUES(deflectorSecondsLeft), deflectorTime = VALUES(deflectorTime), visualModifiers = VALUES(visualModifiers), modules = VALUES(modules), active = VALUES(active)");
+                }
             }
 
             public static void Modules(BattleStation battleStation)
             {
-                // Legacy station modules are disabled for faction battle stations.
+                if (battleStation == null || !battleStation.IsClanBattleStation)
+                    return;
+
+                using (var mySqlClient = SqlDatabaseManager.GetClient())
+                {
+                    mySqlClient.ExecuteNonQuery($"UPDATE server_battlestations SET modules = '{JsonConvert.SerializeObject(battleStation.GetPersistedModules()).Replace("'", "''")}' WHERE id = {battleStation.Id}");
+                }
             }
         }
 
         public static void LoadBattleStations()
         {
             BattleStationConfiguration.SpawnConfiguredStations();
+            LoadClanBattleStations();
+        }
+
+        private static void LoadClanBattleStations()
+        {
+            using (var mySqlClient = SqlDatabaseManager.GetClient())
+            {
+                var data = (DataTable)mySqlClient.ExecuteQueryTable("SELECT * FROM server_battlestations");
+                foreach (DataRow row in data.Rows)
+                {
+                    var mapId = Convert.ToInt32(row["mapId"]);
+                    var spacemap = GameManager.GetSpacemap(mapId);
+                    if (spacemap == null)
+                        continue;
+
+                    var id = Convert.ToInt32(row["id"]);
+                    var name = Convert.ToString(row["name"]);
+                    var clanId = Convert.ToInt32(row["clanId"]);
+                    var clan = GameManager.GetClan(clanId) ?? GameManager.GetClan(0);
+                    var position = new Position(Convert.ToInt32(row["positionX"]), Convert.ToInt32(row["positionY"]));
+                    var active = Convert.ToInt32(row["active"]) == 1;
+
+                    var battleStation = new BattleStation(id, name, spacemap, position, clan, active);
+                    battleStation.LoadClanState(
+                        active,
+                        Convert.ToInt32(row["inBuildingState"]) == 1,
+                        Convert.ToInt32(row["buildTimeInMinutes"]),
+                        ParseBattleStationDateTime(row["buildTime"], DateTime.MinValue),
+                        Convert.ToInt32(row["deflectorActive"]) == 1,
+                        Convert.ToInt32(row["deflectorSecondsLeft"]),
+                        ParseBattleStationDateTime(row["deflectorTime"], DateTime.MinValue));
+
+                    var modulesJson = row.Table.Columns.Contains("modules") ? Convert.ToString(row["modules"]) : string.Empty;
+                    if (!string.IsNullOrWhiteSpace(modulesJson))
+                    {
+                        var equippedModules = JsonConvert.DeserializeObject<List<EquippedModuleBase>>(modulesJson);
+                        battleStation.LoadEquippedModules(equippedModules);
+                    }
+
+                    GameManager.BattleStations.TryAdd(battleStation.Name, battleStation);
+                }
+            }
+        }
+
+        private static DateTime ParseBattleStationDateTime(object value, DateTime fallback)
+        {
+            if (value == null)
+                return fallback;
+
+            var text = Convert.ToString(value);
+            if (string.IsNullOrWhiteSpace(text) || text == "0000-00-00 00:00:00" || text == "0001-01-01 00:00:00")
+                return fallback;
+
+            DateTime parsed;
+            return DateTime.TryParse(text, out parsed) ? parsed : fallback;
         }
 
         public static void LoadShips()
@@ -1600,10 +1681,60 @@ namespace Ow.Managers
                     string name = Convert.ToString(row["name"]);
                     string tag = Convert.ToString(row["tag"]);
                     int factionId = Convert.ToInt32(row["factionId"]);
+                    int leaderId = row.Table.Columns.Contains("leaderId") && row["leaderId"] != DBNull.Value ? Convert.ToInt32(row["leaderId"]) : 0;
 
-                    var clan = new Clan(id, name, tag, factionId);
+                    var clan = new Clan(id, name, tag, factionId, leaderId);
                     GameManager.Clans.TryAdd(clan.Id, clan);
                     LoadClanDiplomacy(clan);
+                    LoadClanBattleStationInventory(clan);
+                }
+            }
+        }
+
+        public static void SaveClanBattleStationInventory(Clan clan)
+        {
+            if (clan == null || clan.Id == 0)
+                return;
+
+            using (var mySqlClient = SqlDatabaseManager.GetClient())
+            {
+                mySqlClient.ExecuteNonQuery($"DELETE FROM clan_battlestation_inventory WHERE clan_id = {clan.Id}");
+
+                foreach (var module in clan.BattleStationInventory.Where(x => x != null))
+                {
+                    mySqlClient.ExecuteNonQuery(
+                        "INSERT INTO clan_battlestation_inventory (clan_id, item_id, module_type, upgrade_level, in_use) " +
+                        $"VALUES ({clan.Id}, {module.ItemId}, {module.Type}, {module.UpgradeLevel}, {(module.InUse ? 1 : 0)})");
+                }
+            }
+        }
+
+        private static void LoadClanBattleStationInventory(Clan clan)
+        {
+            if (clan == null || clan.Id == 0)
+                return;
+
+            clan.BattleStationInventory.Clear();
+
+            using (var mySqlClient = SqlDatabaseManager.GetClient())
+            {
+                DataTable data;
+                try
+                {
+                    data = (DataTable)mySqlClient.ExecuteQueryTable($"SELECT * FROM clan_battlestation_inventory WHERE clan_id = {clan.Id}");
+                }
+                catch
+                {
+                    return;
+                }
+
+                foreach (DataRow row in data.Rows)
+                {
+                    clan.BattleStationInventory.Add(new ClanBattleStationInventoryItem(
+                        Convert.ToInt32(row["item_id"]),
+                        Convert.ToInt16(row["module_type"]),
+                        row.Table.Columns.Contains("upgrade_level") && row["upgrade_level"] != DBNull.Value ? Convert.ToInt32(row["upgrade_level"]) : 0,
+                        Convert.ToInt32(row["in_use"]) == 1));
                 }
             }
         }
