@@ -78,7 +78,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
+                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && !HasTargetLock(player) && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -147,7 +147,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && !HasTargetLock(player) && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -171,7 +171,7 @@ namespace Ow.Game.Objects.AI
                             {
                                 var player = players as Player;
 
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
+                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && !HasTargetLock(player) && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
                                 {
                                     Npc.Attacking = false;
                                     Npc.Selected = null;
@@ -266,12 +266,17 @@ namespace Ow.Game.Objects.AI
             return IsGalaxyGateNpc() || (Npc != null && Npc.UseMapWideChaseRange && Npc.AllMapRange && Npc.Spacemap != null && Npc.Spacemap.Options.RangeDisabled);
         }
 
+        private bool HasTargetLock(Player player)
+        {
+            return player != null && (Npc.Selected == player || player.Selected == Npc);
+        }
+
         private bool CanChasePlayer(Player player, bool ignoreDistanceForNpc)
         {
             return player != null
                 && !player.Storage.IsInDemilitarizedZone
                 && !player.Invisible
-                && (ignoreDistanceForNpc || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
+                && (ignoreDistanceForNpc || HasTargetLock(player) || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
         }
 
         private bool IsWithinAttackRange(Player player)
@@ -304,17 +309,15 @@ namespace Ow.Game.Objects.AI
             if (player == null)
                 return Npc.Position;
 
-            var distanceToPlayer = Npc.Position.DistanceTo(player.Position);
-            if (distanceToPlayer <= 0)
-                return new Position(player.Position.X + ALIEN_DISTANCE_TO_USER, player.Position.Y);
+            var angleDegrees = ((Npc.Id * 37) + (player.Id * 17)) % 360;
+            if (angleDegrees < 0)
+                angleDegrees += 360;
 
-            var directionX = Npc.Position.X - player.Position.X;
-            var directionY = Npc.Position.Y - player.Position.Y;
-            var scale = ALIEN_DISTANCE_TO_USER / distanceToPlayer;
+            var angleRadians = DegreeToRadian(angleDegrees);
 
             return new Position(
-                player.Position.X + (int)Math.Round(directionX * scale),
-                player.Position.Y + (int)Math.Round(directionY * scale));
+                player.Position.X + (int)Math.Round(Math.Cos(angleRadians) * ALIEN_DISTANCE_TO_USER),
+                player.Position.Y + (int)Math.Round(Math.Sin(angleRadians) * ALIEN_DISTANCE_TO_USER));
         }
     }
 }

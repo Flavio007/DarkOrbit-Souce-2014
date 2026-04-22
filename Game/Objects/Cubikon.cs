@@ -119,14 +119,14 @@ namespace Ow.Game.Objects
         {
             if (Ship.Id == 480 || Ship.Id == 880)
             {
-                AddVisualModifier(VisualModifierCommand.SKULL, 5, "", 0, true);
+                AddVisualModifier(VisualModifierCommand.SKULL, 1, "", 1, true);
                 GameManager.SendPacketToMap(Spacemap.Id, $"0|n|s|start|{Id}");
             }
 
             for (int i = 1; i < count; i++)
                 if (minioncount < 20)
                 {
-                    protegits.Add(new Protegit(Randoms.CreateRandomID(), GameManager.GetShip(npcid), Spacemap, Position.GetPosOnCircle(Position, 500), this));
+                    protegits.Add(new Protegit(Randoms.CreateRandomID(), GameManager.GetShip(npcid), Spacemap, Position.GetPosOnCircle(Position, 10), this));
                     minioncount++;
                 }
         }

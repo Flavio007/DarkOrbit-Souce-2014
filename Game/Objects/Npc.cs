@@ -18,10 +18,10 @@ namespace Ow.Game.Objects
     {
         private const int CenturyFalconWaveSize = 20;
         private const int CenturyFalconLaserId = 3;
-        private const int CenturyFalconLaserMultiplier = 4;
+        private const int CenturyFalconLaserMultiplier = 1;
         private const int CenturyFalconRocketLauncherId = 7;
         private const int CenturyFalconRocketCount = 10;
-        private const int CenturyFalconRocketDamage = 4000;
+        private const int CenturyFalconRocketDamage = 5000;
         private const int CenturyFalconRocketCooldownSeconds = 20;
         private readonly List<Protegit> centuryFalconMinions = new List<Protegit>();
 

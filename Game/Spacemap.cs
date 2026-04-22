@@ -279,13 +279,14 @@ namespace Ow.Game
             {
                 foreach (var otherCharacter in Characters.Values.Where(x => x.Id != character.Id && !x.Equals(character)))
                 {
+                    var keepVisibleByTargetLock = character.SelectedCharacter == otherCharacter || otherCharacter.SelectedCharacter == character;
                     var loadRange = character.RenderRange;
                     if (otherCharacter.RenderRange > loadRange)
                         loadRange = otherCharacter.RenderRange;
 
-                    if (character.InRange(otherCharacter, loadRange) || character.AllMapRange)
+                    if (character.InRange(otherCharacter, loadRange) || character.AllMapRange || keepVisibleByTargetLock)
                         character.AddInRangeCharacter(otherCharacter);
-                    else if (!character.AllMapRange || character.SelectedCharacter == null || (character.SelectedCharacter != null && !character.SelectedCharacter.Equals(otherCharacter)))
+                    else if ((!character.AllMapRange || character.SelectedCharacter == null || (character.SelectedCharacter != null && !character.SelectedCharacter.Equals(otherCharacter))) && !keepVisibleByTargetLock)
                         character.RemoveInRangeCharacter(otherCharacter);
                 }
 
