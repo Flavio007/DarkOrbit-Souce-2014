@@ -44,6 +44,12 @@ namespace Ow.Net.netty.handlers.BattleStationRequestHandlers
                 return;
             }
 
+            if (!battleStation.IsValidModuleSlot(module.Type, request.slotId))
+            {
+                player.SendPacket("0|A|STD|Hull deve ser instalado no slot 0, Deflector no slot 1, e os demais modulos nos slots externos.");
+                return;
+            }
+
             if (module.InUse)
             {
                 player.SendCommand(BattleStationErrorCommand.write(BattleStationErrorCommand.ITEM_ALREADY_EQUIPPED_IN_ANOTHER_ASTEROID));
@@ -60,8 +66,12 @@ namespace Ow.Net.netty.handlers.BattleStationRequestHandlers
                 }
 
                 existingSatellite.Remove(false, true, false);
-                battleStation.Spacemap.Activatables.TryRemove(existingSatellite.Id, out var removedSatellite);
-                GameManager.SendCommandToMap(battleStation.Spacemap.Id, AssetRemoveCommand.write(existingSatellite.GetAssetType(), existingSatellite.Id));
+
+                if (battleStation.ShouldDisplayModuleAsSatellite(existingSatellite.SlotId))
+                {
+                    battleStation.Spacemap.Activatables.TryRemove(existingSatellite.Id, out var removedSatellite);
+                    GameManager.SendCommandToMap(battleStation.Spacemap.Id, AssetRemoveCommand.write(existingSatellite.GetAssetType(), existingSatellite.Id));
+                }
             }
 
             var satellite = new Satellite(
@@ -74,21 +84,29 @@ namespace Ow.Net.netty.handlers.BattleStationRequestHandlers
                 module.Type,
                 Satellite.GetPosition(battleStation.Position, request.slotId));
 
-            satellite.Installed = true;
+            satellite.OwnerId = player.Id;
+            satellite.InstallationSecondsLeft = battleStation.GetClanModuleInstallationSeconds();
+            satellite.installationTime = DateTime.Now;
+            satellite.AddVisualModifier(VisualModifierCommand.MODULE_INSTALL_EFFECT, 0, "", 0, true);
             satellite.UpgradeLevel = module.UpgradeLevel;
 
             if (!battleStation.EquippedStationModule.ContainsKey(player.Clan.Id))
                 battleStation.EquippedStationModule[player.Clan.Id] = new List<Satellite>();
 
             battleStation.EquippedStationModule[player.Clan.Id].Add(satellite);
-            battleStation.Spacemap.Activatables.TryAdd(satellite.Id, satellite);
-            battleStation.UpdateClanModuleUsage(module.ItemId, true);
+
+            if (battleStation.ShouldDisplayModuleAsSatellite(satellite.SlotId))
+                battleStation.Spacemap.Activatables.TryAdd(satellite.Id, satellite);
+
+            battleStation.UpdateClanModuleUsage(module.ItemId, true, player.Clan);
 
             QueryManager.BattleStations.Modules(battleStation);
 
-            GameManager.SendCommandToMap(battleStation.Spacemap.Id, satellite.GetAssetCreateCommand());
+            if (battleStation.ShouldDisplayModuleAsSatellite(satellite.SlotId))
+                GameManager.SendCommandToMap(battleStation.Spacemap.Id, satellite.GetAssetCreateCommand());
+
             battleStation.RefreshBoosterInterface();
-            battleStation.SendStatusCommand(player);
+            battleStation.SendClanInterfaceCommand(player);
         }
     }
 }

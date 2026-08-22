@@ -10,12 +10,12 @@
   <BattleStation mapId="16" name="Tyris Fragment" x="11000" y="13000">
     <Vulnerability start="12:30" end="13:00" />
     <Vulnerability start="20:00" end="21:00" />
-    <Tower slotId="2" type="LASER_HIGH_RANGE" designId="6" name="North-East Siege Laser">
+    <Tower slotId="2" type="LASER_HIGH_RANGE" designId="4" name="North-East Siege Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
     </Tower>
-    <Tower slotId="3" type="ROCKET_LOW_ACCURACY" designId="7" name="East Barrage Launcher">
+    <Tower slotId="3" type="ROCKET_LOW_ACCURACY" designId="8" name="East Barrage Launcher">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1700" range="900" cooldownSeconds="2.4" missProbability="0.45" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="2200" range="940" cooldownSeconds="2.2" missProbability="0.40" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2700" range="980" cooldownSeconds="2.0" missProbability="0.35" />
@@ -25,7 +25,7 @@
       <Level level="10" hitPoints="120000" shieldPoints="120000" boostPercent="10" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" boostPercent="15" />
     </Tower>
-    <Tower slotId="5" type="LASER_MID_RANGE" designId="6" name="South Tracking Laser">
+    <Tower slotId="5" type="LASER_MID_RANGE" designId="5" name="South Tracking Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
@@ -45,7 +45,7 @@
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
     </Tower>
-    <Tower slotId="9" type="LASER_HIGH_RANGE" designId="6" name="North Siege Laser">
+    <Tower slotId="9" type="LASER_HIGH_RANGE" designId="4" name="North Siege Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
@@ -54,7 +54,7 @@
   <BattleStation mapId="16" name="Nhalia Core" x="30800" y="7600">
     <Vulnerability start="12:30" end="13:00" />
     <Vulnerability start="20:00" end="21:00" />
-    <Tower slotId="2" type="LASER_MID_RANGE" designId="6" name="North-East Tracking Laser">
+    <Tower slotId="2" type="LASER_MID_RANGE" designId="5" name="North-East Tracking Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
@@ -69,12 +69,12 @@
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1400" range="610" cooldownSeconds="0.9" missProbability="0.08" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="1800" range="630" cooldownSeconds="0.8" missProbability="0.06" />
     </Tower>
-    <Tower slotId="5" type="ROCKET_LOW_ACCURACY" designId="7" name="South Barrage Launcher">
+    <Tower slotId="5" type="ROCKET_LOW_ACCURACY" designId="8" name="South Barrage Launcher">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1700" range="900" cooldownSeconds="2.4" missProbability="0.45" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="2200" range="940" cooldownSeconds="2.2" missProbability="0.40" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2700" range="980" cooldownSeconds="2.0" missProbability="0.35" />
     </Tower>
-    <Tower slotId="6" type="LASER_HIGH_RANGE" designId="6" name="South-West Siege Laser">
+    <Tower slotId="6" type="LASER_HIGH_RANGE" designId="4" name="South-West Siege Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
@@ -84,7 +84,7 @@
       <Level level="10" hitPoints="120000" shieldPoints="120000" repairAmount="7500" repairIntervalSeconds="10" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" repairAmount="10000" repairIntervalSeconds="10" />
     </Tower>
-    <Tower slotId="8" type="LASER_MID_RANGE" designId="6" name="North-West Tracking Laser">
+    <Tower slotId="8" type="LASER_MID_RANGE" designId="5" name="North-West Tracking Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
@@ -103,7 +103,7 @@
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="820" cooldownSeconds="1.8" missProbability="0.24" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2400" range="860" cooldownSeconds="1.6" missProbability="0.18" />
     </Tower>
-    <Tower slotId="3" type="LASER_HIGH_RANGE" designId="6" name="East Siege Laser">
+    <Tower slotId="3" type="LASER_HIGH_RANGE" designId="4" name="East Siege Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1500" range="720" cooldownSeconds="1.3" missProbability="0.32" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1900" range="760" cooldownSeconds="1.2" missProbability="0.28" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
@@ -123,12 +123,12 @@
       <Level level="10" hitPoints="120000" shieldPoints="120000" boostPercent="10" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" boostPercent="15" />
     </Tower>
-    <Tower slotId="7" type="ROCKET_LOW_ACCURACY" designId="7" name="West Barrage Launcher">
+    <Tower slotId="7" type="ROCKET_LOW_ACCURACY" designId="8" name="West Barrage Launcher">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1700" range="900" cooldownSeconds="2.4" missProbability="0.45" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="2200" range="940" cooldownSeconds="2.2" missProbability="0.40" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2700" range="980" cooldownSeconds="2.0" missProbability="0.35" />
     </Tower>
-    <Tower slotId="8" type="LASER_MID_RANGE" designId="6" name="North-West Tracking Laser">
+    <Tower slotId="8" type="LASER_MID_RANGE" designId="5" name="North-West Tracking Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />

@@ -43,6 +43,9 @@ namespace Ow.Net.netty.handlers.BattleStationRequestHandlers
 
             if (!battleStation.CanBeBuiltBy(player))
             {
+                if (!battleStation.HasRequiredCoreModules())
+                    player.SendPacket("0|A|STD|Instale Hull no slot 0 e Deflector no slot 1 antes de iniciar a construcao.");
+
                 player.SendCommand(BattleStationErrorCommand.write(BattleStationErrorCommand.OUT_OF_RANGE));
                 return;
             }

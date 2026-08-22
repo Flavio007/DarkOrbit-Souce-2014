@@ -7,7 +7,7 @@
       <Level level="16" hitPoints="400000" shieldPoints="400000" expansionStage="16" />
     </CenterLevels>
   </Defaults>
-  <BattleStation mapId="16" name="Tyris" x="11000" y="13000">
+  <BattleStation mapId="16" name="Tyris Fragment" x="11000" y="13000">
     <Vulnerability start="12:30" end="13:00" />
     <Vulnerability start="20:00" end="21:00" />
     <Tower slotId="2" type="LASER_HIGH_RANGE" designId="4" name="North-East Siege Laser">
@@ -51,10 +51,10 @@
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2300" range="800" cooldownSeconds="1.1" missProbability="0.24" />
     </Tower>
   </BattleStation>
-  <BattleStation mapId="16" name="Nhalia" x="30800" y="7600">
+  <BattleStation mapId="16" name="Nhalia Core" x="30800" y="7600">
     <Vulnerability start="12:30" end="13:00" />
     <Vulnerability start="20:00" end="21:00" />
-    <Tower slotId="2" type="LASER_MID_RANGE" designId="6" name="North-East Tracking Laser">
+    <Tower slotId="2" type="LASER_MID_RANGE" designId="5" name="North-East Tracking Laser">
       <Level level="1" hitPoints="90000" shieldPoints="90000" damage="1200" range="650" cooldownSeconds="1.1" missProbability="0.22" />
       <Level level="10" hitPoints="120000" shieldPoints="120000" damage="1600" range="680" cooldownSeconds="1.0" missProbability="0.18" />
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2000" range="710" cooldownSeconds="0.9" missProbability="0.14" />
@@ -95,7 +95,7 @@
       <Level level="16" hitPoints="150000" shieldPoints="150000" damage="2400" range="860" cooldownSeconds="1.6" missProbability="0.18" />
     </Tower>
   </BattleStation>
-  <BattleStation mapId="16" name="Vesperon" x="30800" y="18400">
+  <BattleStation mapId="16" name="Vesperon Shard" x="30800" y="18400">
     <Vulnerability start="12:30" end="13:00" />
     <Vulnerability start="20:00" end="21:00" />
     <Tower slotId="2" type="ROCKET_MID_ACCURACY" designId="7" name="North-East Missile Tower">

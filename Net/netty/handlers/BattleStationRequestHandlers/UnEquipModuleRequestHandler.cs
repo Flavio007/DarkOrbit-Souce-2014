@@ -44,12 +44,16 @@ namespace Ow.Net.netty.handlers.BattleStationRequestHandlers
             }
 
             satellite.Remove(false, true, false);
-            battleStation.Spacemap.Activatables.TryRemove(satellite.Id, out var removedSatellite);
-            GameManager.SendCommandToMap(battleStation.Spacemap.Id, AssetRemoveCommand.write(satellite.GetAssetType(), satellite.Id));
+
+            if (battleStation.ShouldDisplayModuleAsSatellite(satellite.SlotId))
+            {
+                battleStation.Spacemap.Activatables.TryRemove(satellite.Id, out var removedSatellite);
+                GameManager.SendCommandToMap(battleStation.Spacemap.Id, AssetRemoveCommand.write(satellite.GetAssetType(), satellite.Id));
+            }
 
             QueryManager.BattleStations.Modules(battleStation);
             battleStation.RefreshBoosterInterface();
-            battleStation.SendStatusCommand(player);
+            battleStation.SendClanInterfaceCommand(player);
         }
     }
 }

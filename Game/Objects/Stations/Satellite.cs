@@ -446,20 +446,27 @@ namespace Ow.Game.Objects.Stations
                 return;
             }
 
-            if (BattleStation.Clan != null && BattleStation.Clan.Id != 0 && BattleStation.EquippedStationModule.ContainsKey(BattleStation.Clan.Id))
-            {
-                BattleStation.EquippedStationModule[BattleStation.Clan.Id].Remove(this);
+            var ownerClanId = BattleStation.EquippedStationModule
+                .Where(x => x.Value != null && x.Value.Contains(this))
+                .Select(x => x.Key)
+                .DefaultIfEmpty(0)
+                .First();
+            var ownerClan = ownerClanId > 0 ? GameManager.GetClan(ownerClanId) : BattleStation.Clan;
 
-                if (removeList && BattleStation.EquippedStationModule[BattleStation.Clan.Id].Count == 0)
-                    BattleStation.EquippedStationModule.Remove(BattleStation.Clan.Id);
+            if (ownerClanId != 0 && BattleStation.EquippedStationModule.ContainsKey(ownerClanId))
+            {
+                BattleStation.EquippedStationModule[ownerClanId].Remove(this);
+
+                if (removeList && BattleStation.EquippedStationModule[ownerClanId].Count == 0)
+                    BattleStation.EquippedStationModule.Remove(ownerClanId);
             }
 
-            var module = BattleStation.Clan?.BattleStationInventory?.FirstOrDefault(x => x.ItemId == ItemId);
+            var module = ownerClan?.BattleStationInventory?.FirstOrDefault(x => x.ItemId == ItemId);
 
             if (deleteModule)
             {
                 if (module != null)
-                    BattleStation.Clan.BattleStationInventory.Remove(module);
+                    ownerClan.BattleStationInventory.Remove(module);
             }
             else
             {
@@ -471,10 +478,10 @@ namespace Ow.Game.Objects.Stations
             if (closeUI && player != null)
                 player.SendCommand(OutOfBattleStationRangeCommand.write(BattleStation.Id));
 
-            if (BattleStation.Clan != null)
-                QueryManager.SaveClanBattleStationInventory(BattleStation.Clan);
+            if (ownerClan != null)
+                QueryManager.SaveClanBattleStationInventory(ownerClan);
 
-            BattleStation?.UpdateClanModuleUsage(ItemId, false);
+            BattleStation?.UpdateClanModuleUsage(ItemId, false, ownerClan);
 
             Program.TickManager.RemoveTick(this);
         }
@@ -516,16 +523,39 @@ namespace Ow.Game.Objects.Stations
             if (BattleStation == null || !BattleStation.IsOwned)
                 return 0;
 
+            var boostPercent = GetCurrentLevelStats()?.BoostPercent ?? GetClanBoosterPercent();
+
             if (boostedAttributeType == BoostedAttributeType.DAMAGE && Type == StationModuleModule.DAMAGE_BOOSTER)
-                return GetCurrentLevelStats()?.BoostPercent ?? 0;
+                return boostPercent;
 
             if (boostedAttributeType == BoostedAttributeType.HONOUR && Type == StationModuleModule.HONOR_BOOSTER)
-                return GetCurrentLevelStats()?.BoostPercent ?? 0;
+                return boostPercent;
 
             if (boostedAttributeType == BoostedAttributeType.EP && Type == StationModuleModule.EXPERIENCE_BOOSTER)
-                return GetCurrentLevelStats()?.BoostPercent ?? 0;
+                return boostPercent;
 
             return 0;
+        }
+
+        private int GetClanBoosterPercent()
+        {
+            if (IsStaticDefenseTower || BattleStation == null || !BattleStation.IsClanBattleStation)
+                return 0;
+
+            if (Type != StationModuleModule.DAMAGE_BOOSTER
+                && Type != StationModuleModule.HONOR_BOOSTER
+                && Type != StationModuleModule.EXPERIENCE_BOOSTER)
+                return 0;
+
+            var effectiveUpgradeLevel = UpgradeLevel > 0 ? UpgradeLevel : BattleStation.GetEffectiveLevel();
+
+            if (effectiveUpgradeLevel >= 16)
+                return 15;
+
+            if (effectiveUpgradeLevel > 8)
+                return 10;
+
+            return 5;
         }
 
         private BattleStationLevelDefinition GetCurrentLevelStats()
