@@ -22,6 +22,8 @@ namespace Ow.Game.Objects
 {
     class Player : Character
     {
+        private const bool EnableModernOreRefinementSync = false;
+
         public string PetName { get; set; }
         public int PetXp { get; set; }
         public int PetLevel { set; get; }
@@ -1357,6 +1359,39 @@ namespace Ow.Game.Objects
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SET_ORE_COUNT}|{Prometium}|{Endurium}|{Terbium}|{Prometid}|{Duranium}|{Promerium}|{Xenomit}|{Seprom}|{Palladium}");
         }
 
+        private List<OreStackCommand> GetModernOreStacks()
+        {
+            return new List<OreStackCommand>
+            {
+                OreStackCommand.FromServerOre(Ores.Prometium, Prometium),
+                OreStackCommand.FromServerOre(Ores.Endurium, Endurium),
+                OreStackCommand.FromServerOre(Ores.Terbium, Terbium),
+                OreStackCommand.FromServerOre(Ores.Xenomit, Xenomit),
+                OreStackCommand.FromServerOre(Ores.Prometid, Prometid),
+                OreStackCommand.FromServerOre(Ores.Duranium, Duranium),
+                OreStackCommand.FromServerOre(Ores.Promerium, Promerium),
+                OreStackCommand.FromServerOre(Ores.Seprom, Seprom),
+                OreStackCommand.FromServerOre(Ores.Palladium, Palladium)
+            };
+        }
+
+        public void SendModernOreState()
+        {
+            var stacks = GetModernOreStacks();
+            // 30352 is consumed by the client as the "You collected" log; 11900 is the count sync.
+            SendCommand(OreCountUpdateCommand.write(stacks));
+
+            var refinementEntries = new List<OreRefinementEntryCommand>
+            {
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.LASER), OreStackCommand.FromServerOre(Ores.Prometid, Prometid)),
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.ROCKET), OreStackCommand.FromServerOre(Ores.Duranium, Duranium)),
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.DRIVING), OreStackCommand.FromServerOre(Ores.Promerium, Promerium)),
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.SHIELD), OreStackCommand.FromServerOre(Ores.Seprom, Seprom))
+            };
+            if (EnableModernOreRefinementSync)
+                SendCommand(OreRefinementUpdateCommand.write(refinementEntries));
+        }
+
         public double GetHonorOreFactor()
         {
             var factor = 1 + (Data.honor / 500000.0);
@@ -1405,17 +1440,18 @@ namespace Ow.Game.Objects
 
             SetOreAmount(oreType, current + applied);
 
-            if (notify)
+            if (notify && applied > 0)
             {
-                var oreName = oreType.ToString();
-                var prefix = applied >= 0 ? "+" : "";
-                SendPacket($"0|LM|STM|{prefix}{applied} {oreName}");
+                var resourceKey = GetOreResourceKey(oreType);
+                if (!string.IsNullOrEmpty(resourceKey))
+                    SendPacket($"0|{ServerCommands.BOX_COLLECT_RESPONSE}|{ServerCommands.BOX_CONTENT_ORE}|{resourceKey}|{applied}");
             }
 
             if (sync)
             {
                 SendCargoStatus();
                 SendOreCount();
+                SendModernOreState();
             }
 
             if (persist)
@@ -1424,6 +1460,23 @@ namespace Ow.Game.Objects
             }
 
             return applied;
+        }
+
+        private static string GetOreResourceKey(Ores oreType)
+        {
+            switch (oreType)
+            {
+                case Ores.Prometium: return "ore_prometium";
+                case Ores.Endurium: return "ore_endurium";
+                case Ores.Terbium: return "ore_terbium";
+                case Ores.Xenomit: return "ore_xenomit";
+                case Ores.Prometid: return "ore_prometid";
+                case Ores.Duranium: return "ore_duranium";
+                case Ores.Promerium: return "ore_promerium";
+                case Ores.Seprom: return "ore_seprom";
+                case Ores.Palladium: return "ore_palladium";
+                default: return null;
+            }
         }
 
         public bool TrySellOre(Ores oreType, int amount)
@@ -1442,6 +1495,7 @@ namespace Ow.Game.Objects
             ChangeData(DataType.CREDITS, sellAmount * unitPrice);
             SendCargoStatus();
             SendOreCount();
+            SendModernOreState();
             QueryManager.SavePlayer.Information(this);
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Sold {sellAmount} {oreType} for {sellAmount * unitPrice} credits.");
             return true;
@@ -1485,6 +1539,7 @@ namespace Ow.Game.Objects
 
             SendCargoStatus();
             SendOreCount();
+            SendModernOreState();
             QueryManager.SavePlayer.Information(this);
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Refinement complete: +{amount} {targetOre}.");
             return true;
@@ -1495,6 +1550,7 @@ namespace Ow.Game.Objects
             Console.WriteLine($"[ORE_INFO] userId={Id} name={Name} prometium={Prometium} endurium={Endurium} terbium={Terbium} prometid={Prometid} duranium={Duranium} promerium={Promerium} xenomit={Xenomit} seprom={Seprom} palladium={Palladium}");
             SendCargoStatus();
             SendOreCount();
+            SendModernOreState();
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SET_ORE_PRICES}|{GetOreSellPrice(Ores.Prometium)}|{GetOreSellPrice(Ores.Endurium)}|{GetOreSellPrice(Ores.Terbium)}|{GetOreSellPrice(Ores.Prometid)}|{GetOreSellPrice(Ores.Duranium)}|{GetOreSellPrice(Ores.Promerium)}");
         }
 
@@ -1608,6 +1664,7 @@ namespace Ow.Game.Objects
                 if (!Program.TickManager.Exists(this)) return;
                 if (gameSession.Client.Socket == null || !gameSession.Client.Socket.IsBound || !gameSession.Client.Socket.Connected) return;
 
+                PacketDebug.NotifyOutgoing(this, command);
                 gameSession.Client.Send(command);
             }
             catch (Exception e)

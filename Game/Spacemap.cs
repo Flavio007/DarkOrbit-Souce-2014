@@ -528,6 +528,8 @@ namespace Ow.Game
 
         public void SendObjects(Player player)
         {
+            PacketDebug.NotifyPortalCount(player, Id, Activatables.Values.OfType<Portal>().Count());
+
             foreach (var activatable in Activatables.Values)
             {
                 if (activatable is Portal portal && !portal.IsVisibleTo(player))

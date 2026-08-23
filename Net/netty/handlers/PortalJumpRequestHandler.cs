@@ -32,6 +32,7 @@ namespace Ow.Net.netty.handlers
         public void execute(GameSession gameSession, byte[] bytes)
         {
             var player = gameSession.Player;
+            PacketDebug.NotifyIncoming(player, "PortalJumpRequest", 9253);
 
             var spacemap = player.Spacemap;
             var activatable = player.Spacemap.GetActivatableMapEntity(player.CurrentInRangePortalId);

@@ -857,7 +857,8 @@ namespace Ow.Game.Objects.Players.Managers
             if (GetAimCpuMissReductionPercent() <= 0 || Player.Xenomit < AIM_XENOMIT_COST)
                 return;
 
-            Player.ChangeCargo(Ow.Game.Ores.Xenomit, -AIM_XENOMIT_COST, false, true, true);
+            // Aim CPU consumption is not a collection event; avoid sending the full ore cargo on every shot.
+            Player.ChangeCargo(Ow.Game.Ores.Xenomit, -AIM_XENOMIT_COST, false, true, false);
         }
 
         public double GetRocketCooldownMultiplier()

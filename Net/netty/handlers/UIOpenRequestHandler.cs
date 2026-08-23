@@ -17,19 +17,33 @@ namespace Ow.Net.netty.handlers
             read.readCommand(bytes);
 
             var player = gameSession.Player;
+            PacketDebug.NotifyIncoming(player, "UIOpenRequest", UIOpenRequest.ID);
             switch (read.itemId)
             {
                 case UIOpenRequest.ACTION_LOGOUT:
                     player.Logout(true);
                     break;
                 case UIOpenRequest.ACTION_SHIP_WARP:
-                    //gemi değiştirme ekranı gönder
+                    // This request carries no ship id. Keep ship changes in the
+                    // dedicated ship-selection flow instead of changing state here.
                     break;
                 case UIOpenRequest.ACTION_REFINEMENT:
                     player.SendOreShopInfo();
                     break;
                 case UIOpenRequest.ACTION_QUESTS:
                     player.Quests?.OpenWindow();
+                    break;
+                case UIOpenRequest.ACTION_USER:
+                case UIOpenRequest.ACTION_SHIP:
+                case UIOpenRequest.ACTION_CHAT:
+                case UIOpenRequest.ACTION_GROUP:
+                case UIOpenRequest.ACTION_MINIMAP:
+                case UIOpenRequest.ACTION_SPACEMAP:
+                case UIOpenRequest.ACTION_LOG:
+                case UIOpenRequest.ACTION_PET:
+                case UIOpenRequest.ACTION_CONTACTS:
+                    // These windows are client-owned or handled by another
+                    // request flow and have no server-side mutation here.
                     break;
             }
         }

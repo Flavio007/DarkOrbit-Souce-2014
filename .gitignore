@@ -346,3 +346,7 @@ healthchecksdb
 Agents.md
 bin/Release/logs/chat_log_06.04.2026.txt
 .gitignore
+
+
+#Client Reference Files
+ClientReference/

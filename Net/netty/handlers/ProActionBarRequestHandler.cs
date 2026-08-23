@@ -18,11 +18,16 @@ namespace Ow.Net.netty.handlers
             read.readCommand(bytes);
 
             var player = gameSession.Player;
+            PacketDebug.NotifyIncoming(player, "ProActionBarRequest", ProActionBarRequest.ID);
             var displaySettings = player.Settings.Display;
+
+            if (displaySettings.proActionBarOpened == read.opened)
+                return;
 
             displaySettings.proActionBarOpened = read.opened;
 
             QueryManager.SavePlayer.Settings(player, "display", player.Settings.Display);
+            player.SettingsManager.SendSlotBarCommand();
         }
     }
 }

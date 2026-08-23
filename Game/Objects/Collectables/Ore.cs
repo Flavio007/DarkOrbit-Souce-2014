@@ -46,7 +46,7 @@ namespace Ow.Game.Objects.Collectables
 
         public override byte[] GetCollectableCreateCommand()
         {
-            return CreateBoxCommand.write("FROM_SHIP", Hash, Position.Y, Position.X);
+            return CreateOreCommand.write(Hash, Position.Y, Position.X, OreType);
         }
 
         protected override Position GetRespawnPosition()
@@ -98,6 +98,14 @@ namespace Ow.Game.Objects.Collectables
                 case 7:
                     oreType = Ores.Promerium;
                     resourceKey = "ore_promerium";
+                    return true;
+                case 8:
+                    oreType = Ores.Seprom;
+                    resourceKey = "ore_seprom";
+                    return true;
+                case 9:
+                    oreType = Ores.Palladium;
+                    resourceKey = "ore_palladium";
                     return true;
                 default:
                     return false;

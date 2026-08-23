@@ -53,6 +53,10 @@ namespace Ow.Net.netty
             Commands.Add(GroupPingPositionRequest.ID, new GroupPingPositionRequestHandler());
             Commands.Add(GroupFollowPlayerRequest.ID, new GroupFollowPlayerRequestHandler());
             Commands.Add(GroupKickPlayerRequest.ID, new GroupKickPlayerRequestHandler());
+            Commands.Add(CollectOreRequest.ID, new CollectOreRequestHandler());
+            Commands.Add(SellOreRequest.ID, new SellOreRequestHandler());
+            Commands.Add(TradeOreRequest.ID, new TradeOreRequestHandler());
+            Commands.Add(RefineOreRequest.ID, new RefineOreRequestHandler());
 
             Commands.Add(EquipModuleRequest.ID, new EquipModuleRequestHandler());
             Commands.Add(BuildStationRequest.ID, new BuildStationRequestHandler());
@@ -71,6 +75,7 @@ namespace Ow.Net.netty
             Commands.Add(9103, new GroupLeaveRequestHandler());
             Commands.Add(28685, new GroupChangeGroupBehaviourRequestHandler());
             Commands.Add(26571, new GroupUpdateBlockInvitationStateRequestHandler());
+            QuestHandlerRegistration.AddTo(Commands);
         }
 
         public static void Execute(byte[] bytes, GameClient client)

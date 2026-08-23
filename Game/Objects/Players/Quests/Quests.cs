@@ -6,8 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ow.Game.Objects;
+using Ow.Managers;
 using Ow.Net.netty;
 using Ow.Net.netty.commands;
+using Ow.Net.netty.requests;
 
 namespace Ow.Game.Objects.Players
 {
@@ -18,6 +20,8 @@ namespace Ow.Game.Objects.Players
         public const int QUEST_STATE_ACTIVE = 1;
         public const int QUEST_STATE_COMPLETED = 2;
         private const int QUEST_SYSTEM_TYPE_STANDARD = 0;
+        private const bool EnableModernQuestListSync = false;
+        private const bool EnableModernQuestUpdateSync = false;
 
         public Player Player { get; set; }
 
@@ -49,6 +53,7 @@ namespace Ow.Game.Objects.Players
         {
             SendQuestSystemInit();
             SendQuestSystemUpdate();
+            SendModernQuestList();
         }
 
         public void HandleQuestGiverClick()
@@ -58,9 +63,58 @@ namespace Ow.Game.Objects.Players
 
         public void Sync()
         {
-            EnsureQuest1Accepted();
             SendQuestSystemInit();
             SendQuestSystemUpdate();
+            SendModernQuestList();
+        }
+
+        public void HandleAcceptQuest(int questId)
+        {
+            if (questId != QUEST_ID_PARTING_ADVICE || QuestState == QUEST_STATE_COMPLETED)
+                return;
+
+            ActiveQuestId = questId;
+            QuestState = QUEST_STATE_ACTIVE;
+            TryCompleteClanQuest();
+        }
+
+        public void HandleAbortQuest(int questId)
+        {
+            if (questId != QUEST_ID_PARTING_ADVICE || ActiveQuestId != questId)
+                return;
+
+            ActiveQuestId = 0;
+            QuestState = QUEST_STATE_AVAILABLE;
+        }
+
+        public void ApplyModernFilters(QuestFiltersRequest filters)
+        {
+            if (filters == null || Player?.Settings?.ClassY2T == null)
+                return;
+
+            var settings = Player.Settings.ClassY2T;
+            settings.questsAvailableFilter = filters.QuestsAvailableFilter;
+            settings.questsUnavailableFilter = filters.QuestsUnavailableFilter;
+            settings.questsCompletedFilter = filters.QuestsCompletedFilter;
+            settings.var_1151 = filters.ChallengesAttemptedFilter;
+            settings.var_2239 = filters.ChallengesUnattemptedFilter;
+            settings.questsLevelOrderDescending = filters.QuestsLevelOrderDescending;
+
+            QueryManager.SavePlayer.Settings(Player, "classY2T", settings);
+            Player.SettingsManager.SendUserSettingsCommand();
+        }
+
+        public void SendModernQuestDetails(int questId)
+        {
+            if (questId != QUEST_ID_PARTING_ADVICE)
+                return;
+
+            var definition = QuestNettyModule.FromWire(QuestDefinitionModule.write(
+                QUEST_ID_PARTING_ADVICE,
+                QuestName,
+                "quest_description_1"));
+            var selectedRating = QuestNettyModule.FromWire(QuestRatingModule.write());
+            Player.SendCommand(new QuestDetailsUpdateCommand(definition, null, selectedRating).write());
         }
 
         public void TryCompleteClanQuest()
@@ -86,6 +140,7 @@ namespace Ow.Game.Objects.Players
 
             QuestState = QUEST_STATE_COMPLETED;
             SendQuestSystemUpdate();
+            SendModernQuestList();
 
             var replacements = new List<MessageWildcardReplacementModule>
             {
@@ -112,6 +167,36 @@ namespace Ow.Game.Objects.Players
         {
             Player.SendPacket($"0|{ServerCommands.QUESTFM_INFO}|{ServerCommands.QUESTFM_UPDATE}|{BuildQuestSystemXml()}|{QUEST_SYSTEM_TYPE_STANDARD}");
             Player.SendPacket($"0|{ServerCommands.QUEST_INFO}|{ServerCommands.QUEST_STATUS}|{QUEST_ID_PARTING_ADVICE}|{GetLegacyQuestStatus()}|{GetQuestProgressValue()}|1");
+            SendModernQuestUpdate();
+        }
+
+        private void SendModernQuestList()
+        {
+            if (!EnableModernQuestListSync)
+                return;
+
+            var quest = QuestNettyModule.FromWire(QuestListItemModule.write(
+                QUEST_ID_PARTING_ADVICE,
+                1,
+                1,
+                0,
+                (short)GetModernQuestStatus(),
+                QuestName,
+                "quest_description_1"));
+            Player.SendCommand(new QuestListUpdateCommand(0, 0, false,
+                new List<QuestNettyModule> { quest }).write());
+        }
+
+        private void SendModernQuestUpdate()
+        {
+            if (!EnableModernQuestUpdateSync)
+                return;
+
+            var quest = QuestNettyModule.FromWire(QuestDefinitionModule.write(
+                QUEST_ID_PARTING_ADVICE,
+                QuestName,
+                "quest_description_1"));
+            Player.SendCommand(new QuestUpdateCommand(quest).write());
         }
 
         private bool IsPlayerInClan()
@@ -129,6 +214,19 @@ namespace Ow.Game.Objects.Players
                     return 1;
                 default:
                     return 0;
+            }
+        }
+
+        private int GetModernQuestStatus()
+        {
+            switch (QuestState)
+            {
+                case QUEST_STATE_COMPLETED:
+                    return 3;
+                case QUEST_STATE_ACTIVE:
+                    return 2;
+                default:
+                    return 1;
             }
         }
 
