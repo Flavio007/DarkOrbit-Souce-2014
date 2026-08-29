@@ -55,10 +55,8 @@ namespace Ow.Game.Objects.Stations
         private bool previousVulnerabilityState;
         private readonly HashSet<int> sectorControlProgressBarPlayers = new HashSet<int>();
         private readonly object sectorControlProgressBarPlayersLock = new object();
-        // SendObjects normally registers the invisible client-side beacon while
-        // the map is being initialized.  Keep track of that per player so a
-        // station created after map initialization can repair the registration
-        // before the first 15267 update is sent.
+        // Tracks the single SZ registration per player.  The client creates
+        // the type-41 beacon every time it receives a MapAddPOICommand.
         private readonly HashSet<int> sectorControlPoiPlayers = new HashSet<int>();
         private readonly HashSet<int> sectorControlProgressBarVisibilityPending = new HashSet<int>();
         private int lastSectorControlProgressPercent = -1;
@@ -70,6 +68,7 @@ namespace Ow.Game.Objects.Stations
         public bool IsOwned => IsClanBattleStation ? Clan != null && Clan.Id != 0 : FactionId != 0;
         public bool IsOperational => AssetTypeId == AssetTypeModule.BATTLESTATION;
         public string SectorControlHash { get; private set; }
+        private string SectorControlVisualHash => $"{SectorControlHash}_visual";
         private bool IsSectorControlStation => IsFactionBattleStation && Spacemap != null && Spacemap.Id == 16;
 
         public BattleStation(BattleStationDefinition definition, Spacemap spacemap)
@@ -87,6 +86,7 @@ namespace Ow.Game.Objects.Stations
             previousVulnerabilityState = Definition.IsVulnerableAt(DateTime.Now);
             SectorControlHash = $"sector_control_{spacemap.Id}_{Id}";
             RegisterSectorControlPOI();
+            RegisterSectorControlVisualPOI();
 
             Program.TickManager.AddTick(this);
         }
@@ -124,6 +124,12 @@ namespace Ow.Game.Objects.Stations
                 ProcessCapture();
             else
                 ResetCaptureProgress();
+
+            if (FactionId == 0)
+            {
+                EnsureSectorControlBeaconPOI();
+                UpdateSectorControlPOI();
+            }
 
             UpdateSectorControlProgressBars();
 
@@ -644,12 +650,58 @@ namespace Ow.Game.Objects.Stations
                 new List<int> { Position.X, Position.Y, radius },
                 true,
                 false,
-                GetSectorControlZoneSpecification());
+                "NONE");
 
             // The client maps this numeric POI type to its internal "SZ" module
             // and creates the invisible type-41 beacon automatically.  Keep a
             // single POI/hash so the progress packets resolve that same asset.
             Spacemap.POIs.TryAdd(SectorControlHash, poi);
+        }
+
+        private void RegisterSectorControlVisualPOI()
+        {
+            if (!IsSectorControlStation || Definition == null)
+                return;
+
+            var radius = Math.Max(1, Definition.CaptureRadius);
+            var poi = new POI(
+                SectorControlVisualHash,
+                POITypes.SECTOR_CONTROL_HOME_ZONE,
+                POIDesigns.SECTOR_CONTROL_SECTOR_ZONE,
+                POIShapes.CIRCLE,
+                new List<int> { Position.X, Position.Y, radius },
+                true,
+                false,
+                GetSectorControlZoneSpecification());
+
+            // HZ is used only for the colored circle.  Unlike SZ, the client
+            // does not create a type-41 beacon when this POI is added.
+            Spacemap.POIs.TryAdd(SectorControlVisualHash, poi);
+        }
+
+        private void EnsureSectorControlBeaconPOI()
+        {
+            if (!IsSectorControlStation || FactionId != 0 || Spacemap == null)
+                return;
+
+            if (Spacemap.POIs.TryGetValue(SectorControlHash, out var poi) && poi != null)
+                return;
+
+            RegisterSectorControlPOI();
+            if (!Spacemap.POIs.TryGetValue(SectorControlHash, out poi) || poi == null)
+                return;
+
+            var poiCommand = poi.GetPOICreateCommand();
+            PacketDebug.Log("sector_control_packets",
+                $"QUEUE MapAddPOICommand ID={MapAddPOICommand.ID} LENGTH={poiCommand.Length} PLAYER=MAP MAP={Spacemap.Id} HASH={SectorControlHash} REASON=BEACON_REGISTER");
+
+            lock (sectorControlProgressBarPlayersLock)
+            {
+                foreach (var player in Spacemap.Characters.Values.OfType<Player>())
+                    sectorControlPoiPlayers.Add(player.Id);
+            }
+
+            GameManager.SendCommandToMap(Spacemap.Id, poiCommand);
         }
 
         public void SendSectorControlPOI(Player player, byte[] command, string reason)
@@ -659,7 +711,9 @@ namespace Ow.Game.Objects.Stations
 
             lock (sectorControlProgressBarPlayersLock)
             {
-                sectorControlPoiPlayers.Add(player.Id);
+                if (!sectorControlPoiPlayers.Add(player.Id))
+                    return;
+
                 SendSectorControlCommand(
                     player,
                     "MapAddPOICommand",
@@ -671,15 +725,15 @@ namespace Ow.Game.Objects.Stations
 
         private void UpdateSectorControlPOI()
         {
-            if (!IsSectorControlStation)
+            if (!IsSectorControlStation || FactionId != 0)
                 return;
 
             var created = false;
-            if (!Spacemap.POIs.TryGetValue(SectorControlHash, out var poi) || poi == null)
+            if (!Spacemap.POIs.TryGetValue(SectorControlVisualHash, out var poi) || poi == null)
             {
-                RegisterSectorControlPOI();
+                RegisterSectorControlVisualPOI();
                 created = true;
-                if (!Spacemap.POIs.TryGetValue(SectorControlHash, out poi) || poi == null)
+                if (!Spacemap.POIs.TryGetValue(SectorControlVisualHash, out poi) || poi == null)
                     return;
             }
 
@@ -690,13 +744,37 @@ namespace Ow.Game.Objects.Stations
             poi.TypeSpecification = zoneSpecification;
             var poiCommand = poi.GetPOICreateCommand();
             PacketDebug.Log("sector_control_packets",
-                $"QUEUE MapAddPOICommand ID={MapAddPOICommand.ID} LENGTH={poiCommand.Length} PLAYER=MAP MAP={Spacemap.Id} HASH={SectorControlHash} REASON=ZONE_UPDATE");
+                $"QUEUE MapAddPOICommand ID={MapAddPOICommand.ID} LENGTH={poiCommand.Length} PLAYER=MAP MAP={Spacemap.Id} HASH={SectorControlVisualHash} REASON=VISUAL_ZONE_UPDATE");
             GameManager.SendCommandToMap(Spacemap.Id, poiCommand);
+        }
+
+        private void RemoveSectorControlPOI()
+        {
+            if (!IsSectorControlStation || Spacemap == null)
+                return;
+
+            Spacemap.POIs.TryRemove(SectorControlHash, out var removedPoi);
+            Spacemap.POIs.TryRemove(SectorControlVisualHash, out var removedVisualPoi);
+
+            lock (sectorControlProgressBarPlayersLock)
+            {
+                sectorControlPoiPlayers.Clear();
+                sectorControlProgressBarVisibilityPending.Clear();
+            }
+
+            GameManager.SendCommandToMap(
+                Spacemap.Id,
+                MapRemovePOICommand.write(SectorControlHash));
+            GameManager.SendCommandToMap(
+                Spacemap.Id,
+                MapRemovePOICommand.write(SectorControlVisualHash));
         }
 
         private string GetSectorControlZoneSpecification()
         {
-            switch (FactionId)
+            var displayedFactionId = capturingFactionId > 0 ? capturingFactionId : FactionId;
+
+            switch (displayedFactionId)
             {
                 case FactionModule.MMO:
                     return "MMO";
@@ -781,7 +859,7 @@ namespace Ow.Game.Objects.Stations
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
-            UpdateSectorControlPOI();
+            RemoveSectorControlPOI();
             GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} was captured by {GetFactionName(FactionId)} at level 1.");
 
             QueryManager.BattleStations.BattleStation(this);
@@ -811,6 +889,7 @@ namespace Ow.Game.Objects.Stations
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            EnsureSectorControlBeaconPOI();
             UpdateSectorControlPOI();
             RefreshBoosterInterface();
         }
@@ -971,11 +1050,9 @@ namespace Ow.Game.Objects.Stations
                             continue;
                         }
 
-                        // MapAddPOI creates the client's invisible type-41
-                        // sector-control beacon and the hash -> asset mapping.
-                        // Normally SendObjects has already done this.  If this
-                        // station was added after map initialization, repair the
-                        // missing registration before sending 15267/24512.
+                        // A station created after map initialization may not
+                        // have been included in SendObjects.  Register its
+                        // beacon once for this player before sending 15267.
                         if (!sectorControlPoiPlayers.Contains(player.Id))
                         {
                             SendSectorControlPOI(
@@ -1034,9 +1111,6 @@ namespace Ow.Game.Objects.Stations
             lock (sectorControlProgressBarPlayersLock)
             {
                 sectorControlProgressBarPlayers.Remove(player.Id);
-                // A map cleanup removes the client-side POI/asset mapping.  Do
-                // not carry the registration over to a later visit to this
-                // map; SendObjects or the range-entry fallback must recreate it.
                 sectorControlPoiPlayers.Remove(player.Id);
                 sectorControlProgressBarVisibilityPending.Remove(player.Id);
                 SendSectorControlCommand(

@@ -552,9 +552,8 @@ namespace Ow.Game
                         .FirstOrDefault(station => station.SectorControlHash == poi.Id);
                     if (sectorControlStation != null)
                     {
-                        // Serialize the registration with range entry.  This
-                        // prevents a Tick from inserting 15267 between a POI
-                        // command and the rest of the map initialization.
+                        // Serialize beacon registration with range entry and
+                        // suppress duplicate MapAddPOI commands per player.
                         sectorControlStation.SendSectorControlPOI(player, poiCommand, "MAP_OBJECTS");
                         continue;
                     }
