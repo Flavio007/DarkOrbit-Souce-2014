@@ -21,9 +21,9 @@ namespace Ow.Net.netty.commands
         {
             var param1 = new ByteArray(ID);
             param1.write(Result.write());
+            param1.writeShort(AFTER_TYPE_MARKER);
             param1.writeShort(BEFORE_TYPE_MARKER);
             param1.write(Source.write());
-            param1.writeShort(AFTER_TYPE_MARKER);
             return param1.Message.ToArray();
         }
     }

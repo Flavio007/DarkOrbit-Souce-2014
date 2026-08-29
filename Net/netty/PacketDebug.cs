@@ -3,18 +3,55 @@ using Ow.Net.netty.commands;
 using Ow.Net.netty.requests;
 using Ow.Utils;
 using System;
+using System.Globalization;
+using System.Text;
 
 namespace Ow.Net.netty
 {
     static class PacketDebug
     {
-        // Toggle this flag to enable or disable every packet-debug trace.
-        // It is enabled by default so the current diagnostics keep working.
+        // Controls the in-game diagnostic messages and the existing packet traces.
         public static bool Enabled = false;
+
+        // Captures the raw upgrade request without enabling diagnostics for every
+        // other packet. Turn this off after the upgrade issue is diagnosed.
+        public static bool RawIncomingEnabled = true;
+        public static bool RawOreRefinementOutgoingEnabled = true;
 
         public static void NotifyIncoming(Player player, string packetName, short packetId)
         {
             Notify(player, "C2S", packetName, packetId);
+        }
+
+        public static void NotifyIncoming(Player player, string packetName, short packetId, byte[] packet)
+        {
+            NotifyIncoming(player, packetName, packetId);
+            LogRawIncoming(player, packetName, packetId, packet);
+        }
+
+        public static void NotifyRefineOreDecoded(Player player, RefineOreRequest request, byte[] packet)
+        {
+            if (!RawIncomingEnabled || request == null)
+                return;
+
+            var playerId = player == null ? -1 : player.Id;
+            var mapId = player == null || player.Spacemap == null ? -1 : player.Spacemap.Id;
+            var sourceType = request.Source == null ? "<null>" : request.Source.TypeValue.ToString(CultureInfo.InvariantCulture);
+            var targetCount = request.Target == null
+                ? "<null>"
+                : request.Target.Count.ToString("R", CultureInfo.InvariantCulture);
+            var targetResourceType = request.Target == null || request.Target.Resource == null
+                ? "<null>"
+                : request.Target.Resource.TypeValue.ToString(CultureInfo.InvariantCulture);
+            var length = packet == null ? 0 : packet.Length;
+            var message = $"- [PacketDebug] C2S RefineOreRequest ID={RefineOreRequest.ID} LENGTH={length} PLAYER={playerId} MAP={mapId}" +
+                          $" TARGET_MARKER={request.TargetFieldMarker} TARGET_ID={OreStackCommand.ID}" +
+                          $" TARGET_COUNT={targetCount} TARGET_RESOURCE_ID={OreResourceTypeModule.ID} TARGET_RESOURCE_TYPE={targetResourceType}" +
+                          $" SOURCE_MARKER={request.SourceFieldMarker} SOURCE_ID={RefinementTypeModule.ID} SOURCE_TYPE={sourceType}" +
+                          $" MARKERS_OK={request.HasExpectedFieldMarkers} CONSUMED={request.BytesConsumed} HEX={ToHex(packet)}";
+
+            Logger.Log("packet_debug", message);
+            Out.WriteLine(message, "PacketDebug", ConsoleColor.DarkYellow);
         }
 
         public static void NotifyPortalCount(Player player, int mapId, int portalCount)
@@ -27,10 +64,16 @@ namespace Ow.Net.netty
 
         public static void NotifyOutgoing(Player player, byte[] command)
         {
-            if (!Enabled || command == null || command.Length < 4)
+            if (command == null || command.Length < 4)
                 return;
 
             var packetId = (short)((command[2] << 8) | (command[3] & 0xff));
+            if (packetId == OreRefinementUpdateCommand.ID)
+                LogRawOutgoing(player, "OreRefinementUpdateCommand", packetId, command);
+
+            if (!Enabled)
+                return;
+
             var packetName = GetOutgoingPacketName(packetId);
             if (packetName != null)
                 Notify(player, "S2C", packetName, packetId, command.Length);
@@ -151,6 +194,51 @@ namespace Ow.Net.netty
                 return;
 
             Logger.Log(category, message);
+        }
+
+        private static void LogRawIncoming(Player player, string packetName, short packetId, byte[] packet)
+        {
+            if (!RawIncomingEnabled)
+                return;
+
+            var playerId = player == null ? -1 : player.Id;
+            var mapId = player == null || player.Spacemap == null ? -1 : player.Spacemap.Id;
+            var length = packet == null ? 0 : packet.Length;
+            var message = $"- [PacketDebug] C2S {packetName} ID={packetId} LENGTH={length} PLAYER={playerId} MAP={mapId} HEX={ToHex(packet)}";
+
+            Logger.Log("packet_debug", message);
+            Out.WriteLine(message, "PacketDebug", ConsoleColor.DarkYellow);
+        }
+
+        private static void LogRawOutgoing(Player player, string packetName, short packetId, byte[] packet)
+        {
+            if (!RawOreRefinementOutgoingEnabled)
+                return;
+
+            var playerId = player == null ? -1 : player.Id;
+            var mapId = player == null || player.Spacemap == null ? -1 : player.Spacemap.Id;
+            var length = packet == null ? 0 : packet.Length;
+            var message = $"- [PacketDebug] S2C {packetName} ID={packetId} LENGTH={length} PLAYER={playerId} MAP={mapId} HEX={ToHex(packet)}";
+
+            Logger.Log("packet_debug", message);
+            Out.WriteLine(message, "PacketDebug", ConsoleColor.DarkCyan);
+        }
+
+        private static string ToHex(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+                return string.Empty;
+
+            var builder = new StringBuilder(bytes.Length * 3);
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                if (i > 0)
+                    builder.Append(' ');
+
+                builder.Append(bytes[i].ToString("X2", CultureInfo.InvariantCulture));
+            }
+
+            return builder.ToString();
         }
     }
 }

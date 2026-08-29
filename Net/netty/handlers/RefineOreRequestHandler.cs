@@ -8,11 +8,13 @@ namespace Ow.Net.netty.handlers
     {
         public void execute(GameSession gameSession, byte[] bytes)
         {
+            var player = gameSession?.Player;
+            PacketDebug.NotifyIncoming(player, "RefineOreRequest", RefineOreRequest.ID, bytes);
+
             var read = new RefineOreRequest();
             read.readCommand(bytes);
+            PacketDebug.NotifyRefineOreDecoded(player, read, bytes);
 
-            var player = gameSession?.Player;
-            PacketDebug.NotifyIncoming(player, "RefineOreRequest", RefineOreRequest.ID);
             if (player == null || read.Source == null ||
                 !OreRequestHandlerUtilities.TryGetOre(read.Target, out var targetOre) ||
                 !OreRequestHandlerUtilities.TryGetAmount(read.Target, out var amount))

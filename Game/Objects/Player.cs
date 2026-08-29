@@ -22,7 +22,12 @@ namespace Ow.Game.Objects
 {
     class Player : Character
     {
-        private const bool EnableModernOreRefinementSync = false;
+        private const bool EnableModernOreRefinementSync = true;
+        private const int ShotOreRefinementSyncIntervalSeconds = 5;
+        private const int TimedOreRefinementSyncIntervalSeconds = 60;
+
+        private DateTime nextShotOreRefinementSyncAt = DateTime.MinValue;
+        private DateTime nextTimedOreRefinementSyncAt = DateTime.MinValue;
 
         public string PetName { get; set; }
         public int PetXp { get; set; }
@@ -202,13 +207,20 @@ namespace Ow.Game.Objects
             switch (refinementType)
             {
                 case RefinementTypeModule.LASER:
-                    return ore == Ores.Prometid ? 15 : ore == Ores.Seprom ? 60 : 0;
+                    return ore == Ores.Prometid ? 15 :
+                           ore == Ores.Promerium ? 30 :
+                           ore == Ores.Seprom ? 60 : 0;
                 case RefinementTypeModule.ROCKET:
-                    return ore == Ores.Duranium ? 10 : ore == Ores.Seprom ? 60 : 0;
+                    return ore == Ores.Prometid ? 15 :
+                           ore == Ores.Promerium ? 30 :
+                           ore == Ores.Seprom ? 60 : 0;
                 case RefinementTypeModule.DRIVING:
-                    return ore == Ores.Promerium ? 20 : 0;
+                    return ore == Ores.Duranium ? 10 :
+                           ore == Ores.Promerium ? 20 : 0;
                 case RefinementTypeModule.SHIELD:
-                    return ore == Ores.Duranium ? 10 : ore == Ores.Seprom ? 60 : 0;
+                    return ore == Ores.Duranium ? 10 :
+                           ore == Ores.Promerium ? 20 :
+                           ore == Ores.Seprom ? 40 : 0;
                 default:
                     return 0;
             }
@@ -249,6 +261,16 @@ namespace Ow.Game.Objects
                 upgrade.resource = -1;
                 upgrade.expiresAt = DateTime.MinValue;
             }
+
+            // The server amount is consumed above, but the client only changes
+            // the refinement counters when it receives the complete state again.
+            var now = DateTime.UtcNow;
+            if (GameSession != null &&
+                (upgrade.amount == 0 || now >= nextShotOreRefinementSyncAt))
+            {
+                SendModernOreRefinementState(RefinementTypeModule.LASER, RefinementTypeModule.ROCKET);
+                nextShotOreRefinementSyncAt = now.AddSeconds(ShotOreRefinementSyncIntervalSeconds);
+            }
         }
 
         private bool ExpireOreUpgrades()
@@ -276,13 +298,13 @@ namespace Ow.Game.Objects
             switch (refinementType)
             {
                 case RefinementTypeModule.LASER:
-                    return oreType == Ores.Prometid || oreType == Ores.Seprom;
+                    return oreType == Ores.Prometid || oreType == Ores.Promerium || oreType == Ores.Seprom;
                 case RefinementTypeModule.ROCKET:
-                    return oreType == Ores.Duranium || oreType == Ores.Seprom;
+                    return oreType == Ores.Prometid || oreType == Ores.Promerium || oreType == Ores.Seprom;
                 case RefinementTypeModule.DRIVING:
-                    return oreType == Ores.Promerium;
+                    return oreType == Ores.Duranium || oreType == Ores.Promerium;
                 case RefinementTypeModule.SHIELD:
-                    return oreType == Ores.Duranium || oreType == Ores.Seprom;
+                    return oreType == Ores.Duranium || oreType == Ores.Promerium || oreType == Ores.Seprom;
                 default:
                     return false;
             }
@@ -346,7 +368,14 @@ namespace Ow.Game.Objects
             {
                 UpdateStatus();
                 SendModernOreState();
+                SendModernOreRefinementState();
                 QueryManager.SavePlayer.Information(this);
+            }
+            else if (GameSession != null && HasActiveTimedOreUpgrades() &&
+                     DateTime.UtcNow >= nextTimedOreRefinementSyncAt)
+            {
+                SendModernOreRefinementState(RefinementTypeModule.DRIVING, RefinementTypeModule.SHIELD);
+                nextTimedOreRefinementSyncAt = DateTime.UtcNow.AddSeconds(TimedOreRefinementSyncIntervalSeconds);
             }
             CheckHitpointsRepair();
             CheckShieldPointsRepair();
@@ -1535,7 +1564,7 @@ namespace Ow.Game.Objects
                 return Math.Ceiling(upgrade.amount / 10.0);
 
             var remainingMinutes = (upgrade.expiresAt - DateTime.UtcNow).TotalMinutes;
-            return remainingMinutes > 0 ? Math.Ceiling(remainingMinutes / 10.0) : 0;
+            return remainingMinutes > 0 ? Math.Ceiling(remainingMinutes) : 0;
         }
 
         private OreStackCommand GetModernUpgradeStack(short refinementType)
@@ -1560,13 +1589,40 @@ namespace Ow.Game.Objects
             if (!EnableModernOreRefinementSync)
                 return;
 
-            var refinementEntries = new List<OreRefinementEntryCommand>
+            SendModernOreRefinementState(
+                RefinementTypeModule.LASER,
+                RefinementTypeModule.ROCKET,
+                RefinementTypeModule.DRIVING,
+                RefinementTypeModule.SHIELD);
+
+            var now = DateTime.UtcNow;
+            nextShotOreRefinementSyncAt = now.AddSeconds(ShotOreRefinementSyncIntervalSeconds);
+            nextTimedOreRefinementSyncAt = now.AddSeconds(TimedOreRefinementSyncIntervalSeconds);
+        }
+
+        private bool HasActiveTimedOreUpgrades()
+        {
+            if (Data == null)
+                return false;
+
+            var now = DateTime.UtcNow;
+            return (Data.drivingUpgrade != null && Data.drivingUpgrade.resource >= 0 && Data.drivingUpgrade.expiresAt > now) ||
+                   (Data.shieldUpgrade != null && Data.shieldUpgrade.resource >= 0 && Data.shieldUpgrade.expiresAt > now);
+        }
+
+        private void SendModernOreRefinementState(params short[] refinementTypes)
+        {
+            if (!EnableModernOreRefinementSync || refinementTypes == null || refinementTypes.Length == 0)
+                return;
+
+            var refinementEntries = new List<OreRefinementEntryCommand>();
+            foreach (var refinementType in refinementTypes)
             {
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.LASER), GetModernUpgradeStack(RefinementTypeModule.LASER)),
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.ROCKET), GetModernUpgradeStack(RefinementTypeModule.ROCKET)),
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.DRIVING), GetModernUpgradeStack(RefinementTypeModule.DRIVING)),
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.SHIELD), GetModernUpgradeStack(RefinementTypeModule.SHIELD))
-            };
+                refinementEntries.Add(new OreRefinementEntryCommand(
+                    new RefinementTypeModule(refinementType),
+                    GetModernUpgradeStack(refinementType)));
+            }
+
             SendCommand(OreRefinementUpdateCommand.write(refinementEntries));
         }
 
