@@ -1,0 +1,1 @@
+[29.08.2026 12: 36:36] QUEUE SectorControlBeaconProgressVisibilityCommand ID=24512 LENGTH=34 PLAYER=6 MAP=16 HASH=sector_control_16_37843 REASON=REMOVE_CHARACTER

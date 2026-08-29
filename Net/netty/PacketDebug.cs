@@ -8,6 +8,10 @@ namespace Ow.Net.netty
 {
     static class PacketDebug
     {
+        // Toggle this flag to enable or disable every packet-debug trace.
+        // It is enabled by default so the current diagnostics keep working.
+        public static bool Enabled = false;
+
         public static void NotifyIncoming(Player player, string packetName, short packetId)
         {
             Notify(player, "C2S", packetName, packetId);
@@ -15,7 +19,7 @@ namespace Ow.Net.netty
 
         public static void NotifyPortalCount(Player player, int mapId, int portalCount)
         {
-            if (player == null)
+            if (!Enabled || player == null)
                 return;
 
             player.SendPacket($"0|A|STD|[PACKET_DEBUG] MAP_PORTALS MAP={mapId} COUNT={portalCount}");
@@ -23,19 +27,19 @@ namespace Ow.Net.netty
 
         public static void NotifyOutgoing(Player player, byte[] command)
         {
-            if (command == null || command.Length < 4)
+            if (!Enabled || command == null || command.Length < 4)
                 return;
 
             var packetId = (short)((command[2] << 8) | (command[3] & 0xff));
             var packetName = GetOutgoingPacketName(packetId);
             if (packetName != null)
-                Notify(player, "S2C", packetName, packetId);
+                Notify(player, "S2C", packetName, packetId, command.Length);
         }
 
         public static void NotifyLegacyOutgoing(Player player, string packet)
         {
             const string configurationPrefix = "0|S|CFG|";
-            if (string.IsNullOrEmpty(packet) || !packet.StartsWith(configurationPrefix, StringComparison.Ordinal))
+            if (!Enabled || string.IsNullOrEmpty(packet) || !packet.StartsWith(configurationPrefix, StringComparison.Ordinal))
                 return;
 
             NotifyText(player, "S2C Configuration CFG=" + packet.Substring(configurationPrefix.Length));
@@ -43,6 +47,9 @@ namespace Ow.Net.netty
 
         public static void NotifyException(Player player, short packetId, int packetLength, Exception exception)
         {
+            if (!Enabled)
+                return;
+
             var packetName = GetIncomingPacketName(packetId) ?? "UnknownPacket";
             var playerId = player == null ? -1 : player.Id;
             var mapId = player == null || player.Spacemap == null ? -1 : player.Spacemap.Id;
@@ -77,6 +84,12 @@ namespace Ow.Net.netty
                     return "QuestUpdateCommand";
                 case QuestDetailsUpdateCommand.ID:
                     return "QuestDetailsUpdateCommand";
+                case MapAddPOICommand.ID:
+                    return "MapAddPOICommand";
+                case SectorControlBeaconProgressVisibilityCommand.ID:
+                    return "SectorControlBeaconProgressVisibilityCommand";
+                case SectorControlBeaconUpdateCommand.ID:
+                    return "SectorControlBeaconUpdateCommand";
             }
 
             if (packetId == CreatePortalCommand.ID)
@@ -113,22 +126,31 @@ namespace Ow.Net.netty
             }
         }
 
-        private static void Notify(Player player, string direction, string packetName, short packetId)
+        private static void Notify(Player player, string direction, string packetName, short packetId, int packetLength = -1)
         {
-            if (player == null)
+            if (!Enabled || player == null)
                 return;
 
             var mapId = player.Spacemap == null ? -1 : player.Spacemap.Id;
-            player.SendPacket($"0|A|STD|[PACKET_DEBUG] {direction} {packetName} ID={packetId} MAP={mapId}");
+            var length = packetLength >= 0 ? $" LENGTH={packetLength}" : string.Empty;
+            player.SendPacket($"0|A|STD|[PACKET_DEBUG] {direction} {packetName} ID={packetId}{length} MAP={mapId}");
         }
 
         private static void NotifyText(Player player, string message)
         {
-            if (player == null)
+            if (!Enabled || player == null)
                 return;
 
             var mapId = player.Spacemap == null ? -1 : player.Spacemap.Id;
             player.SendPacket($"0|A|STD|[PACKET_DEBUG] {message} MAP={mapId}");
+        }
+
+        public static void Log(string category, string message)
+        {
+            if (!Enabled)
+                return;
+
+            Logger.Log(category, message);
         }
     }
 }

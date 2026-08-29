@@ -543,7 +543,33 @@ namespace Ow.Game
             }
 
             foreach (var poi in POIs.Values)
-                player.SendCommand(poi.GetPOICreateCommand());
+            {
+                var poiCommand = poi.GetPOICreateCommand();
+                if (Id == 16 && poi.Type == POITypes.SECTOR_CONTROL_SECTOR_ZONE)
+                {
+                    var sectorControlStation = Activatables.Values
+                        .OfType<BattleStation>()
+                        .FirstOrDefault(station => station.SectorControlHash == poi.Id);
+                    if (sectorControlStation != null)
+                    {
+                        // Serialize the registration with range entry.  This
+                        // prevents a Tick from inserting 15267 between a POI
+                        // command and the rest of the map initialization.
+                        sectorControlStation.SendSectorControlPOI(player, poiCommand, "MAP_OBJECTS");
+                        continue;
+                    }
+                }
+
+                player.SendCommand(poiCommand);
+                if (Id == 16 && poi.Type == POITypes.SECTOR_CONTROL_SECTOR_ZONE)
+                {
+                    if (PacketDebug.Enabled)
+                    {
+                        player.SendPacket(
+                            $"0|A|STD|[PACKET_DEBUG] AFTER MapAddPOICommand ID={MapAddPOICommand.ID} LENGTH={poiCommand.Length} MAP={Id} HASH={poi.Id} REASON=MAP_OBJECTS");
+                    }
+                }
+            }
 
             foreach (var obj in Objects.Values)
                 if (obj is Asset asset)
@@ -618,6 +644,12 @@ namespace Ow.Game
             var success = Characters.TryRemove(character.Id, out character);
             if (success)
             {
+                if (character is Player leavingPlayer)
+                {
+                    foreach (var battleStation in Activatables.Values.OfType<BattleStation>())
+                        battleStation.HideSectorControlProgressBar(leavingPlayer);
+                }
+
                 CharacterRemoved?.Invoke(this, new CharacterArgs(character));
 
                 foreach (var otherCharacter in Characters.Values.Where(x => x.InRangeCharacters.ContainsKey(character.Id)))

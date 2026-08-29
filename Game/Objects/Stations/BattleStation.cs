@@ -2,7 +2,9 @@ using Ow.Game;
 using Ow.Game.Movements;
 using Ow.Game.Objects;
 using Ow.Managers;
+using Ow.Net.netty;
 using Ow.Net.netty.commands;
+using Ow.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,6 +53,17 @@ namespace Ow.Game.Objects.Stations
         private int captureProgressPoints;
         private DateTime lastCaptureProgressAt = DateTime.MinValue;
         private bool previousVulnerabilityState;
+        private readonly HashSet<int> sectorControlProgressBarPlayers = new HashSet<int>();
+        private readonly object sectorControlProgressBarPlayersLock = new object();
+        // SendObjects normally registers the invisible client-side beacon while
+        // the map is being initialized.  Keep track of that per player so a
+        // station created after map initialization can repair the registration
+        // before the first 15267 update is sent.
+        private readonly HashSet<int> sectorControlPoiPlayers = new HashSet<int>();
+        private readonly HashSet<int> sectorControlProgressBarVisibilityPending = new HashSet<int>();
+        private int lastSectorControlProgressPercent = -1;
+        private int lastSectorControlCapturingFactionId = -1;
+        private string lastSectorControlCapturingFactions = null;
 
         public bool IsFactionBattleStation => Definition != null;
         public bool IsClanBattleStation => !IsFactionBattleStation;
@@ -111,6 +124,8 @@ namespace Ow.Game.Objects.Stations
                 ProcessCapture();
             else
                 ResetCaptureProgress();
+
+            UpdateSectorControlProgressBars();
 
             if (FactionId != 0 && wasVulnerable && !isVulnerable)
                 HandleVulnerabilitySurvived();
@@ -631,7 +646,27 @@ namespace Ow.Game.Objects.Stations
                 false,
                 GetSectorControlZoneSpecification());
 
+            // The client maps this numeric POI type to its internal "SZ" module
+            // and creates the invisible type-41 beacon automatically.  Keep a
+            // single POI/hash so the progress packets resolve that same asset.
             Spacemap.POIs.TryAdd(SectorControlHash, poi);
+        }
+
+        public void SendSectorControlPOI(Player player, byte[] command, string reason)
+        {
+            if (player == null || command == null)
+                return;
+
+            lock (sectorControlProgressBarPlayersLock)
+            {
+                sectorControlPoiPlayers.Add(player.Id);
+                SendSectorControlCommand(
+                    player,
+                    "MapAddPOICommand",
+                    MapAddPOICommand.ID,
+                    command,
+                    reason);
+            }
         }
 
         private void UpdateSectorControlPOI()
@@ -653,7 +688,10 @@ namespace Ow.Game.Objects.Stations
                 return;
 
             poi.TypeSpecification = zoneSpecification;
-            GameManager.SendCommandToMap(Spacemap.Id, poi.GetPOICreateCommand());
+            var poiCommand = poi.GetPOICreateCommand();
+            PacketDebug.Log("sector_control_packets",
+                $"QUEUE MapAddPOICommand ID={MapAddPOICommand.ID} LENGTH={poiCommand.Length} PLAYER=MAP MAP={Spacemap.Id} HASH={SectorControlHash} REASON=ZONE_UPDATE");
+            GameManager.SendCommandToMap(Spacemap.Id, poiCommand);
         }
 
         private string GetSectorControlZoneSpecification()
@@ -712,7 +750,8 @@ namespace Ow.Game.Objects.Stations
             lastCaptureProgressAt = lastCaptureProgressAt.AddSeconds(elapsedSeconds);
 
             var captureState = GetCaptureState();
-            if (captureState.Contested || captureState.ActiveFactionId == 0 || captureState.PlayerCount <= 0)
+            var minimumPlayers = Math.Max(1, Definition.MinPlayersToCapture);
+            if (captureState.Contested || captureState.ActiveFactionId == 0 || captureState.PlayerCount < minimumPlayers)
                 return;
 
             var pointsPerSecond = Math.Min(captureState.PlayerCount, GetMaxCapturePointsPerSecond());
@@ -866,6 +905,185 @@ namespace Ow.Game.Objects.Stations
             capturingFactionId = 0;
             captureProgressPoints = 0;
             lastCaptureProgressAt = DateTime.MinValue;
+        }
+
+        private void UpdateSectorControlProgressBars()
+        {
+            if (!IsSectorControlStation || Definition == null || Spacemap == null)
+                return;
+
+            var playersById = Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => player != null)
+                .ToDictionary(player => player.Id);
+
+            var playersInCaptureZone = FactionId == 0
+                ? playersById.Values
+                    .Where(player => !player.Destroyed && player.CurrentHitPoints > 0 && player.FactionId > 0 && player.Position.DistanceTo(Position) <= Definition.CaptureRadius)
+                    .ToList()
+                : new List<Player>();
+
+            var playersInCaptureZoneIds = new HashSet<int>(playersInCaptureZone.Select(player => player.Id));
+
+            List<int> playersLeavingCaptureZone;
+            lock (sectorControlProgressBarPlayersLock)
+            {
+                playersLeavingCaptureZone = sectorControlProgressBarPlayers
+                    .Where(id => !playersInCaptureZoneIds.Contains(id))
+                    .ToList();
+
+                foreach (var playerId in playersLeavingCaptureZone)
+                {
+                    sectorControlProgressBarPlayers.Remove(playerId);
+                    sectorControlProgressBarVisibilityPending.Remove(playerId);
+                    if (playersById.TryGetValue(playerId, out var player))
+                        SendSectorControlCommand(
+                            player,
+                            "SectorControlBeaconProgressVisibilityCommand",
+                            SectorControlBeaconProgressVisibilityCommand.ID,
+                            SectorControlBeaconProgressVisibilityCommand.write(SectorControlHash, false),
+                            "LEAVE_RANGE");
+                }
+            }
+
+            var factions = GetSectorControlCapturingFactions();
+            var progressPercent = GetSectorControlProgressPercent();
+            var factionsSnapshot = string.Join(",", factions);
+            var shouldBroadcast = progressPercent != lastSectorControlProgressPercent
+                || capturingFactionId != lastSectorControlCapturingFactionId
+                || factionsSnapshot != lastSectorControlCapturingFactions;
+
+            foreach (var player in playersInCaptureZone)
+            {
+                bool enteredCaptureZone;
+                lock (sectorControlProgressBarPlayersLock)
+                {
+                    if (!Spacemap.Characters.TryGetValue(player.Id, out var currentCharacter)
+                        || !ReferenceEquals(currentCharacter, player))
+                        continue;
+
+                    enteredCaptureZone = sectorControlProgressBarPlayers.Add(player.Id);
+                    if (enteredCaptureZone)
+                    {
+                        if (!Spacemap.POIs.TryGetValue(SectorControlHash, out var sectorPoi) || sectorPoi == null)
+                        {
+                            sectorControlProgressBarPlayers.Remove(player.Id);
+                            continue;
+                        }
+
+                        // MapAddPOI creates the client's invisible type-41
+                        // sector-control beacon and the hash -> asset mapping.
+                        // Normally SendObjects has already done this.  If this
+                        // station was added after map initialization, repair the
+                        // missing registration before sending 15267/24512.
+                        if (!sectorControlPoiPlayers.Contains(player.Id))
+                        {
+                            SendSectorControlPOI(
+                                player,
+                                sectorPoi.GetPOICreateCommand(),
+                                "ENTER_RANGE_REGISTER_BEACON");
+                        }
+                    }
+
+                    if (enteredCaptureZone || shouldBroadcast)
+                        SendSectorControlCommand(
+                            player,
+                            "SectorControlBeaconUpdateCommand",
+                            SectorControlBeaconUpdateCommand.ID,
+                            SectorControlBeaconUpdateCommand.write(
+                                progressPercent,
+                                0,
+                                factions,
+                                capturingFactionId,
+                                SectorControlHash),
+                            enteredCaptureZone ? "ENTER_RANGE_SNAPSHOT" : "PROGRESS_UPDATE");
+
+                    if (enteredCaptureZone)
+                    {
+                        // Let the client finish registering/updating the
+                        // beacon before its visibility handler touches the
+                        // progress-bar model.  The command is sent on the next
+                        // station Tick (normally ~84 ms later).
+                        sectorControlProgressBarVisibilityPending.Add(player.Id);
+                    }
+                    else if (sectorControlProgressBarVisibilityPending.Remove(player.Id))
+                    {
+                        SendSectorControlCommand(
+                            player,
+                            "SectorControlBeaconProgressVisibilityCommand",
+                            SectorControlBeaconProgressVisibilityCommand.ID,
+                            SectorControlBeaconProgressVisibilityCommand.write(SectorControlHash, true),
+                            "ENTER_RANGE_SHOW_DELAYED");
+                    }
+                }
+            }
+
+            if (shouldBroadcast)
+            {
+                lastSectorControlProgressPercent = progressPercent;
+                lastSectorControlCapturingFactionId = capturingFactionId;
+                lastSectorControlCapturingFactions = factionsSnapshot;
+            }
+        }
+
+        public void HideSectorControlProgressBar(Player player)
+        {
+            if (player == null)
+                return;
+
+            lock (sectorControlProgressBarPlayersLock)
+            {
+                sectorControlProgressBarPlayers.Remove(player.Id);
+                // A map cleanup removes the client-side POI/asset mapping.  Do
+                // not carry the registration over to a later visit to this
+                // map; SendObjects or the range-entry fallback must recreate it.
+                sectorControlPoiPlayers.Remove(player.Id);
+                sectorControlProgressBarVisibilityPending.Remove(player.Id);
+                SendSectorControlCommand(
+                    player,
+                    "SectorControlBeaconProgressVisibilityCommand",
+                    SectorControlBeaconProgressVisibilityCommand.ID,
+                    SectorControlBeaconProgressVisibilityCommand.write(SectorControlHash, false),
+                    "REMOVE_CHARACTER");
+            }
+        }
+
+        private List<int> GetSectorControlCapturingFactions()
+        {
+            var factions = Spacemap.Characters.Values
+                .OfType<Player>()
+                .Where(player => !player.Destroyed && player.CurrentHitPoints > 0 && player.FactionId > 0 && player.Position.DistanceTo(Position) <= Definition.CaptureRadius)
+                .Select(player => player.FactionId)
+                .Distinct()
+                .OrderBy(factionId => factionId == capturingFactionId ? 0 : 1)
+                .ThenBy(factionId => factionId)
+                .ToList();
+
+            return factions;
+        }
+
+        private int GetSectorControlProgressPercent()
+        {
+            var required = GetCapturePointsRequired();
+            if (required <= 0)
+                return 0;
+
+            return Math.Max(0, Math.Min(100, captureProgressPoints * 100 / required));
+        }
+
+        private void SendSectorControlCommand(Player player, string commandName, short commandId, byte[] command, string reason)
+        {
+            if (player == null || command == null)
+                return;
+
+            PacketDebug.Log("sector_control_packets",
+                $"QUEUE {commandName} ID={commandId} LENGTH={command.Length} PLAYER={player.Id} MAP={player.Spacemap?.Id ?? -1} HASH={SectorControlHash} REASON={reason}");
+            player.SendCommand(command);
+            if (PacketDebug.Enabled)
+            {
+                player.SendPacket(
+                    $"0|A|STD|[PACKET_DEBUG] AFTER {commandName} ID={commandId} LENGTH={command.Length} MAP={player.Spacemap?.Id ?? -1} HASH={SectorControlHash} REASON={reason}");
+            }
         }
 
         private void ApplyCaptureProgress(int factionId, int points)

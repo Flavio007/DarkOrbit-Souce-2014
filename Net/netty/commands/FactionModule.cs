@@ -27,8 +27,8 @@ namespace Ow.Net.netty.commands
         {
             var param1 = new ByteArray(ID);
             super(param1);
-            param1.writeShort(this.factionId);
             param1.writeShort(-31859);
+            param1.writeShort(this.factionId);
             return param1.Message.ToArray();
         }
     }

@@ -287,6 +287,8 @@
     <Compile Include="Net\netty\commands\ExampleCommand.cs" />
     <Compile Include="Net\netty\commands\ExampleModule.cs" />
     <Compile Include="Net\netty\commands\StationModuleModule.cs" />
+    <Compile Include="Net\netty\commands\SectorControlBeaconProgressVisibilityCommand.cs" />
+    <Compile Include="Net\netty\commands\SectorControlBeaconUpdateCommand.cs" />
     <Compile Include="Net\netty\commands\PetActivationCommand.cs" />
     <Compile Include="Net\netty\commands\PetHeroActivationCommand.cs" />
     <Compile Include="Net\netty\commands\PetGearSelectCommand.cs" />
