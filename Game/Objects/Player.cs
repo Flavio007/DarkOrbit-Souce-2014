@@ -67,7 +67,11 @@ namespace Ow.Game.Objects
 
         public int Score = 0;
 
-        public int EquipExpansion = 1;
+        public int EquipExpansion
+        {
+            get { return Expansion; }
+            set { Expansion = PlayerShipExtension.NormalizeLevel(Ship, value); }
+        }
 
         public DateTime UnderEmp = DateTime.Now;
 
@@ -177,10 +181,129 @@ namespace Ow.Game.Objects
             return JsonConvert.SerializeObject(cargo);
         }
 
+        private OreUpgradeBase GetOreUpgrade(short refinementType)
+        {
+            if (Data == null)
+                return null;
+
+            switch (refinementType)
+            {
+                case RefinementTypeModule.LASER: return Data.laserUpgrade;
+                case RefinementTypeModule.ROCKET: return Data.rocketUpgrade;
+                case RefinementTypeModule.DRIVING: return Data.drivingUpgrade;
+                case RefinementTypeModule.SHIELD: return Data.shieldUpgrade;
+                default: return null;
+            }
+        }
+
+        private static int GetOreUpgradePercentage(int resource, short refinementType)
+        {
+            var ore = (Ores)resource;
+            switch (refinementType)
+            {
+                case RefinementTypeModule.LASER:
+                    return ore == Ores.Prometid ? 15 : ore == Ores.Seprom ? 60 : 0;
+                case RefinementTypeModule.ROCKET:
+                    return ore == Ores.Duranium ? 10 : ore == Ores.Seprom ? 60 : 0;
+                case RefinementTypeModule.DRIVING:
+                    return ore == Ores.Promerium ? 20 : 0;
+                case RefinementTypeModule.SHIELD:
+                    return ore == Ores.Duranium ? 10 : ore == Ores.Seprom ? 60 : 0;
+                default:
+                    return 0;
+            }
+        }
+
+        private int GetTimedOreUpgradePercentage(short refinementType)
+        {
+            var upgrade = GetOreUpgrade(refinementType);
+            if (upgrade == null || upgrade.resource < 0 || upgrade.expiresAt <= DateTime.UtcNow)
+                return 0;
+
+            return GetOreUpgradePercentage(upgrade.resource, refinementType);
+        }
+
+        public int GetShotOreUpgradePercentage(short refinementType)
+        {
+            var upgrade = GetOreUpgrade(refinementType);
+            if (upgrade == null || upgrade.resource < 0 || upgrade.amount <= 0)
+                return 0;
+
+            return GetOreUpgradePercentage(upgrade.resource, refinementType);
+        }
+
+        public void ConsumeShotOreUpgrade(short refinementType, int shots)
+        {
+            if (shots <= 0)
+                return;
+
+            var upgrade = GetOreUpgrade(refinementType);
+            if (upgrade == null ||
+                (refinementType != RefinementTypeModule.LASER && refinementType != RefinementTypeModule.ROCKET) ||
+                upgrade.amount <= 0)
+                return;
+
+            upgrade.amount = Math.Max(0, upgrade.amount - shots);
+            if (upgrade.amount == 0)
+            {
+                upgrade.resource = -1;
+                upgrade.expiresAt = DateTime.MinValue;
+            }
+        }
+
+        private bool ExpireOreUpgrades()
+        {
+            if (Data == null)
+                return false;
+
+            var changed = false;
+            foreach (var upgrade in new[] { Data.drivingUpgrade, Data.shieldUpgrade })
+            {
+                if (upgrade != null && upgrade.resource >= 0 && upgrade.expiresAt <= DateTime.UtcNow)
+                {
+                    upgrade.resource = -1;
+                    upgrade.amount = 0;
+                    upgrade.expiresAt = DateTime.MinValue;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
+        private static bool IsUpgradeResourceAllowed(short refinementType, Ores oreType)
+        {
+            switch (refinementType)
+            {
+                case RefinementTypeModule.LASER:
+                    return oreType == Ores.Prometid || oreType == Ores.Seprom;
+                case RefinementTypeModule.ROCKET:
+                    return oreType == Ores.Duranium || oreType == Ores.Seprom;
+                case RefinementTypeModule.DRIVING:
+                    return oreType == Ores.Promerium;
+                case RefinementTypeModule.SHIELD:
+                    return oreType == Ores.Duranium || oreType == Ores.Seprom;
+                default:
+                    return false;
+            }
+        }
+
+        private static string GetUpgradeName(short refinementType)
+        {
+            switch (refinementType)
+            {
+                case RefinementTypeModule.LASER: return "laser damage";
+                case RefinementTypeModule.ROCKET: return "rocket damage";
+                case RefinementTypeModule.DRIVING: return "speed";
+                case RefinementTypeModule.SHIELD: return "shield";
+                default: return "upgrade";
+            }
+        }
+
 
 
         public Player(int id, string name, Clan clan, int factionId, int rankId, int warRank, Ship ship)
-                     : base(id, name, factionId, ship, new Position(0, 0), null, clan, 3)
+                     : base(id, name, factionId, ship, new Position(0, 0), null, clan, PlayerShipExtension.GetDefaultLevel(ship))
         {
             Name = name;
             Clan = clan;
@@ -219,6 +342,12 @@ namespace Ow.Game.Objects
         public override void Tick()
         {
             Movement.ActualPosition(this);
+            if (ExpireOreUpgrades() && GameSession != null)
+            {
+                UpdateStatus();
+                SendModernOreState();
+                QueryManager.SavePlayer.Information(this);
+            }
             CheckHitpointsRepair();
             CheckShieldPointsRepair();
             CheckRadiation();
@@ -402,6 +531,7 @@ namespace Ow.Game.Objects
                 if (Storage.CitadelTravel)
                     return TimeManager.CITADEL_TRAVEL_SPEED;
 
+                value += Maths.GetPercentage(value, GetTimedOreUpgradePercentage(RefinementTypeModule.DRIVING));
                 value += Storage.SpeedBoost;
 
                 return value;
@@ -502,7 +632,7 @@ namespace Ow.Game.Objects
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Shield : Equipment.Configs.Config2Shield;
                 if (Ship.Id == Ship.LEONOV && FriendlyMap == true)
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Shield : Equipment.Configs.LeonovConfig2Shield;
-                value += Maths.GetPercentage(value, 40);
+                value += Maths.GetPercentage(value, GetTimedOreUpgradePercentage(RefinementTypeModule.SHIELD));
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.SHIELD));
                 value += Maths.GetPercentage(value, GetSkillPercentage("Shield Engineering"));
 
@@ -577,7 +707,7 @@ namespace Ow.Game.Objects
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Damage : Equipment.Configs.Config2Damage;
                 if (Ship.Id == Ship.LEONOV && GetLeonovEffect(Spacemap.Id,FactionId) == true)
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
-                value += Maths.GetPercentage(value, 60); //seprom
+                value += Maths.GetPercentage(value, GetShotOreUpgradePercentage(RefinementTypeModule.LASER));
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
                 value += Maths.GetPercentage(value, BattleStation.GetPlayerBoostPercentage(this, BoostedAttributeType.DAMAGE));
 
@@ -643,7 +773,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = AttackManager.GetRocketDamage();
-                value += Maths.GetPercentage(value, 60); //Seprom
+                value += Maths.GetPercentage(value, GetShotOreUpgradePercentage(RefinementTypeModule.ROCKET));
                 value += Maths.GetPercentage(value, GetSkillPercentage("Rocket Fusion"));
 
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
@@ -767,6 +897,9 @@ namespace Ow.Game.Objects
 
         public void SetCurrentConfiguration(int pCurrentConfiguration)
         {
+            if (pCurrentConfiguration != 1 && pCurrentConfiguration != 2)
+                return;
+
             CurrentConfig = Convert.ToInt32(pCurrentConfiguration);
             Settings.InGameSettings.currentConfig = CurrentConfig;
 
@@ -806,7 +939,7 @@ namespace Ow.Game.Objects
             return ShipCreateCommand.write(
                 Id,
                 Ship.LootId,
-                Expansion,
+                EquipExpansion,
                 !EventManager.JackpotBattle.InEvent(this) ? Clan.Tag : "",
                 !EventManager.JackpotBattle.InEvent(this) ? (otherPlayer.RankId == 21 ? $"{Name} - {Id}" : Name) : EventManager.JackpotBattle.Name,
                 Position.X,
@@ -828,7 +961,6 @@ namespace Ow.Game.Objects
 
         public byte[] GetShipInitializationCommand()
         {
-            Console.WriteLine($"[CARGO_INIT] userId={Id} name={Name} shipId={Ship?.Id} shipBaseCargo={Ship?.Cargo ?? 0} current={CargoInUse} max={CargoCapacity}");
             var clientMapId = Spacemap != null ? Spacemap.VisualMapId : 0;
             return ShipInitializationCommand.write(
                 Id,
@@ -848,7 +980,7 @@ namespace Ow.Game.Objects
                 clientMapId,
                 FactionId,
                 Clan.Id,
-                3,
+                EquipExpansion,
                 Premium,
                 Data.experience,
                 Data.honor,
@@ -1038,6 +1170,7 @@ namespace Ow.Game.Objects
         {
             SkillManager.DisableAllSkills();
             Ship = GameManager.GetShip(shipId);
+            EquipExpansion = PlayerShipExtension.GetDefaultLevel(Ship);
             QueryManager.SetEquipment(this);
             SkillManager.InitiateSkills(true);
 
@@ -1345,7 +1478,6 @@ namespace Ow.Game.Objects
 
         public void SendCargoStatus()
         {
-            Console.WriteLine($"[CARGO_UPDATE] userId={Id} name={Name} used={CargoInUse} free={FreeCargo} max={CargoCapacity} packet={CargoCapacity}|{FreeCargo}");
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.CARGO_CHANGE}|{CargoCapacity}|{1}");
         }
 
@@ -1366,30 +1498,76 @@ namespace Ow.Game.Objects
                 OreStackCommand.FromServerOre(Ores.Prometium, Prometium),
                 OreStackCommand.FromServerOre(Ores.Endurium, Endurium),
                 OreStackCommand.FromServerOre(Ores.Terbium, Terbium),
-                OreStackCommand.FromServerOre(Ores.Xenomit, Xenomit),
                 OreStackCommand.FromServerOre(Ores.Prometid, Prometid),
                 OreStackCommand.FromServerOre(Ores.Duranium, Duranium),
                 OreStackCommand.FromServerOre(Ores.Promerium, Promerium),
+                OreStackCommand.FromServerOre(Ores.Xenomit, Xenomit),
                 OreStackCommand.FromServerOre(Ores.Seprom, Seprom),
                 OreStackCommand.FromServerOre(Ores.Palladium, Palladium)
             };
         }
 
+        private static Ores GetDefaultUpgradeOre(short refinementType)
+        {
+            switch (refinementType)
+            {
+                case RefinementTypeModule.LASER:
+                    return Ores.Prometid;
+                case RefinementTypeModule.ROCKET:
+                    return Ores.Duranium;
+                case RefinementTypeModule.DRIVING:
+                    return Ores.Promerium;
+                case RefinementTypeModule.SHIELD:
+                    return Ores.Seprom;
+                default:
+                    return Ores.Prometid;
+            }
+        }
+
+        private double GetUpgradeDisplayCount(short refinementType)
+        {
+            var upgrade = GetOreUpgrade(refinementType);
+            if (upgrade == null || upgrade.resource < 0 ||
+                GetOreUpgradePercentage(upgrade.resource, refinementType) <= 0)
+                return 0;
+
+            if (refinementType == RefinementTypeModule.LASER || refinementType == RefinementTypeModule.ROCKET)
+                return Math.Ceiling(upgrade.amount / 10.0);
+
+            var remainingMinutes = (upgrade.expiresAt - DateTime.UtcNow).TotalMinutes;
+            return remainingMinutes > 0 ? Math.Ceiling(remainingMinutes / 10.0) : 0;
+        }
+
+        private OreStackCommand GetModernUpgradeStack(short refinementType)
+        {
+            var upgrade = GetOreUpgrade(refinementType);
+            var ore = upgrade != null && upgrade.resource >= 0 &&
+                      GetOreUpgradePercentage(upgrade.resource, refinementType) > 0
+                ? (Ores)upgrade.resource
+                : GetDefaultUpgradeOre(refinementType);
+
+            return OreStackCommand.FromServerOre(ore, GetUpgradeDisplayCount(refinementType));
+        }
+
         public void SendModernOreState()
         {
             var stacks = GetModernOreStacks();
-            // 30352 is consumed by the client as the "You collected" log; 11900 is the count sync.
             SendCommand(OreCountUpdateCommand.write(stacks));
+        }
+
+        public void SendModernOreRefinementState()
+        {
+            if (!EnableModernOreRefinementSync)
+                return;
 
             var refinementEntries = new List<OreRefinementEntryCommand>
             {
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.LASER), OreStackCommand.FromServerOre(Ores.Prometid, Prometid)),
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.ROCKET), OreStackCommand.FromServerOre(Ores.Duranium, Duranium)),
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.DRIVING), OreStackCommand.FromServerOre(Ores.Promerium, Promerium)),
-                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.SHIELD), OreStackCommand.FromServerOre(Ores.Seprom, Seprom))
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.LASER), GetModernUpgradeStack(RefinementTypeModule.LASER)),
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.ROCKET), GetModernUpgradeStack(RefinementTypeModule.ROCKET)),
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.DRIVING), GetModernUpgradeStack(RefinementTypeModule.DRIVING)),
+                new OreRefinementEntryCommand(new RefinementTypeModule(RefinementTypeModule.SHIELD), GetModernUpgradeStack(RefinementTypeModule.SHIELD))
             };
-            if (EnableModernOreRefinementSync)
-                SendCommand(OreRefinementUpdateCommand.write(refinementEntries));
+            SendCommand(OreRefinementUpdateCommand.write(refinementEntries));
         }
 
         public double GetHonorOreFactor()
@@ -1501,6 +1679,60 @@ namespace Ow.Game.Objects
             return true;
         }
 
+        public bool TryUpgrade(short refinementType, Ores oreType, int amount)
+        {
+            if (amount <= 0 || !IsUpgradeResourceAllowed(refinementType, oreType))
+                return false;
+
+            if (GetOreAmount(oreType) < amount)
+                return false;
+
+            var upgrade = GetOreUpgrade(refinementType);
+            if (upgrade == null)
+                return false;
+
+            var now = DateTime.UtcNow;
+            if (refinementType == RefinementTypeModule.LASER || refinementType == RefinementTypeModule.ROCKET)
+            {
+                var boostedShots = (long)amount * 10L;
+                var existingShots = upgrade.resource == (int)oreType ? Math.Max(0, upgrade.amount) : 0;
+                if (boostedShots > int.MaxValue || (long)existingShots + boostedShots > int.MaxValue)
+                    return false;
+
+                upgrade.amount = (int)(existingShots + boostedShots);
+                upgrade.resource = (int)oreType;
+                upgrade.expiresAt = DateTime.MinValue;
+            }
+            else
+            {
+                var baseTime = upgrade.resource == (int)oreType && upgrade.expiresAt > now
+                    ? upgrade.expiresAt
+                    : now;
+                DateTime expiresAt;
+                try
+                {
+                    expiresAt = baseTime.AddMinutes((double)amount * 10.0);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    return false;
+                }
+
+                upgrade.resource = (int)oreType;
+                upgrade.amount = 0;
+                upgrade.expiresAt = expiresAt;
+            }
+
+            ChangeCargo(oreType, -amount, false, false, false);
+            SendCargoStatus();
+            SendOreCount();
+            SendModernOreState();
+            UpdateStatus();
+            QueryManager.SavePlayer.Information(this);
+            SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Upgrade complete: {amount} {oreType} applied to {GetUpgradeName(refinementType)}.");
+            return true;
+        }
+
         public bool TryRefine(Ores targetOre, int amount = 1)
         {
             if (amount <= 0) amount = 1;
@@ -1510,26 +1742,35 @@ namespace Ow.Game.Objects
             {
                 case Ores.Prometid:
                     batches = amount;
-                    if (Prometium < batches * 200 || Endurium < batches * 100)
+                    var prometiumRequired = (long)batches * 20L;
+                    var enduriumForPrometid = (long)batches * 10L;
+                    if (prometiumRequired > int.MaxValue || enduriumForPrometid > int.MaxValue ||
+                        Prometium < prometiumRequired || Endurium < enduriumForPrometid)
                         return false;
-                    ChangeCargo(Ores.Prometium, -(batches * 200), false, false, false);
-                    ChangeCargo(Ores.Endurium, -(batches * 100), false, false, false);
-                    ChangeCargo(Ores.Prometid, batches * 10, false, false, false);
+                    ChangeCargo(Ores.Prometium, -(int)prometiumRequired, false, false, false);
+                    ChangeCargo(Ores.Endurium, -(int)enduriumForPrometid, false, false, false);
+                    ChangeCargo(Ores.Prometid, batches, false, false, false);
                     break;
                 case Ores.Duranium:
                     batches = amount;
-                    if (Terbium < batches * 200 || Endurium < batches * 100)
+                    var terbiumRequired = (long)batches * 20L;
+                    var enduriumForDuranium = (long)batches * 10L;
+                    if (terbiumRequired > int.MaxValue || enduriumForDuranium > int.MaxValue ||
+                        Terbium < terbiumRequired || Endurium < enduriumForDuranium)
                         return false;
-                    ChangeCargo(Ores.Terbium, -(batches * 200), false, false, false);
-                    ChangeCargo(Ores.Endurium, -(batches * 100), false, false, false);
-                    ChangeCargo(Ores.Duranium, batches * 10, false, false, false);
+                    ChangeCargo(Ores.Terbium, -(int)terbiumRequired, false, false, false);
+                    ChangeCargo(Ores.Endurium, -(int)enduriumForDuranium, false, false, false);
+                    ChangeCargo(Ores.Duranium, batches, false, false, false);
                     break;
                 case Ores.Promerium:
                     batches = amount;
-                    if (Prometid < batches * 10 || Duranium < batches * 10 || Xenomit < batches)
+                    var prometidRequired = (long)batches * 10L;
+                    var duraniumRequired = (long)batches * 10L;
+                    if (prometidRequired > int.MaxValue || duraniumRequired > int.MaxValue ||
+                        Prometid < prometidRequired || Duranium < duraniumRequired || Xenomit < batches)
                         return false;
-                    ChangeCargo(Ores.Prometid, -(batches * 10), false, false, false);
-                    ChangeCargo(Ores.Duranium, -(batches * 10), false, false, false);
+                    ChangeCargo(Ores.Prometid, -(int)prometidRequired, false, false, false);
+                    ChangeCargo(Ores.Duranium, -(int)duraniumRequired, false, false, false);
                     ChangeCargo(Ores.Xenomit, -batches, false, false, false);
                     ChangeCargo(Ores.Promerium, batches, false, false, false);
                     break;
@@ -1547,7 +1788,6 @@ namespace Ow.Game.Objects
 
         public void SendOreShopInfo()
         {
-            Console.WriteLine($"[ORE_INFO] userId={Id} name={Name} prometium={Prometium} endurium={Endurium} terbium={Terbium} prometid={Prometid} duranium={Duranium} promerium={Promerium} xenomit={Xenomit} seprom={Seprom} palladium={Palladium}");
             SendCargoStatus();
             SendOreCount();
             SendModernOreState();
@@ -1645,6 +1885,7 @@ namespace Ow.Game.Objects
                 if (!Program.TickManager.Exists(this)) return;
                 if (gameSession.Client.Socket == null || !gameSession.Client.Socket.IsBound || !gameSession.Client.Socket.Connected) return;
 
+                PacketDebug.NotifyLegacyOutgoing(this, packet);
                 gameSession.Client.Send(LegacyModule.write(packet));
             }
             catch (Exception e)

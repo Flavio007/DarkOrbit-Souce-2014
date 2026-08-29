@@ -13,8 +13,12 @@ namespace Ow.Net.netty.requests
         public void readCommand(byte[] bytes)
         {
             var parser = new ByteParser(bytes);
-            parser.readShort();
-            parser.readShort();
+
+            // The client writes the two nested commands immediately after
+            // the request header: RefinementTypeModule followed by OreStack.
+            // ByteParser has already consumed the packet length and the
+            // request ID, so skipping two more shorts shifts the whole
+            // request and makes every upgrade look invalid.
             Source = RefinementTypeModule.readNested(parser);
             Target = OreStackCommand.readNested(parser);
         }

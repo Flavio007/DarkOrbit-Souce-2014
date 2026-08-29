@@ -1,4 +1,5 @@
 using Ow.Game;
+using Ow.Game.Objects;
 using Ow.Net.netty.requests;
 
 namespace Ow.Net.netty.handlers
@@ -13,16 +14,19 @@ namespace Ow.Net.netty.handlers
             read.readCommand(bytes);
 
             var player = gameSession?.Player;
-            PacketDebug.NotifyIncoming(player, "RefineOreRequest", SellOreRequest.ID);
-            if (player == null || !OreRequestHandlerUtilities.TryGetOre(read.Stack, out var ore) ||
-                !OreRequestHandlerUtilities.TryGetAmount(read.Stack, out var amount) ||
-                !player.TryRefine(ore, amount))
+            PacketDebug.NotifyIncoming(player, "SellOreRequest", SellOreRequest.ID);
+            var success = player != null && OreRequestHandlerUtilities.TryGetOre(read.Stack, out var ore) &&
+                          OreRequestHandlerUtilities.TryGetAmount(read.Stack, out var amount) &&
+                          player.TryRefine(ore, amount);
+
+            if (!success)
             {
                 if (player != null)
                     OreRequestHandlerUtilities.SendFailure(player, "Refinement failed: insufficient resources.");
                 return;
             }
 
+            player.SendModernOreRefinementState();
         }
     }
 }

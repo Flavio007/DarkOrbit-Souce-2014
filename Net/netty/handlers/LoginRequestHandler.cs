@@ -55,9 +55,9 @@ namespace Ow.Net.netty.handlers
                 else
                 {
                     SendSettings(Player);
+                    Player.Spacemap.AddCharacter(Player);
                     SendPlayer(Player);
                     SendEquippedItemsDebug(Player);
-                    Player.Spacemap.AddCharacter(Player);
                 }
             }
             catch (Exception e)
@@ -118,7 +118,6 @@ namespace Ow.Net.netty.handlers
             try
             {
                 player.SendCommand(player.GetShipInitializationCommand());
-                player.SendOreShopInfo();
 
                 if (player.Title != "")
                     player.SendPacket($"0|n|t|{player.Id}|1|{player.Title}");
@@ -158,7 +157,9 @@ namespace Ow.Net.netty.handlers
                 //player.SendPacket("0|A|JCPU|S|20|1"); //ATLAMA GERİ SAYIM
 
                 player.SendCommand(SetSpeedCommand.write(player.Speed, player.Speed));
+                player.SendOreShopInfo();
                 player.Spacemap.SendObjects(player);
+                player.Spacemap.SendCharacters(player);
 
                 player.BoosterManager.Update();
 

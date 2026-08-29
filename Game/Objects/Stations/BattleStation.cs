@@ -56,6 +56,8 @@ namespace Ow.Game.Objects.Stations
         public bool IsClanBattleStation => !IsFactionBattleStation;
         public bool IsOwned => IsClanBattleStation ? Clan != null && Clan.Id != 0 : FactionId != 0;
         public bool IsOperational => AssetTypeId == AssetTypeModule.BATTLESTATION;
+        public string SectorControlHash { get; private set; }
+        private bool IsSectorControlStation => IsFactionBattleStation && Spacemap != null && Spacemap.Id == 16;
 
         public BattleStation(BattleStationDefinition definition, Spacemap spacemap)
             : base(spacemap, 0, definition.Position, GameManager.GetClan(0), definition.AsteroidAssetTypeId)
@@ -70,6 +72,8 @@ namespace Ow.Game.Objects.Stations
             ApplyLevelStats(true);
             Invincible = true;
             previousVulnerabilityState = Definition.IsVulnerableAt(DateTime.Now);
+            SectorControlHash = $"sector_control_{spacemap.Id}_{Id}";
+            RegisterSectorControlPOI();
 
             Program.TickManager.AddTick(this);
         }
@@ -611,6 +615,62 @@ namespace Ow.Game.Objects.Stations
                 VisualModifiers.Values.ToList());
         }
 
+        private void RegisterSectorControlPOI()
+        {
+            if (!IsSectorControlStation || Definition == null)
+                return;
+
+            var radius = Math.Max(1, Definition.CaptureRadius);
+            var poi = new POI(
+                SectorControlHash,
+                POITypes.SECTOR_CONTROL_SECTOR_ZONE,
+                POIDesigns.SECTOR_CONTROL_SECTOR_ZONE,
+                POIShapes.CIRCLE,
+                new List<int> { Position.X, Position.Y, radius },
+                true,
+                false,
+                GetSectorControlZoneSpecification());
+
+            Spacemap.POIs.TryAdd(SectorControlHash, poi);
+        }
+
+        private void UpdateSectorControlPOI()
+        {
+            if (!IsSectorControlStation)
+                return;
+
+            var created = false;
+            if (!Spacemap.POIs.TryGetValue(SectorControlHash, out var poi) || poi == null)
+            {
+                RegisterSectorControlPOI();
+                created = true;
+                if (!Spacemap.POIs.TryGetValue(SectorControlHash, out poi) || poi == null)
+                    return;
+            }
+
+            var zoneSpecification = GetSectorControlZoneSpecification();
+            if (!created && poi.TypeSpecification == zoneSpecification)
+                return;
+
+            poi.TypeSpecification = zoneSpecification;
+            GameManager.SendCommandToMap(Spacemap.Id, poi.GetPOICreateCommand());
+        }
+
+        private string GetSectorControlZoneSpecification()
+        {
+            switch (FactionId)
+            {
+                case FactionModule.MMO:
+                    return "MMO";
+                case FactionModule.EIC:
+                    return "EIC";
+                case FactionModule.VRU:
+                    return "VRU";
+                default:
+                    return "NONE";
+            }
+        }
+
         private void HandleClanClick(Player player)
         {
             if (player.Clan == null || player.Clan.Id == 0)
@@ -682,6 +742,7 @@ namespace Ow.Game.Objects.Stations
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            UpdateSectorControlPOI();
             GameManager.SendPacketToAll($"0|A|STD|Battle station {AsteroidName} on {Spacemap.Name} was captured by {GetFactionName(FactionId)} at level 1.");
 
             QueryManager.BattleStations.BattleStation(this);
@@ -711,6 +772,7 @@ namespace Ow.Game.Objects.Stations
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            UpdateSectorControlPOI();
             RefreshBoosterInterface();
         }
 

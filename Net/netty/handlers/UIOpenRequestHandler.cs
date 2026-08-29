@@ -29,6 +29,7 @@ namespace Ow.Net.netty.handlers
                     break;
                 case UIOpenRequest.ACTION_REFINEMENT:
                     player.SendOreShopInfo();
+                    player.SendModernOreRefinementState();
                     break;
                 case UIOpenRequest.ACTION_QUESTS:
                     player.Quests?.OpenWindow();

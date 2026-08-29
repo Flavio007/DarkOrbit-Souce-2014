@@ -33,6 +33,17 @@ namespace Ow.Game.Objects.Players.Managers
         public long extraEnergy = 0;
         public long repairCredits = 0;
         public Cargo cargo = new Cargo();
+        public OreUpgradeBase laserUpgrade = new OreUpgradeBase();
+        public OreUpgradeBase rocketUpgrade = new OreUpgradeBase();
+        public OreUpgradeBase drivingUpgrade = new OreUpgradeBase();
+        public OreUpgradeBase shieldUpgrade = new OreUpgradeBase();
+    }
+
+    public class OreUpgradeBase
+    {
+        public int resource = -1;
+        public int amount = 0;
+        public DateTime expiresAt = DateTime.MinValue;
     }
 
     public class SkillTreeBase
@@ -472,7 +483,15 @@ namespace Ow.Game.Objects.Players.Managers
 
         public void SetCurrentItems()
         {
-            Player.CurrentConfig = Player.Settings.InGameSettings.currentConfig;
+            if (Player.Settings.InGameSettings == null)
+                Player.Settings.InGameSettings = new InGameSettingsBase();
+
+            var currentConfig = Player.Settings.InGameSettings.currentConfig;
+            if (currentConfig != 1 && currentConfig != 2)
+                currentConfig = 1;
+
+            Player.CurrentConfig = currentConfig;
+            Player.Settings.InGameSettings.currentConfig = currentConfig;
             Player.CpuManager.SyncFromInventoryLoadout();
             Player.CpuManager.SyncSelectedCpus();
         }

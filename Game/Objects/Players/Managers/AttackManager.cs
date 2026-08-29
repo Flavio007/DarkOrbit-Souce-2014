@@ -234,6 +234,7 @@ namespace Ow.Game.Objects.Players.Managers
                     var damage = RandomizeDamage((GetDamageMultiplier() * Player.Damage), Player.LaserMissProbabilityAgainst(target));
 
                     Player.SubAmmo(Player.Settings.InGameSettings.selectedLaser, Player.equipedlasercount);
+                    Player.ConsumeShotOreUpgrade(RefinementTypeModule.LASER, Player.equipedlasercount);
                     Player.CpuManager?.ConsumeAimCpuXenomit();
 
                     if (Player.Storage.Spectrum)
@@ -331,6 +332,7 @@ namespace Ow.Game.Objects.Players.Managers
                         Player.SendCooldown(AmmunitionManager.R_310, rocketCooldown);
                         lastRocketAttack = DateTime.Now;
                         Player.SubAmmo(Player.Settings.InGameSettings.selectedRocket, 1);
+                        Player.ConsumeShotOreUpgrade(RefinementTypeModule.ROCKET, 1);
                     } else return;
                     break;
             }

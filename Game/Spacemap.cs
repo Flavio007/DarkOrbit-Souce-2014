@@ -550,6 +550,25 @@ namespace Ow.Game
                     player.SendCommand(asset.GetAssetCreateCommand());
         }
 
+        public void SendCharacters(Player player)
+        {
+            if (player == null)
+                return;
+
+            foreach (var character in Characters.Values.ToList())
+            {
+                if (character == null || character.Id == player.Id || character.Destroyed)
+                    continue;
+
+                var loadRange = player.RenderRange;
+                if (character.RenderRange > loadRange)
+                    loadRange = character.RenderRange;
+
+                if (player.AllMapRange || character.AllMapRange || player.InRange(character, loadRange))
+                    player.AddInRangeCharacter(character);
+            }
+        }
+
         public void AddAndInitPlayer(Player player, bool sendSettings = false)
         {
             var petActivated = player.Pet != null && player.Pet.Activated;
@@ -557,8 +576,8 @@ namespace Ow.Game
             if (petActivated)
                 player.Pet.Deactivate(true);
 
-            LoginRequestHandler.SendPlayer(player);
             AddCharacter(player);
+            LoginRequestHandler.SendPlayer(player);
 
             if (petActivated)
                 player.Pet.Activate();

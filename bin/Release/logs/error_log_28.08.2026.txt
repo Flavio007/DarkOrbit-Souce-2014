@@ -1,0 +1,4 @@
+[28.08.2026 20: 38:32] - [GameClient.cs] SendCallback void exception: System.InvalidOperationException: Fila vazia.
+   em System.ThrowHelper.ThrowInvalidOperationException(ExceptionResource resource)
+   em System.Collections.Generic.Queue`1.Dequeue()
+   em Ow.Net.GameClient.SendCallback(IAsyncResult ar) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\GameClient.cs:linha 210

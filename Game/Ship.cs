@@ -77,6 +77,39 @@ namespace Ow.Game
         public int invis { get; set; }
     }
 
+    /// <summary>
+    /// Defines the visual extension stages supported by the classic player ships.
+    /// The reference client clamps expansionTypeID to the inclusive range 1..3.
+    /// </summary>
+    static class PlayerShipExtension
+    {
+        public const int FirstSupportedShipId = 1;
+        public const int LastSupportedShipId = 10;
+        public const int MinimumLevel = 1;
+        public const int MaximumLevel = 3;
+        private const int LegacyFallbackLevel = 3;
+
+        public static bool Supports(Ship ship)
+        {
+            return ship != null && ship.Id >= FirstSupportedShipId && ship.Id <= LastSupportedShipId;
+        }
+
+        public static int GetDefaultLevel(Ship ship)
+        {
+            // Preserve the old value for out-of-scope ships/designs while the
+            // extension system is intentionally limited to ship IDs 1..10.
+            return Supports(ship) ? MaximumLevel : LegacyFallbackLevel;
+        }
+
+        public static int NormalizeLevel(Ship ship, int requestedLevel)
+        {
+            if (!Supports(ship))
+                return requestedLevel;
+
+            return Math.Max(MinimumLevel, Math.Min(MaximumLevel, requestedLevel));
+        }
+    }
+
     /* class QuestState
     {
         public List

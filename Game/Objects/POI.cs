@@ -26,6 +26,7 @@ namespace Ow.Game.Objects
             set { ShapeId = (short)value; }
         }
         public List<Position> ShapeCords { get; set; }
+        public List<int> ShapeCoordinates { get; set; }
         public bool Inverted { get; set; }
         public string TypeSpecification { get; set; }
         public bool Active { get; set; }
@@ -42,6 +43,20 @@ namespace Ow.Game.Objects
             DesignId = designId;
             ShapeId = shapeId;
             ShapeCords = shapeCords;
+            ShapeCoordinates = null;
+            Inverted = inverted;
+            TypeSpecification = poiTypeSpecification;
+            Active = active;
+        }
+
+        public POI(string id, POITypes type, POIDesigns design, POIShapes shape, List<int> shapeCoordinates, bool active = true, bool inverted = false, string poiTypeSpecification = "")
+        {
+            Id = id;
+            TypeId = (short)type;
+            DesignId = (short)design;
+            ShapeId = (short)shape;
+            ShapeCords = new List<Position>();
+            ShapeCoordinates = shapeCoordinates ?? new List<int>();
             Inverted = inverted;
             TypeSpecification = poiTypeSpecification;
             Active = active;
@@ -49,6 +64,9 @@ namespace Ow.Game.Objects
 
         public List<int> ShapeCordsToInts()
         {
+            if (ShapeCoordinates != null)
+                return new List<int>(ShapeCoordinates);
+
             List<int> cords = new List<int>();
             foreach (var cord in ShapeCords)
             {

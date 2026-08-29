@@ -16,6 +16,21 @@ namespace Ow.Net
 {
     class GameClient
     {
+        private sealed class PendingSend
+        {
+            public byte[] Data { get; }
+            public int Offset { get; set; }
+
+            public PendingSend(byte[] data)
+            {
+                Data = data;
+            }
+        }
+
+        private readonly object sendLock = new object();
+        private readonly Queue<PendingSend> sendQueue = new Queue<PendingSend>();
+        private bool sendInProgress;
+
         public Socket Socket { get; set; }
         public int UserId { get; set; }
 
@@ -40,6 +55,12 @@ namespace Ow.Net
         {
             try
             {
+                lock (sendLock)
+                {
+                    sendQueue.Clear();
+                    sendInProgress = false;
+                }
+
                 Socket.Shutdown(SocketShutdown.Both);
                 Socket.Close();
 
@@ -106,12 +127,8 @@ namespace Ow.Net
         {
             try
             {
-                if (Socket == null || !Socket.IsBound || !Socket.Connected) return;
-
                 byte[] byteData = Encoding.UTF8.GetBytes(data);
-
-                Socket.BeginSend(byteData, 0, byteData.Length, 0,
-                    new AsyncCallback(SendCallback), Socket);
+                Send(byteData);
             }
             catch (Exception e)
             {
@@ -123,10 +140,21 @@ namespace Ow.Net
         {
             try
             {
-                if (Socket == null || !Socket.IsBound || !Socket.Connected) return;
+                if (byteData == null || byteData.Length == 0 || Socket == null || !Socket.IsBound || !Socket.Connected)
+                    return;
 
-                Socket.BeginSend(byteData, 0, byteData.Length, 0,
-                    new AsyncCallback(SendCallback), Socket);
+                PendingSend pendingSend;
+                lock (sendLock)
+                {
+                    sendQueue.Enqueue(new PendingSend(byteData));
+                    if (sendInProgress)
+                        return;
+
+                    sendInProgress = true;
+                    pendingSend = sendQueue.Peek();
+                }
+
+                BeginSend(pendingSend);
             }
             catch (Exception e)
             {
@@ -134,17 +162,73 @@ namespace Ow.Net
             }
         }
 
-        private static void SendCallback(IAsyncResult ar)
+        private void BeginSend(PendingSend pendingSend)
         {
             try
             {
-                Socket handler = (Socket)ar.AsyncState;
+                if (Socket == null || !Socket.IsBound || !Socket.Connected)
+                {
+                    lock (sendLock)
+                    {
+                        sendQueue.Clear();
+                        sendInProgress = false;
+                    }
+                    return;
+                }
 
-                handler.EndSend(ar);
+                Socket.BeginSend(pendingSend.Data, pendingSend.Offset,
+                    pendingSend.Data.Length - pendingSend.Offset, 0,
+                    new AsyncCallback(SendCallback), pendingSend);
             }
             catch (Exception e)
             {
-                //Logger.Log("error_log", $"- [GameClient.cs] SendCallback void exception: {e}");
+                lock (sendLock)
+                {
+                    sendQueue.Clear();
+                    sendInProgress = false;
+                }
+
+                Logger.Log("error_log", $"- [GameClient.cs] BeginSend void exception: {e}");
+            }
+        }
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            PendingSend pendingSend = (PendingSend)ar.AsyncState;
+            PendingSend nextSend = null;
+
+            try
+            {
+                var sent = Socket.EndSend(ar);
+                if (sent <= 0)
+                    throw new SocketException((int)SocketError.ConnectionReset);
+
+                lock (sendLock)
+                {
+                    pendingSend.Offset += sent;
+                    if (pendingSend.Offset >= pendingSend.Data.Length)
+                        sendQueue.Dequeue();
+
+                    if (sendQueue.Count == 0)
+                    {
+                        sendInProgress = false;
+                        return;
+                    }
+
+                    nextSend = sendQueue.Peek();
+                }
+
+                BeginSend(nextSend);
+            }
+            catch (Exception e)
+            {
+                lock (sendLock)
+                {
+                    sendQueue.Clear();
+                    sendInProgress = false;
+                }
+
+                Logger.Log("error_log", $"- [GameClient.cs] SendCallback void exception: {e}");
             }
         }
     }

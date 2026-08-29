@@ -80,9 +80,13 @@ namespace Ow.Net.netty
 
         public static void Execute(byte[] bytes, GameClient client)
         {
+            short packetId = -1;
+            GameSession gameSession = null;
+
             try
             {
                 var parser = new ByteParser(bytes);
+                packetId = parser.ID;
 
                 if (parser.ID == LoginRequest.ID)
                 {
@@ -95,7 +99,7 @@ namespace Ow.Net.netty
                     return;
                 }
 
-                var gameSession = GameManager.GetGameSession(client.UserId);
+                gameSession = GameManager.GetGameSession(client.UserId);
                 if (gameSession == null) return;
 
                 if (Commands.ContainsKey(parser.ID))
@@ -109,6 +113,7 @@ namespace Ow.Net.netty
             {
                 Out.WriteLine("Execute void exception: " + e, "Handler.cs");
                 Logger.Log("error_log", $"- [Handler.cs] Execute void exception: {e}");
+                PacketDebug.NotifyException(gameSession?.Player, packetId, bytes == null ? 0 : bytes.Length, e);
             }
         }
     }

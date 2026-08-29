@@ -10,6 +10,7 @@ namespace Ow.Net.netty.commands
         public const short ROCKET = 1;
         public const short DRIVING = 2;
         public const short SHIELD = 3;
+        public const short REFINING = 4;
 
         public short TypeValue { get; }
 
