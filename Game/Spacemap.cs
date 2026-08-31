@@ -450,7 +450,7 @@ namespace Ow.Game
                         actionTooltip.Add(new ClientUITooltipModule(
                             new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED),
                             ClientUITooltipModule.STANDARD,
-                            "msg_accept_jobs_here",
+                            "mapasset_questgiver",
                             new List<ClientUITextReplacementModule>()));
                     }
 

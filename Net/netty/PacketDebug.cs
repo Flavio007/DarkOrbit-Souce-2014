@@ -133,6 +133,12 @@ namespace Ow.Net.netty
                     return "SectorControlBeaconProgressVisibilityCommand";
                 case SectorControlBeaconUpdateCommand.ID:
                     return "SectorControlBeaconUpdateCommand";
+                case CameraLockToCoordinatesCommand.ID:
+                    return "CameraLockToCoordinatesCommand";
+                case CameraLockToShipCommand.ID:
+                    return "CameraLockToShipCommand";
+                case CameraLockToHeroCommand.ID:
+                    return "CameraLockToHeroCommand";
             }
 
             if (packetId == CreatePortalCommand.ID)

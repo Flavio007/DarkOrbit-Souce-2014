@@ -12,7 +12,6 @@ namespace Ow.Net.netty.handlers
             var player = GetPlayer(gameSession);
             NotifyRequest(player, "QuestFiltersRequest", QuestFiltersRequest.ID);
             player?.Quests?.ApplyModernFilters(request);
-            Refresh(player);
         }
     }
 }

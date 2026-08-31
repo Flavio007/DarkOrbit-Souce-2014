@@ -16,14 +16,14 @@ namespace Ow.Game.Objects.Stations
 
         public override void Click(GameSession gameSession)
         {
-            gameSession?.Player?.Quests?.HandleQuestGiverClick();
+            gameSession?.Player?.Quests?.OpenQuestGiver(Id);
         }
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
             return AssetCreateCommand.write(GetAssetType(), "Morgus Petterson",
                                           FactionId, "", Id, 3, 0,
-                                          Position.X, Position.Y, 0, true, true, true, false,
+                                          Position.X, Position.Y, 0, true, true, true, true,
                                           new ClanRelationModule(clanRelationModule),
                                           new List<VisualModifierCommand>());
         }

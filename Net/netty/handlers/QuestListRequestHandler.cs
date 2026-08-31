@@ -10,7 +10,7 @@ namespace Ow.Net.netty.handlers
             new QuestListRequest().readCommand(bytes);
             var player = GetPlayer(gameSession);
             NotifyRequest(player, "QuestListRequest", QuestListRequest.ID);
-            Refresh(player);
+            player?.Quests?.SendModernQuestList();
         }
     }
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<quests>
+  <quest id="1" title="Parting Advice" titleKey="quest_title_1"
+         description="Join a clan." descriptionKey="quest_description_1_{faction}"
+         sortOrder="1" minLevel="1" priority="0" factionId="0">
+    <conditions>
+      <condition id="join_clan" type="joinClan" wireId="1" wireType="62"
+                 target="1" descriptionKey="q2_condition_JOIN_CLAN" />
+    </conditions>
+  </quest>
+</quests>

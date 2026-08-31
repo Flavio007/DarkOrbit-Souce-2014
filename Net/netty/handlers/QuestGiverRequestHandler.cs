@@ -7,10 +7,11 @@ namespace Ow.Net.netty.handlers
     {
         public void execute(GameSession gameSession, byte[] bytes)
         {
-            new QuestGiverRequest().readCommand(bytes);
+            var request = new QuestGiverRequest();
+            request.readCommand(bytes);
             var player = GetPlayer(gameSession);
             NotifyRequest(player, "QuestGiverRequest", QuestGiverRequest.ID);
-            player?.Quests?.HandleQuestGiverClick();
+            player?.Quests?.OpenQuestGiver(request.QuestGiverId);
         }
     }
 }

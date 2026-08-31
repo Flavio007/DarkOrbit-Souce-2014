@@ -12,7 +12,6 @@ namespace Ow.Net.netty.handlers
             var player = GetPlayer(gameSession);
             NotifyRequest(player, "AcceptQuestRequest", AcceptQuestRequest.ID);
             player?.Quests?.HandleAcceptQuest(request.QuestId);
-            Refresh(player);
         }
     }
 }

@@ -11,11 +11,6 @@ namespace Ow.Net.netty.handlers
             return gameSession == null ? null : gameSession.Player;
         }
 
-        protected static void Refresh(Player player)
-        {
-            player?.Quests?.Sync();
-        }
-
         protected static void NotifyRequest(Player player, string packetName, short packetId)
         {
             PacketDebug.NotifyIncoming(player, packetName, packetId);

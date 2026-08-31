@@ -12,13 +12,13 @@ namespace Ow.Net.netty.commands
         {
             var packet = new ByteArray(ID);
             packet.write(QuestIconModule.write());
-            packet.writeUTF(description);
             packet.writeUTF(title);
-            packet.writeInt(QuestCommandCodec.RotateRight(questId, 10));
+            packet.writeUTF(description);
             packet.writeInt(0);
             packet.writeInt(QuestCommandCodec.RotateRight(sortOrder, 13));
-            packet.writeShort(WIRE_MARKER);
+            packet.writeInt(QuestCommandCodec.RotateRight(questId, 10));
             packet.writeInt(QuestCommandCodec.RotateLeft(priority, 16));
+            packet.writeShort(WIRE_MARKER);
             packet.writeInt(0);
             packet.write(QuestStatusModule.write(statusType));
             packet.writeInt(QuestCommandCodec.RotateRight(minLevel, 7));

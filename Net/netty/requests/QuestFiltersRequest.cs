@@ -16,13 +16,14 @@ namespace Ow.Net.netty.requests
         public void readCommand(byte[] bytes)
         {
             var parser = new ByteParser(bytes);
+            // Request 5503 has a different wire order from the y2t settings module.
             QuestsLevelOrderDescending = parser.readBoolean();
+            parser.readShort();
             ChallengesAttemptedFilter = parser.readBoolean();
             ChallengesUnattemptedFilter = parser.readBoolean();
-            QuestsAvailableFilter = parser.readBoolean();
-            parser.readShort();
             QuestsCompletedFilter = parser.readBoolean();
             QuestsUnavailableFilter = parser.readBoolean();
+            QuestsAvailableFilter = parser.readBoolean();
         }
     }
 }

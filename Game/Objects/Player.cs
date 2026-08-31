@@ -2133,30 +2133,27 @@ namespace Ow.Game.Objects
             Achievements.Set(1, true, 1, true);
         }
 
-        private static string FormatCameraNumber(double value)
-        {
-            return value.ToString("0.###", CultureInfo.InvariantCulture);
-        }
-
         public void CameraLockToHero()
         {
-            SendPacket($"0|{ServerCommands.USER_INTERFACE}|{ServerCommands.CAMERA}|{ServerCommands.CAMERA_LOCK_TO_HERO}");
+            SendCommand(CameraLockToHeroCommand.write());
         }
 
         public void CameraLockToShip(int shipUserId, double zoomFactor = 1, double tweenDurationInSeconds = 3)
         {
             if (shipUserId <= 0) return;
 
-            SendPacket(
-                $"0|{ServerCommands.USER_INTERFACE}|{ServerCommands.CAMERA}|{ServerCommands.CAMERA_LOCK_TO_SHIP}|{shipUserId}|{FormatCameraNumber(zoomFactor)}|{FormatCameraNumber(tweenDurationInSeconds)}"
-            );
+            SendCommand(CameraLockToShipCommand.write(
+                shipUserId,
+                (float)zoomFactor,
+                (float)tweenDurationInSeconds));
         }
 
         public void CameraLockToCoordinates(int x, int y, double tweenDurationInSeconds = 3)
         {
-            SendPacket(
-                $"0|{ServerCommands.USER_INTERFACE}|{ServerCommands.CAMERA}|{ServerCommands.CAMERA_LOCK_TO_COORDINATES}|{x}|{y}|{FormatCameraNumber(tweenDurationInSeconds)}"
-            );
+            SendCommand(CameraLockToCoordinatesCommand.write(
+                x,
+                y,
+                (float)tweenDurationInSeconds));
         }
 
 

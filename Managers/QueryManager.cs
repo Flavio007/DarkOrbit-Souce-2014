@@ -23,6 +23,9 @@ namespace Ow.Managers
 {
     class QueryManager
     {
+        private static readonly object QuestSchemaLock = new object();
+        private static bool QuestSchemaReady;
+
         public class SavePlayer
         {
             public static void Settings(Player player, string target, object settings)
@@ -43,6 +46,31 @@ namespace Ow.Managers
                     mySqlClient.ExecuteNonQuery(
                         $"UPDATE player_accounts SET data = '{dataJson}', cargo = '{cargoJson}', nanohull = {player.CurrentNanoHull}, destructions = '{destrJson}', extraEnergy = {extraEnergy}, repairCredits = {repairCredits} WHERE userId = {player.Id}"
                     );
+                }
+            }
+
+            internal static bool SaveQuestState(Player player, QuestPlayerState state)
+            {
+                if (player == null || state == null)
+                    return false;
+
+                try
+                {
+                    using (var mySqlClient = SqlDatabaseManager.GetClient())
+                    {
+                        EnsureQuestSchema(mySqlClient);
+                        var progressJson = JsonConvert.SerializeObject(state.Progress ?? new Dictionary<string, int>()).Replace("'", "''");
+                        mySqlClient.ExecuteNonQuery(
+                            "INSERT INTO player_quests (user_id, quest_id, state, progress_json) VALUES (" +
+                            player.Id + "," + state.QuestId + "," + state.State + ",'" + progressJson + "') " +
+                            "ON DUPLICATE KEY UPDATE state = VALUES(state), progress_json = VALUES(progress_json), updated_at = CURRENT_TIMESTAMP");
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.Log("error_log", $"- [QueryManager.cs] SaveQuestState({player.Id},{state.QuestId}) exception: {e}");
+                    return false;
                 }
             }
 
@@ -271,6 +299,7 @@ namespace Ow.Managers
 
                     if (player != null)
                     {
+                        player.Quests.LoadPersistedState(LoadQuestStates(mySqlClient, playerId));
                         player.Achievements.Load(achievementsJson);
                         player.Achievements.EnsureDefaultSeed();
                     }
@@ -336,6 +365,43 @@ namespace Ow.Managers
             {
                 Logger.Log("error_log", $"- [QueryManager.cs] GetPlayer({playerId}) exception: {e}");
                 return null;
+            }
+        }
+
+        private static DataTable LoadQuestStates(SqlDatabaseClient mySqlClient, int playerId)
+        {
+            try
+            {
+                EnsureQuestSchema(mySqlClient);
+                return mySqlClient.ExecuteQueryTable("SELECT quest_id, state, progress_json FROM player_quests WHERE user_id = " + playerId);
+            }
+            catch (Exception e)
+            {
+                Logger.Log("error_log", $"- [QueryManager.cs] LoadQuestStates({playerId}) exception: {e}");
+                return null;
+            }
+        }
+
+        private static void EnsureQuestSchema(SqlDatabaseClient mySqlClient)
+        {
+            if (QuestSchemaReady)
+                return;
+
+            lock (QuestSchemaLock)
+            {
+                if (QuestSchemaReady)
+                    return;
+
+                mySqlClient.ExecuteNonQuery(
+                    "CREATE TABLE IF NOT EXISTS player_quests (" +
+                    "user_id INT NOT NULL," +
+                    "quest_id INT NOT NULL," +
+                    "state TINYINT NOT NULL DEFAULT 0," +
+                    "progress_json LONGTEXT NOT NULL," +
+                    "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
+                    "PRIMARY KEY (user_id, quest_id)" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+                QuestSchemaReady = true;
             }
         }
 

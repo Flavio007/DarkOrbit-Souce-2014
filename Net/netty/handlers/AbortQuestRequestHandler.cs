@@ -12,7 +12,6 @@ namespace Ow.Net.netty.handlers
             var player = GetPlayer(gameSession);
             NotifyRequest(player, "AbortQuestRequest", AbortQuestRequest.ID);
             player?.Quests?.HandleAbortQuest(request.QuestId);
-            Refresh(player);
         }
     }
 }

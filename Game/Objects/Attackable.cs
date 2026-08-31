@@ -468,7 +468,13 @@ namespace Ow.Game.Objects
                     }
 
                     if (this is Npc killedNpc)
+                    {
                         destroyerPlayer.BoosterManager?.TryRewardNpcDrop(killedNpc);
+                        destroyerPlayer.Quests?.ReportProgress("killNpc");
+                        destroyerPlayer.Quests?.ReportProgress("killNpcs");
+                    }
+                    else if (this is Player)
+                        destroyerPlayer.Quests?.ReportProgress("killPlayers");
                 }
 
                 if (this is Player)

@@ -65,6 +65,12 @@ namespace Ow.Game.Objects
                                 }
 
                                 Reward(rewardPlayer);
+                                if (rewardPlayer != null)
+                                {
+                                    rewardPlayer.Quests?.ReportProgress("collect");
+                                    if (this is BonusBox)
+                                        rewardPlayer.Quests?.ReportProgress("collectBonusBox");
+                                }
                                 Dispose();
                             }
                         }

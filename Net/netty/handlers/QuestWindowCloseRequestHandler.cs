@@ -7,8 +7,11 @@ namespace Ow.Net.netty.handlers
     {
         public void execute(GameSession gameSession, byte[] bytes)
         {
-            new QuestWindowCloseRequest().readCommand(bytes);
-            NotifyRequest(GetPlayer(gameSession), "QuestWindowCloseRequest", QuestWindowCloseRequest.ID);
+            var request = new QuestWindowCloseRequest();
+            request.readCommand(bytes);
+            var player = GetPlayer(gameSession);
+            NotifyRequest(player, "QuestWindowCloseRequest", QuestWindowCloseRequest.ID);
+            player?.Quests?.CloseQuestGiver(request.QuestGiverId);
         }
     }
 }

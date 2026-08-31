@@ -78,6 +78,7 @@ namespace Ow.Game
                 Player.UpdateCurrentCooldowns();
                 Player.SaveSettings();
                 Player.UpdateShipStatus();
+                Player.Quests?.FlushPersistence();
                 QueryManager.SavePlayer.Information(Player);
                 QueryManager.SavePlayer.Boosters(Player);
                 QueryManager.SavePlayer.Position(Player);

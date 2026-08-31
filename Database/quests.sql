@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS `player_quests` (
+    `user_id` INT NOT NULL,
+    `quest_id` INT NOT NULL,
+    `state` TINYINT NOT NULL DEFAULT 0,
+    `progress_json` LONGTEXT NOT NULL,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`user_id`, `quest_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

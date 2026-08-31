@@ -8,6 +8,8 @@ Inventario comparando o servidor com o cliente decompilado:
 
 Nenhum build foi executado. Os contratos abaixo foram obtidos por leitura dos serializers, dispatchers e handlers do cliente, e por busca dos IDs no servidor.
 
+Mapa focado e atualizado de missoes, eventos, efeitos e diferencas entre o cliente atual e o legacy: [`docs/PACOTES_MISSOES_EVENTOS_EFEITOS.md`](docs/PACOTES_MISSOES_EVENTOS_EFEITOS.md).
+
 ## Convencoes de protocolo
 
 ### Netty atual
@@ -44,7 +46,7 @@ Quando transportados pelo `LegacyModule` (`ID 4224`), o campo UTF contem a mensa
 | TDM | **FALTANDO**: os contratos de placar/resultado do cliente nao foram encontrados no servidor. |
 | Battle Station | **IMPLEMENTADO**, mas e captura de estacao/clan e nao substitui Sector Control. |
 | Beacons do LoW | **IMPLEMENTADO**: relay stations usam carga `0..100` e `AssetCreateCommand`. |
-| Ores e quests modernos | **IMPLEMENTADO/PARCIAL** no estado atual do workspace; os arquivos correspondentes ja existem. |
+| Ores e quests modernos | **IMPLEMENTADO/PARCIAL**: requests existem, mas quests modernas continuam limitadas a uma quest fixa e a lista/update estao desativados. |
 
 ## 2. Sector Control e beacons capturaveis
 
@@ -327,7 +329,7 @@ Os pontos restantes sao validacao de trafego, mapeamento dos nove tipos de recur
 
 ### 7.2 Quests modernas
 
-Os requests `28872`, `13518`, `21421`, `23727`, `21988`, `5503` e `27259` possuem requests/handlers no workspace. Os commands `16203`, `26745` e `8537` agora possuem serializers e emissao: a lista inclui a quest fixa 1, detalhes enviam definicao/restricao e rating, e atualizacoes sao enviadas a cada sincronizacao. Ainda ha necessidade de validar os modelos aninhados em trafego real e expandir o catalogo de quests.
+Os requests `28872`, `13518`, `21421`, `23727`, `21988`, `5503` e `27259` possuem requests/handlers no workspace. Os commands `16203`, `26745` e `8537` possuem serializers, mas `SendModernQuestList()` e `SendModernQuestUpdate()` estao explicitamente desativados por flags `false`; somente os detalhes da quest fixa 1 (`26745`) sao enviados pelo fluxo atual. Ainda faltam os modelos aninhados, o catalogo geral de quests e a escolha entre a versao moderna e o XML legacy. Ver [`docs/PACOTES_MISSOES_EVENTOS_EFEITOS.md`](docs/PACOTES_MISSOES_EVENTOS_EFEITOS.md).
 
 ### 7.3 Action bar
 
@@ -524,8 +526,8 @@ Assim, esses IDs nao devem ser descritos como “nao registrados”. O que ainda
 - `XCP|<amount>` legacy nao foi encontrado no servidor;
 - o mapeamento moderno cliente `0..8` para enum servidor `1..9` precisa ser mantido explicitamente;
 - `OreTradeInfoCommand.cs` permanece sem fluxo completo;
-- quest moderna ainda esta limitada a uma quest fixa: `QuestListUpdateCommand`, `QuestDetailsUpdateCommand` e `QuestUpdateCommand` ja sao enviados, mas sem catalogo geral;
-- requests de quests estao conectados; filtros sao persistidos e a lista moderna e sincronizada, mas ainda nao representa um catalogo geral.
+- quest moderna ainda esta limitada a uma quest fixa: os serializers `QuestListUpdateCommand`, `QuestDetailsUpdateCommand` e `QuestUpdateCommand` existem, mas somente o fluxo de detalhes esta ativo;
+- requests de quests estao conectados; filtros sao persistidos, mas a lista/update modernos estao desativados e ainda nao representam um catalogo geral.
 
 Estruturas modernas de ore ja implementadas e seus IDs:
 
