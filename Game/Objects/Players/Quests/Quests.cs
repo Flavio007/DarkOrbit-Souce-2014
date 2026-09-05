@@ -615,7 +615,7 @@ namespace Ow.Game.Objects.Players
                 var state = GetState(definition.Id);
                 if (!Include(definition, state))
                     continue;
-                quests.Add(QuestNettyModule.FromWire(QuestListItemModule.write(definition.Id, definition.SortOrder, definition.MinLevel, definition.Priority, ModernStatus(definition, state), definition.Title, DescriptionKey(definition))));
+                quests.Add(QuestNettyModule.FromWire(QuestListItemModule.write(definition.Id, definition.SortOrder, definition.MinLevel, definition.Priority, ModernStatus(definition, state), definition.Title, QuestTitleKey(definition))));
             }
             // The wire order is daily slots first, normal slots second.
             Player.SendCommand(new QuestListUpdateCommand(0, GetNormalQuestSlotsRemaining(), false, quests).write());
@@ -680,7 +680,7 @@ namespace Ow.Game.Objects.Players
             var restriction = QuestNettyModule.FromWire(QuestRestrictionModule.write(
                 0, IsEligible(definition), false, definition.MinLevel, true, conditionRestrictions));
             return QuestNettyModule.FromWire(QuestDefinitionModule.write(
-                definition.Id, definition.Title, DescriptionKey(definition), restriction, icons, rewards, conditionTypes));
+                definition.Id, definition.Title, QuestTitleKey(definition), restriction, icons, rewards, conditionTypes));
         }
 
         private void SendQuestCompleted(QuestDefinition definition)
@@ -752,6 +752,19 @@ namespace Ow.Game.Objects.Players
             var key = string.IsNullOrWhiteSpace(q.DescriptionKey) ? q.Description : q.DescriptionKey;
             if (string.IsNullOrWhiteSpace(key)) key = "quest_description_" + q.Id;
             return key.Replace("{faction}", Player != null && Player.FactionId == 2 ? "eic" : Player != null && Player.FactionId == 3 ? "vru" : "mmo");
+        }
+
+        private static string QuestTitleKey(QuestDefinition q)
+        {
+            if (q == null)
+                return "0";
+
+            var key = string.IsNullOrWhiteSpace(q.TitleKey) ? "" : q.TitleKey.Trim();
+            const string prefix = "quest_title_";
+            if (key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                key = key.Substring(prefix.Length);
+
+            return string.IsNullOrWhiteSpace(key) ? q.Id.ToString() : key;
         }
 
         private static bool ReadInt(DataRow row, string column, out int value)

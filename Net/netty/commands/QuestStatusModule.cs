@@ -5,15 +5,16 @@ namespace Ow.Net.netty.commands
     class QuestStatusModule
     {
         public const short ID = 24033;
-        private const short BEFORE_TYPE_MARKER = 11654;
-        private const short AFTER_TYPE_MARKER = -1488;
+        private const short FIRST_MARKER = 11654;
+        private const short SECOND_MARKER = -1488;
 
         public static byte[] write(short type)
         {
             var packet = new ByteArray(ID);
-            packet.writeShort(BEFORE_TYPE_MARKER);
+            // The client skips two shorts before reading the quest status.
+            packet.writeShort(FIRST_MARKER);
+            packet.writeShort(SECOND_MARKER);
             packet.writeShort(type);
-            packet.writeShort(AFTER_TYPE_MARKER);
             return packet.Message.ToArray();
         }
     }

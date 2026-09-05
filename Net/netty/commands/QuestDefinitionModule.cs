@@ -7,16 +7,16 @@ namespace Ow.Net.netty.commands
     {
         public const short ID = 10794;
 
-        public static byte[] write(int questId, string title, string description)
+        public static byte[] write(int questId, string category, string titleKey)
         {
-            return write(questId, title, description,
+            return write(questId, category, titleKey,
                 QuestNettyModule.FromWire(QuestRestrictionModule.write()),
                 new List<QuestNettyModule>(),
                 new List<QuestNettyModule>(),
                 new List<QuestNettyModule>());
         }
 
-        public static byte[] write(int questId, string title, string description,
+        public static byte[] write(int questId, string category, string titleKey,
             QuestNettyModule restriction,
             IEnumerable<QuestNettyModule> icons,
             IEnumerable<QuestNettyModule> rewards,
@@ -24,12 +24,12 @@ namespace Ow.Net.netty.commands
         {
             var packet = new ByteArray(ID);
             packet.writeInt(QuestCommandCodec.RotateRight(questId, 15));
-            packet.writeUTF(title);
+            packet.writeUTF(category);
             packet.write((restriction ?? QuestNettyModule.FromWire(QuestRestrictionModule.write())).ToWireBytes());
             var iconList = Normalize(icons);
             packet.writeInt(iconList.Count);
             QuestCommandCodec.WriteModules(packet, iconList);
-            packet.writeUTF(description);
+            packet.writeUTF(titleKey);
             var rewardList = Normalize(rewards);
             packet.writeInt(rewardList.Count);
             QuestCommandCodec.WriteModules(packet, rewardList);

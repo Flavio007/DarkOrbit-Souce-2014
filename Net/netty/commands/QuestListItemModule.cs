@@ -8,12 +8,12 @@ namespace Ow.Net.netty.commands
         private const short WIRE_MARKER = 5563;
 
         public static byte[] write(int questId, int sortOrder, int minLevel, int priority,
-            short statusType, string title, string description)
+            short statusType, string category, string titleKey)
         {
             var packet = new ByteArray(ID);
             packet.write(QuestIconModule.write());
-            packet.writeUTF(title);
-            packet.writeUTF(description);
+            packet.writeUTF(category);
+            packet.writeUTF(titleKey);
             packet.writeInt(0);
             packet.writeInt(QuestCommandCodec.RotateRight(sortOrder, 13));
             packet.writeInt(QuestCommandCodec.RotateRight(questId, 10));

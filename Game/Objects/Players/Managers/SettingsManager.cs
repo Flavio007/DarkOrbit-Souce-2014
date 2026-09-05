@@ -207,7 +207,7 @@ namespace Ow.Game.Objects.Players.Managers
 
     public class ClassY2TBase
     {
-        public bool questsAvailableFilter = false;
+        public bool questsAvailableFilter = true;
         public bool questsUnavailableFilter = false;
         public bool questsCompletedFilter = false;
         public bool var_1151 = false;
@@ -646,6 +646,11 @@ namespace Ow.Game.Objects.Players.Managers
             var y2tSettings = Player.Settings.ClassY2T;
 
             windowSettings?.EnsureDefaults();
+
+            // Older settings disabled every quest filter. The client treats that
+            // as an empty list, even when the server sends available quests.
+            if (!y2tSettings.questsAvailableFilter && !y2tSettings.questsUnavailableFilter && !y2tSettings.questsCompletedFilter)
+                y2tSettings.questsAvailableFilter = true;
 
             Player.SendCommand(UserSettingsCommand.write(
                 new QualitySettingsModule(qualitySettings.notSet, qualitySettings.qualityAttack, qualitySettings.qualityBackground, qualitySettings.qualityPresetting, qualitySettings.qualityCustomized, qualitySettings.qualityPoizone, qualitySettings.qualityShip, qualitySettings.qualityEngine, qualitySettings.qualityExplosion, qualitySettings.qualityCollectable, qualitySettings.qualityEffect),

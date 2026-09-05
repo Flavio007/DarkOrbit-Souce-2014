@@ -20,9 +20,23 @@ namespace Ow.Net.netty.commands
             if (wire == null || wire.Length < 2)
                 return new QuestNettyModule(0, new byte[0]);
 
-            var typeId = (short)((wire[0] << 8) | (wire[1] & 0xff));
-            var body = new byte[wire.Length - 2];
-            Buffer.BlockCopy(wire, 2, body, 0, body.Length);
+            // ByteArray.ToByteArray() returns [payload length][module id][body],
+            // while nested modules are written back as [module id][body].
+            // Accept both forms, but never mistake the frame length for TypeId.
+            var payloadOffset = 0;
+            if (wire.Length >= 4)
+            {
+                var declaredLength = (wire[0] << 8) | (wire[1] & 0xff);
+                if (declaredLength == wire.Length - 2)
+                    payloadOffset = 2;
+            }
+
+            if (wire.Length - payloadOffset < 2)
+                return new QuestNettyModule(0, new byte[0]);
+
+            var typeId = (short)((wire[payloadOffset] << 8) | (wire[payloadOffset + 1] & 0xff));
+            var body = new byte[wire.Length - payloadOffset - 2];
+            Buffer.BlockCopy(wire, payloadOffset + 2, body, 0, body.Length);
             return new QuestNettyModule(typeId, body);
         }
 
