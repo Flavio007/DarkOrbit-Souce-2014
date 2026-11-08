@@ -59,6 +59,7 @@ namespace Ow.Game.Objects
         public bool Invisible { get; set; }
         public bool Invincible { get; set; }
 
+        public string QuestLastHitWeapon { get; set; } = "";
         public bool Destroyed = false;
 
         public Character MainAttacker { get; set; }
@@ -68,7 +69,26 @@ namespace Ow.Game.Objects
         public ConcurrentDictionary<int, VisualModifierCommand> VisualModifiers = new ConcurrentDictionary<int, VisualModifierCommand>();
         private readonly ConcurrentDictionary<int, int> temporaryVisualModifierTokens = new ConcurrentDictionary<int, int>();
 
-        public Attackable Selected { get; set; }
+        private long lifeVersion;
+        public long LifeVersion => System.Threading.Interlocked.Read(ref lifeVersion);
+        protected void BeginNewLife() { System.Threading.Interlocked.Increment(ref lifeVersion); }
+
+        private sealed class TargetSelection
+        {
+            public readonly Attackable Target;
+            public readonly long Life;
+            public TargetSelection(Attackable target) { Target = target; Life = target.LifeVersion; }
+        }
+        private TargetSelection selection;
+        public Attackable Selected
+        {
+            get
+            {
+                var current = System.Threading.Volatile.Read(ref selection);
+                return current != null && current.Target.LifeVersion == current.Life ? current.Target : null;
+            }
+            set { System.Threading.Volatile.Write(ref selection, value == null ? null : new TargetSelection(value)); }
+        }
 
         protected Attackable(int id)
         {
@@ -84,7 +104,7 @@ namespace Ow.Game.Objects
 
         public bool InRange(Attackable attackable, int range = 2000)
         {
-            if (attackable == null || attackable.Spacemap.Id != Spacemap.Id) return false;
+            if (attackable == null || Spacemap == null || attackable.Spacemap != Spacemap) return false;
             if (attackable is Character character)
             {
                 if (character == null || character.Destroyed) return false;
@@ -118,7 +138,7 @@ namespace Ow.Game.Objects
             else if (this is Npc npc)
             {
                 npc.Attacking = false;
-                npc.NpcAI.AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
+                if (npc.NpcAI != null) npc.NpcAI.AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
             }
         }
 
@@ -183,18 +203,25 @@ namespace Ow.Game.Objects
             return damage > maxAllowedDamage ? maxAllowedDamage : damage;
         }
 
+        // Network visibility can be asymmetric on x-1: defenders observe distant invaders.
+        public IEnumerable<Player> PacketRecipients()
+        {
+            var sent = new HashSet<int>();
+            foreach (var player in InRangeCharacters.Values.OfType<Player>())
+                if (sent.Add(player.Id)) yield return player;
+            if (this is Player subject && Spacemap != null && LowMapRadar.Sector(Spacemap.VisualMapId) == 1)
+                foreach (var viewer in Spacemap.Characters.Values.OfType<Player>())
+                    if (viewer != subject && LowMapRadar.Shared(Spacemap.VisualMapId, viewer.FactionId, subject.FactionId)
+                        && viewer.InRangeCharacters.TryGetValue(Id, out var visible) && ReferenceEquals(visible, this)
+                        && sent.Add(viewer.Id)) yield return viewer;
+        }
         public void SendPacketToInRangePlayers(string packet)
         {
-            foreach (var character in InRangeCharacters.Values)
-                if (character is Player player)
-                    player.SendPacket(packet);
+            foreach (var player in PacketRecipients()) player.SendPacket(packet);
         }
-
         public void SendCommandToInRangePlayers(byte[] command)
         {
-            foreach (var character in InRangeCharacters.Values)
-                if (character is Player player)
-                    player.SendCommand(command);
+            foreach (var player in PacketRecipients()) player.SendCommand(command);
         }
 
         private void ApplyRewards(Player player, int credits, int experience, int honor, int uridium, ChangeType changeType, bool isNpc)
@@ -288,7 +315,15 @@ namespace Ow.Game.Objects
             return true;
         }
 
+        private int destructionInProgress;
         public void Destroy(Attackable destroyer, DestructionType destructionType)
+        {
+            if (System.Threading.Interlocked.CompareExchange(ref destructionInProgress, 1, 0) != 0) return;
+            try { DestroyCore(destroyer, destructionType); }
+            finally { System.Threading.Volatile.Write(ref destructionInProgress, 0); }
+        }
+
+        private void DestroyCore(Attackable destroyer, DestructionType destructionType)
         {
             if (this is Spaceball || Destroyed) return;
 
@@ -314,6 +349,7 @@ namespace Ow.Game.Objects
                 destructionType = DestructionType.PLAYER;
             }
 
+            var questRecipients = Quests.KillRecipients(destroyer as Player, this);
             Destroyed = true;
 
             var destroyCommand = ShipDestroyedCommand.write(Id, 0);
@@ -325,6 +361,7 @@ namespace Ow.Game.Objects
 
             if (this is Player player)
             {
+                player.Quests?.RecordDeath();
                 player.DroneManager?.ApplyDeathDamage();
 
                 if (EventManager.JackpotBattle.InEvent(player))
@@ -340,6 +377,7 @@ namespace Ow.Game.Objects
                 player.CurrentInRangePortalId = -1;
                 player.Storage.InRangeAssets.Clear();
                 EventManager.GalaxyGate?.HandlePlayerDestroyed(player);
+                EventManager.Scoremageddon?.RecordKill(destroyer as Player,player);
                 player.KillScreen(destroyer, destructionType);
                 /*
                 if (EventManager.Scoremageddon.Active && destroyer is Player) 
@@ -467,14 +505,23 @@ namespace Ow.Game.Objects
                             ApplyRewards(member, credits, experience, honor, uridium, changeType, isNpcReward);
                     }
 
+                    destroyerPlayer.Quests?.RecordKill();
                     if (this is Npc killedNpc)
                     {
                         destroyerPlayer.BoosterManager?.TryRewardNpcDrop(killedNpc);
-                        destroyerPlayer.Quests?.ReportProgress("killNpc");
-                        destroyerPlayer.Quests?.ReportProgress("killNpcs");
+                        destroyerPlayer.Achievements?.Report("killNpc",1,killedNpc.Ship.Id);
                     }
-                    else if (this is Player)
-                        destroyerPlayer.Quests?.ReportProgress("killPlayers");
+                    foreach (var recipient in questRecipients)
+                    {
+                        if (recipient != destroyerPlayer) recipient.Quests?.RecordKill();
+                        if (this is Npc questNpc)
+                        {
+                            recipient.Quests?.ReportProgress("killNpc", targetShipId: questNpc.Ship.Id, weapon: QuestLastHitWeapon);
+                            recipient.Quests?.ReportProgress("killNpcs", targetShipId: questNpc.Ship.Id, weapon: QuestLastHitWeapon);
+                        }
+                        else if (this is Player)
+                            recipient.Quests?.ReportProgress("killPlayers", targetShipId: (this as Character)?.Ship.Id ?? 0, targetFactionId: FactionId, weapon: QuestLastHitWeapon);
+                    }
                 }
 
                 if (this is Player)
@@ -503,16 +550,15 @@ namespace Ow.Game.Objects
 
             if (this is Npc npc)
             {
-                new CargoBox(Position, Spacemap, false, false);
+                var cargoContents = new CargoDrop(npc.Ship.Drops, npc.CargoDropMultiplier);
+                var droppedCargo = cargoContents.Empty ? null : new CargoBox(new Position(Position.X, Position.Y), Spacemap, false, false, contents: cargoContents, questOwner: destroyer as Player);
                 if (npc is InstanceNpc instanceNpc)
                 {
                     EventManager.GalaxyGate?.HandleNpcDestroyed(instanceNpc);
                     EventManager.GroupMap200?.HandleNpcDestroyed(instanceNpc);
                 }
                 else if (destroyer is Player tutorialDestroyer)
-                    EventManager.Tutorial?.HandleNpcDestroyed(npc, tutorialDestroyer);
-                if (npc.Respawnable)
-                    npc.Respawn();
+                    EventManager.Tutorial?.HandleNpcDestroyed(npc, tutorialDestroyer, droppedCargo);
             }
 
             if (this is Escort escort)
@@ -524,7 +570,7 @@ namespace Ow.Game.Objects
                 }
             }
 
-            if (destroyer is Character)
+            if (destroyer is Character && destroyer.Selected == this)
                 destroyer.Deselection();
 
             Deselection();
@@ -533,6 +579,10 @@ namespace Ow.Game.Objects
 
             if (this is Pet pet)
                 pet.Deactivate(true, true);
+
+            // Publish the next life only after all observers and combat state were cleared.
+            if (this is Npc respawningNpc && respawningNpc.Respawnable && !(this is Cubikon))
+                respawningNpc.Respawn();
         }
 
         public DateTime outOfRangeCooldown = new DateTime();
@@ -540,7 +590,8 @@ namespace Ow.Game.Objects
         public DateTime peaceAreaCooldown = new DateTime();
         public bool TargetDefinition(Attackable target, bool sendMessage = true, bool isPlayerRocketAttack = false)
         {
-            if (target == null) return false;
+            if (target == null || Destroyed || target.Destroyed || Spacemap == null || target.Spacemap != Spacemap) return false;
+            if (target is Character targetCharacter && !Spacemap.ContainsCharacter(targetCharacter)) return false;
 
             short relationType = Clan.Id != 0 && target.Clan.Id != 0 ? Clan.GetRelation(target.Clan) : (short)0;
 
@@ -797,7 +848,7 @@ namespace Ow.Game.Objects
         public Boolean ShieldMechanics()
         {
             if (this is Player player)
-                return player.GetShieldMechanics();
+                return CurrentShieldPoints > 0 && player.GetShieldMechanics();
             return false;
         }
     }

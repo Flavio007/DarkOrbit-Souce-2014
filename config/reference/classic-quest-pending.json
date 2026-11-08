@@ -1,0 +1,69 @@
+{
+  "revision": 63014,
+  "reason": "Exact objective quantities were unavailable in the retrieved individual pages; no guessed playable definitions are generated.",
+  "missions": [
+    {
+      "level": 6,
+      "title": "Company Wars I: The VRU has crossed the line! (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Goliath)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The MMO has crossed the line! (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Goliath)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The VRU has crossed the line! (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(BigBoy)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The MMO has crossed the line! (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(BigBoy)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The VRU has crossed the line! (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Vengeance)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The MMO has crossed the line! (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Vengeance)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 8,
+      "title": "David vs. Goliath",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/David_vs._Goliath"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+[27.10.2026 13: 16:03] - [GameClient.cs] SendCallback void exception: System.ObjectDisposedException: Não é possível acessar um objeto descartado.
+Nome do objeto: 'System.Net.Sockets.Socket'.
+   em System.Net.Sockets.Socket.EndSend(IAsyncResult asyncResult, SocketError& errorCode)
+   em System.Net.Sockets.Socket.EndSend(IAsyncResult asyncResult)
+   em Ow.Net.GameClient.SendCallback(IAsyncResult ar) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\GameClient.cs:linha 198

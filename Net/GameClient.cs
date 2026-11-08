@@ -30,6 +30,14 @@ namespace Ow.Net
         private readonly object sendLock = new object();
         private readonly Queue<PendingSend> sendQueue = new Queue<PendingSend>();
         private bool sendInProgress;
+        private bool closeAfterSend;
+        private readonly ClientPacketBuffer receiveBuffer = new ClientPacketBuffer();
+        private int closing;
+        private readonly System.Threading.Timer diagnosticsTimer;
+        private long handlerStarted;
+        private int activeCommand = -1;
+        private long sendStarted;
+        private long lastDiagnostic;
 
         public Socket Socket { get; set; }
         public int UserId { get; set; }
@@ -37,6 +45,7 @@ namespace Ow.Net
         public GameClient(Socket handler)
         {
             Socket = handler;
+            diagnosticsTimer = new System.Threading.Timer(CheckProgress, null, 5000, 5000);
 
             StateObject state = new StateObject();
             state.workSocket = handler;
@@ -47,12 +56,23 @@ namespace Ow.Net
         private void OnConnectionClosed()
         {
             var gameSession = GameManager.GetGameSession(UserId);
-            if (gameSession != null)
+            if (gameSession != null && ReferenceEquals(gameSession.Client, this))
                 gameSession.Disconnect(GameSession.DisconnectionType.SOCKET_CLOSED);
+        }
+
+        // A normal logout must deliver the final confirmation before closing TCP.
+        public void CloseAfterSending()
+        {
+            bool pending;
+            lock (sendLock) { closeAfterSend = true; pending = sendInProgress || sendQueue.Count != 0; }
+            if (!pending) Task.Run((Action)Close);
+            else Task.Delay(2000).ContinueWith(_ => Close());
         }
 
         public void Close()
         {
+            if (System.Threading.Interlocked.Exchange(ref closing, 1) != 0) return;
+            diagnosticsTimer.Dispose();
             try
             {
                 lock (sendLock)
@@ -61,15 +81,18 @@ namespace Ow.Net
                     sendInProgress = false;
                 }
 
-                Socket.Shutdown(SocketShutdown.Both);
-                Socket.Close();
-
-                OnConnectionClosed();
+                try { Socket?.Shutdown(SocketShutdown.Both); }
+                catch (SocketException) { }
+                catch (ObjectDisposedException) { }
             }
             catch (Exception e)
             {
-                //ignored
-                //Logger.Log("error_log", $"- [GameClient.cs] Close void exception: {e}");
+                Logger.Log("error_log", "[GameClient] Close failed: " + e.GetType().Name);
+            }
+            finally
+            {
+                try { Socket?.Close(); }
+                finally { OnConnectionClosed(); }
             }
         }
 
@@ -77,9 +100,7 @@ namespace Ow.Net
         {
             try
             {
-                if (Socket == null || !Socket.IsBound || !Socket.Connected) return;
-
-                String content = String.Empty;
+                if (Socket == null || !Socket.Connected) return;
 
                 StateObject state = (StateObject)ar.AsyncState;
                 Socket handler = state.workSocket;
@@ -91,10 +112,7 @@ namespace Ow.Net
 
                 if (bytesRead > 0)
                 {
-                    content = Encoding.UTF8.GetString(
-                        state.buffer, 0, bytesRead);
-
-                    if (content.StartsWith("<policy-file-request/>"))
+                    receiveBuffer.Feed(bytes, bytesRead, ExecutePacket, () =>
                     {
                         const string policyPacket = "<?xml version=\"1.0\"?>\r\n" +
                            "<!DOCTYPE cross-domain-policy SYSTEM \"/xml/dtds/cross-domain-policy.dtd\">\r\n" +
@@ -103,22 +121,18 @@ namespace Ow.Net
                            "</cross-domain-policy>";
 
                         Send(policyPacket + (char)0x00);
-                    }
-                    else
-                    {
-                        Handler.Execute(bytes, this);
-
-                        handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    });
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                         new AsyncCallback(ReadCallback), state);
-                    }
                 }
                 else
                 {
                     Close();
                 }
             } 
-            catch
+            catch (Exception error)
             {
+                Logger.Log("error_log", "[GameClient] Receive failed: " + error.GetType().Name + ": " + error.Message);
                 Close();
             }
         }
@@ -140,12 +154,13 @@ namespace Ow.Net
         {
             try
             {
-                if (byteData == null || byteData.Length == 0 || Socket == null || !Socket.IsBound || !Socket.Connected)
+                if (byteData == null || byteData.Length == 0 || Socket == null || !Socket.Connected)
                     return;
 
                 PendingSend pendingSend;
                 lock (sendLock)
                 {
+                    if (System.Threading.Volatile.Read(ref closing) != 0) return;
                     sendQueue.Enqueue(new PendingSend(byteData));
                     if (sendInProgress)
                         return;
@@ -159,6 +174,7 @@ namespace Ow.Net
             catch (Exception e)
             {
                 Logger.Log("error_log", $"- [GameClient.cs] Send(byte[]) void exception: {e}");
+                Close();
             }
         }
 
@@ -166,16 +182,18 @@ namespace Ow.Net
         {
             try
             {
-                if (Socket == null || !Socket.IsBound || !Socket.Connected)
+                if (Socket == null || !Socket.Connected)
                 {
                     lock (sendLock)
                     {
                         sendQueue.Clear();
                         sendInProgress = false;
                     }
+                    Close();
                     return;
                 }
 
+                System.Threading.Interlocked.Exchange(ref sendStarted, Stopwatch.GetTimestamp());
                 Socket.BeginSend(pendingSend.Data, pendingSend.Offset,
                     pendingSend.Data.Length - pendingSend.Offset, 0,
                     new AsyncCallback(SendCallback), pendingSend);
@@ -189,6 +207,7 @@ namespace Ow.Net
                 }
 
                 Logger.Log("error_log", $"- [GameClient.cs] BeginSend void exception: {e}");
+                Close();
             }
         }
 
@@ -205,6 +224,7 @@ namespace Ow.Net
 
                 lock (sendLock)
                 {
+                    if (System.Threading.Volatile.Read(ref closing) != 0) return;
                     pendingSend.Offset += sent;
                     if (pendingSend.Offset >= pendingSend.Data.Length)
                         sendQueue.Dequeue();
@@ -212,6 +232,8 @@ namespace Ow.Net
                     if (sendQueue.Count == 0)
                     {
                         sendInProgress = false;
+                        System.Threading.Interlocked.Exchange(ref sendStarted, 0);
+                        if (closeAfterSend) Task.Run((Action)Close);
                         return;
                     }
 
@@ -229,7 +251,35 @@ namespace Ow.Net
                 }
 
                 Logger.Log("error_log", $"- [GameClient.cs] SendCallback void exception: {e}");
+                Close();
             }
+        }
+
+        private void ExecutePacket(byte[] frame)
+        {
+            activeCommand = (frame[2] << 8) | frame[3];
+            System.Threading.Interlocked.Exchange(ref handlerStarted, Stopwatch.GetTimestamp());
+            try { Handler.Execute(frame, this); }
+            finally { System.Threading.Interlocked.Exchange(ref handlerStarted, 0); }
+        }
+
+        // Runs independently of packet handlers, so a blocked handler is recorded
+        // while it is blocked, rather than only after it eventually returns.
+        private void CheckProgress(object state)
+        {
+            if (System.Threading.Volatile.Read(ref closing) != 0) return;
+            var now = Stopwatch.GetTimestamp();
+            var handling = System.Threading.Interlocked.Read(ref handlerStarted);
+            var sending = System.Threading.Interlocked.Read(ref sendStarted);
+            var handlerMs = handling == 0 ? 0 : (now - handling) * 1000 / Stopwatch.Frequency;
+            var sendMs = sending == 0 ? 0 : (now - sending) * 1000 / Stopwatch.Frequency;
+            if (handlerMs < 5000 && sendMs < 5000) return;
+            var previous = System.Threading.Interlocked.Read(ref lastDiagnostic);
+            if (previous != 0 && (now - previous) / Stopwatch.Frequency < 15) return;
+            System.Threading.Interlocked.Exchange(ref lastDiagnostic, now);
+            int queued;
+            lock (sendLock) queued = sendQueue.Count;
+            Logger.Log("network_log", $"[GameClient] user={UserId} command={activeCommand} handlerMs={handlerMs} sendMs={sendMs} queued={queued} tick={Ow.Game.Ticks.TickManager.CurrentTickId}");
         }
     }
 }

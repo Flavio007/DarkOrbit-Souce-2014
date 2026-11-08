@@ -16,16 +16,14 @@ namespace Ow.Game.Objects
 {
     class Cubikon : Npc
     {
-        public new NpcAI NpcAI { get; set; }
-        public new bool Attacking = false;
-        public new int MotherShipId = 0;
-        public new int minioncount = 0;
         public List<Protegit> protegits = new List<Protegit>();
         public int MinionShip = 1;
         public int WaveSize = 1;
         public bool Alive = true;
         private Position respawnpos;
         public DateTime respawntime;
+        private readonly ClassicCubikonWave classicWave = new ClassicCubikonWave();
+        private readonly object classicWaveSync = new object();
 
 
         public Cubikon(int id, Ship ship, Spacemap spacemap, Position position, int minionsShip, int minionsCount) : base(id, ship, spacemap, position, 0)
@@ -54,7 +52,10 @@ namespace Ow.Game.Objects
 
         public override void Tick()
         {
+            checkrepsawn();
+            if (Destroyed) return;
             Movement.ActualPosition(this);
+            TickClassicWave();
             NpcAI.TickAI();
             CheckShieldPointsRepair();
             Storage.Tick();
@@ -75,7 +76,6 @@ namespace Ow.Game.Objects
         }
 
 
-        public new DateTime lastAttackTime = new DateTime();
         public new void Attack()
         {
             var target = SelectedCharacter;
@@ -101,10 +101,16 @@ namespace Ow.Game.Objects
                     damageHp = 0;
                 }
 
-                if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+                (target as Player)?.Quests?.RecordDamage(Math.Max(0, Math.Min(damageHp, target.CurrentHitPoints)));
+            if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+                {
                     target.Destroy(this, DestructionType.NPC);
+                    lastAttackTime = DateTime.Now;
+                    return;
+                }
                 else
                     target.CurrentHitPoints -= damageHp;
+
 
                 target.CurrentShieldPoints -= damageShd;
                 target.LastCombatTime = DateTime.Now;
@@ -117,6 +123,14 @@ namespace Ow.Game.Objects
 
         public void SpawnWave(int npcid, int count)
         {
+            if (Ship.Id == 80)
+            {
+                lock (classicWaveSync)
+                    if (classicWave.PendingCount == 0 && !Destroyed && Alive)
+                        classicWave.Begin(npcid, Math.Min(Math.Max(0, count - 1), Math.Max(0, 20 - minioncount)), DateTime.Now);
+                return;
+            }
+
             if (Ship.Id == 480 || Ship.Id == 880)
             {
                 AddVisualModifier(VisualModifierCommand.SKULL, 1, "", 1, true);
@@ -126,12 +140,57 @@ namespace Ow.Game.Objects
             for (int i = 1; i < count; i++)
                 if (minioncount < 20)
                 {
-                    protegits.Add(new Protegit(Randoms.CreateRandomID(), GameManager.GetShip(npcid), Spacemap, Position.GetPosOnCircle(Position, 10), this));
+                    var boss = Ship.Id == 480 || Ship.Id == 880;
+                    var origin = boss ? new Position(Position.X, Position.Y) : Position.GetPosOnCircle(Position, 10);
+                    var git = new Protegit(Randoms.CreateRandomID(), GameManager.GetShip(npcid), Spacemap, origin, this);
+                    protegits.Add(git);
+                    if (boss)
+                    {
+                        // Spread the wave evenly from the center in the game's world coordinates.
+                        var angle = 2 * Math.PI * (i - 1) / Math.Max(1, count - 1);
+                        var destination = new Position(Position.X + (int)Math.Round(300 * Math.Cos(angle)),
+                            Position.Y + (int)Math.Round(300 * Math.Sin(angle)));
+                        Movement.Move(git, destination);
+                    }
                     minioncount++;
                 }
         }
 
-        public new DateTime lastShieldRepairTime = new DateTime();
+        // Original door transforms + the git's exit point at frame 45 (world art scale 1).
+        private static readonly Position[] ClassicExits =
+        {
+            new Position(-172, 64),
+            new Position(-169, 41),
+            new Position(-163, 13),
+            new Position(-158, -18),
+            new Position(-152, -50),
+            new Position(-147, -90),
+            new Position(137, 105),
+            new Position(159, 77),
+            new Position(183, 49),
+            new Position(211, 19)
+        };
+
+        private void TickClassicWave()
+        {
+            if (Ship.Id != 80) return;
+            lock (classicWaveSync)
+            {
+                if (Destroyed || !Alive) { classicWave.Cancel(); return; }
+                classicWave.Tick(DateTime.Now,
+                    door => GameManager.SendPacketToMap(Spacemap.Id, $"0|n|s|door|{Id}|{door}"),
+                    (ship, door) =>
+                    {
+                        if (minioncount >= 20) return;
+                        var exit = ClassicExits[door];
+                        var git = new Protegit(Randoms.CreateRandomID(), GameManager.GetShip(ship), Spacemap,
+                            new Position(Position.X + exit.X, Position.Y + exit.Y), this);
+                        protegits.Add(git);
+                        minioncount++;
+                    });
+            }
+        }
+
         private void CheckShieldPointsRepair()
         {
             if (LastCombatTime.AddSeconds(10) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;
@@ -150,14 +209,8 @@ namespace Ow.Game.Objects
 
         public void Respawn(Position respawn)
         {
-            LastCombatTime = DateTime.Now.AddSeconds(-999);
-            CurrentHitPoints = MaxHitPoints;
-            CurrentShieldPoints = MaxShieldPoints;
-            SetPosition(respawn);
-            Spacemap.AddCharacter(this);
-            Attackers.Clear();
-            MainAttacker = null;
-            Destroyed = false;
+            lock (classicWaveSync) classicWave.Cancel();
+            RespawnAt(respawn);
             protegits.Clear();
             minioncount = 0;
         }

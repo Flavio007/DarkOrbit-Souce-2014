@@ -134,7 +134,12 @@ namespace Ow.Game.Objects
         {
             try
             {
-                if (character == null || InRangeCharacters.ContainsKey(character.Id) || character.Destroyed || character.Id == Id || character.Spacemap.Id != Spacemap.Id) return false;
+                if (Spacemap == null || !Spacemap.CanSeeCharacter(this, character)) return false;
+                if (InRangeCharacters.TryGetValue(character.Id, out var previous))
+                {
+                    if (ReferenceEquals(previous, character)) return false;
+                    RemoveInRangeCharacter(previous);
+                }
 
                 var success = InRangeCharacters.TryAdd(character.Id, character);
 
@@ -166,7 +171,7 @@ namespace Ow.Game.Objects
                         else player.SendCommand(character.GetShipCreateCommand());
 
                         var timeElapsed = (DateTime.Now - character.MovementStartTime).TotalMilliseconds;
-                        player.SendCommand(MoveCommand.write(character.Id, character.Destination.X, character.Destination.Y, (int)(character.MovementTime - timeElapsed)));
+                        player.SendCommand(MoveCommand.write(character.Id, character.Destination.X, character.Destination.Y, character.Moving ? Math.Max(0, (int)(character.MovementTime - timeElapsed)) : 0));
                     }
                 }
 
@@ -184,9 +189,9 @@ namespace Ow.Game.Objects
         {
             try
             {
-                if (character.Spacemap != Spacemap || !InRangeCharacters.ContainsKey(character.Id)) return false;
+                if (character == null) return false;
 
-                var success = InRangeCharacters.TryRemove(character.Id, out character);
+                var success = ((ICollection<KeyValuePair<int, Character>>)InRangeCharacters).Remove(new KeyValuePair<int, Character>(character.Id, character));
                 if (success)
                 {
                     InRangeCharacterRemoved?.Invoke(this, new CharacterArgs(character));

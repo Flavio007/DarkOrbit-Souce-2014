@@ -1,4 +1,4 @@
-using Ow.Game.Movements;
+﻿using Ow.Game.Movements;
 using Ow.Game.Objects;
 using Ow.Game.Objects.AI;
 using Ow.Game.Objects.Players;
@@ -33,9 +33,16 @@ namespace Ow.Game.Events
             public FakePlayer SupportVengeance { get; set; }
             public FakePlayer SupportGoliath { get; set; }
             public TutorialExitPortal ExitPortal { get; set; }
+            public Dictionary<string, Collectable> Cargo { get; } = new Dictionary<string, Collectable>();
+            public int CollectedCargo;
+            public int DestroyedNpcs;
             public bool RewardsSpawned { get; set; }
             public bool RewardsSequenceStarted { get; set; }
             public bool CleanedUp { get; set; }
+            public bool IntroPresented;
+            public int CameraRevision;
+            public bool CameraActive;
+            public bool CameraPreviousLock;
         }
 
         private sealed class TutorialExitPortal : Portal
@@ -89,6 +96,8 @@ namespace Ow.Game.Events
                     player.Spacemap.AddAndInitPlayer(player);
                     player.Storage.Jumping = false;
 
+                    player.SendPacket("0|UI|TUT|NONE");
+                    player.SendPacket("0|UI|VID|DW|9001");
                     manager.CompleteTutorial(ownerId);
                 }
                 catch (Exception e)
@@ -107,7 +116,6 @@ namespace Ow.Game.Events
         private const int SupportShipApproachOffsetX = 320;
         private const int SupportShipApproachOffsetY = 120;
         private const int ExitPortalOffsetY = 520;
-        private const int WarpEffectDurationMs = 1800;
         private const int SupportShipWarpStaggerMs = 350;
         private const int SupportShipApproachDelayMs = 700;
         private const int PhoenixPortalApproachPauseMs = 850;
@@ -179,7 +187,7 @@ namespace Ow.Game.Events
             player.LastPosition.y = player.Position.Y;
         }
 
-        public void HandleNpcDestroyed(Npc npc, Player destroyer)
+        public void HandleNpcDestroyed(Npc npc, Player destroyer, Collectable cargo = null)
         {
             if (npc == null || destroyer == null || npc.Spacemap == null)
                 return;
@@ -193,11 +201,132 @@ namespace Ow.Game.Events
                     return;
 
                 var removed = instance.Streuners.RemoveAll(x => x != null && x.Id == npc.Id);
-                if (removed <= 0 || instance.Streuners.Count > 0 || instance.RewardsSpawned)
-                    return;
+                if (removed <= 0 || instance.RewardsSpawned) return;
+                instance.DestroyedNpcs++;
+                if (cargo != null)
+                {
+                    cargo.TutorialCargo = true;
+                    cargo.ToPlayer = destroyer;
+                    instance.Cargo[cargo.Hash] = cargo;
+                }
+                PresentProgress(instance, destroyer, instance.DestroyedNpcs == 1 || instance.Streuners.Count == 0);
 
-                SpawnRewards(instance, destroyer);
             }
+        }
+
+        public void HandleCargoCollected(Collectable cargo, Player player)
+        {
+            if (cargo?.Spacemap == null || player == null) return;
+            lock (tutorialLock)
+            {
+                if (!instancesByMap.TryGetValue(cargo.Spacemap.Id, out var instance) || instance.OwnerId != player.Id || !instance.Cargo.Remove(cargo.Hash)) return;
+                instance.CollectedCargo++;
+                PresentProgress(instance, player, true);
+            }
+        }
+
+        private static void Video(Player player, string text)
+        {
+            player.SendCommand(VideoWindowCreateCommand.write(9001, "sw", true, new List<string> { text }, 0, 0));
+        }
+
+        private void PresentProgress(TutorialInstance instance, Player player, bool message)
+        {
+            if (instance.RewardsSpawned && instance.ExitPortal != null)
+            {
+                player.SendPacket("0|UI|TUT|PORTAL|" + instance.ExitPortal.Id + "|Aproxime-se do portal e pressione J para concluir o tutorial.");
+                if (message) Video(player, "Siga a seta ate o portal. Aproxime-se dele e clique em Pular ou pressione J para viajar ate sua base.");
+            }
+            else if (instance.Cargo.Count > 0)
+            {
+                var cargo = instance.Cargo.Values.First();
+                player.SendPacket("0|UI|TUT|BOX|" + cargo.Hash + "|Clique na carga deixada pelo Streuner para coletar os recursos.");
+                if (message) Video(player, "Bom trabalho! Naves destruidas deixam caixas de carga. Clique na caixa indicada e aguarde a coleta. Cargas coletadas: " + instance.CollectedCargo + "/3.");
+            }
+            else if (instance.Streuners.Count > 0)
+            {
+                player.SendPacket("0|UI|TUT|SHIP|" + instance.Streuners[0].Id + "|Selecione o Streuner indicado. Depois clique no laser da barra ou pressione Ctrl para atacar.");
+                if (message) Video(player, "Selecione um Streuner com o mouse. Use o laser na barra de atalhos ou pressione Ctrl para iniciar o ataque. Depois recolha a carga de cada inimigo.");
+            }
+            else if (instance.CollectedCargo >= 3 && !instance.RewardsSpawned)
+            {
+                player.SendPacket("0|UI|TUT|NONE");
+                Video(player, "Voce salvou a Phoenix e recuperou as tres cargas! Aguarde a chegada dos reforcos. Em seguida, siga pelo portal para sua base.");
+                SpawnRewards(instance, player);
+            }
+        }
+
+        public void OnPlayerReady(Player player)
+        {
+            if (player?.Spacemap == null) return;
+            TutorialInstance instance;
+            lock (tutorialLock)
+            {
+                if (!instancesByMap.TryGetValue(player.Spacemap.Id, out instance) || instance.OwnerId != player.Id ) return;
+                if (instance.IntroPresented) { PresentProgress(instance, player, true); return; }
+                instance.IntroPresented = true;
+                PresentProgress(instance, player, true);
+            }
+            _ = ShowDestinationAsync(instance, player, instance.RewardsSpawned);
+        }
+
+        private async Task ShowDestinationAsync(TutorialInstance instance, Player player, bool exit)
+        {
+            int revision;
+            bool returnedToHero = false;
+            lock (instance)
+            {
+                revision = ++instance.CameraRevision;
+                if (!instance.CameraActive) instance.CameraPreviousLock = player.ControlsLocked;
+                instance.CameraActive = true;
+            }
+            try
+            {
+                await Task.Delay(600);
+                if (!CanPresent(instance, player, revision)) return;
+                player.SetControlsLocked(true);
+                if (exit)
+                {
+                    if (instance.ExitPortal == null) return;
+                    player.SendPacket("0|A|STD|Siga ate este portal para concluir o tutorial.");
+                    player.SendPacket("0|UI|TUT|PORTAL|" + instance.ExitPortal.Id + "|Aproxime-se do portal e clique em Pular ou pressione J.");
+                    Video(player, "Siga a seta ate o portal. Aproxime-se dele e clique em Pular ou pressione J para viajar ate sua base.");
+                    player.CameraLockToCoordinates(instance.ExitPortal.Position.X, instance.ExitPortal.Position.Y, 1.25);
+                }
+                else
+                {
+                    if (instance.Phoenix == null || instance.Phoenix.Destroyed) return;
+                    player.SendPacket("0|A|STD|Ajude a Phoenix: destrua os tres Streuners que estao atacando a nave.");
+                    player.CameraLockToShip(instance.Phoenix.Id, 1, 1.25);
+                }
+                await Task.Delay(2750);
+                if (!CanPresent(instance, player, revision)) return;
+                player.CameraLockToHero();
+                returnedToHero = true;
+                await Task.Delay(1000);
+            }
+            catch (Exception e)
+            {
+                Logger.Log("error_log", $"- [TutorialManager.cs] ShowDestinationAsync: {e}");
+            }
+            finally
+            {
+                lock (instance)
+                {
+                    if (revision == instance.CameraRevision)
+                    {
+                        instance.CameraActive = false;
+                        player.SetControlsLocked(instance.CameraPreviousLock);
+                        if (!returnedToHero && player.Spacemap == instance.Spacemap) player.CameraLockToHero();
+                    }
+                }
+            }
+        }
+
+        private static bool CanPresent(TutorialInstance instance, Player player, int revision)
+        {
+            return IsInstanceActive(instance) && revision == instance.CameraRevision && player != null &&
+                !player.Destroyed && player.Spacemap == instance.Spacemap && GameManager.GetGameSession(player.Id)?.Player == player;
         }
 
         public void CompleteTutorial(int ownerId)
@@ -221,6 +350,8 @@ namespace Ow.Game.Events
             instance.CleanedUp = true;
 
             instance.ExitPortal?.Remove();
+            foreach (var cargo in instance.Cargo.Values.ToList()) cargo.Dispose();
+            instance.Cargo.Clear();
 
             if (instance.Spacemap != null)
             {
@@ -301,7 +432,7 @@ namespace Ow.Game.Events
 
         private void EnsureTutorialScene(TutorialInstance instance, Player owner)
         {
-            if (instance.RewardsSpawned)
+            if (instance.RewardsSpawned || instance.DestroyedNpcs > 0)
                 return;
 
             if (instance.Phoenix != null && !instance.Phoenix.Destroyed && instance.Streuners.Count > 0)
@@ -320,6 +451,8 @@ namespace Ow.Game.Events
             foreach (var position in StreunerPositions)
             {
                 var streuner = new Npc(Randoms.CreateRandomID(), streunerShip, instance.Spacemap, new Position(position.X, position.Y), 0);
+                streuner.MaxHitPoints = Math.Max(1, streunerShip.BaseHitpoints / 5);
+                streuner.CurrentHitPoints = streuner.MaxHitPoints;
                 streuner.Respawnable = false;
                 streuner.Aggressive = true;
                 streuner.AgroRange = streuner.RenderRange;
@@ -334,6 +467,8 @@ namespace Ow.Game.Events
             instance.SupportVengeance = null;
             instance.SupportGoliath = null;
             instance.ExitPortal?.Remove();
+            foreach (var cargo in instance.Cargo.Values.ToList()) cargo.Dispose();
+            instance.Cargo.Clear();
             instance.ExitPortal = null;
         }
 
@@ -402,13 +537,13 @@ namespace Ow.Game.Events
                 if (!IsInstanceActive(instance))
                     return;
 
-                StartWarpAnimation(instance.SupportVengeance);
+                StartArrivalAnimation(instance.SupportVengeance);
                 await Task.Delay(SupportShipWarpStaggerMs);
 
                 if (!IsInstanceActive(instance))
                     return;
 
-                StartWarpAnimation(instance.SupportGoliath);
+                StartArrivalAnimation(instance.SupportGoliath);
                 await Task.Delay(SupportShipApproachDelayMs);
 
                 if (!IsInstanceActive(instance))
@@ -421,6 +556,8 @@ namespace Ow.Game.Events
                 await Task.Delay(supportMovementTime + PhoenixPortalApproachPauseMs);
 
                 await AnimatePhoenixPortalJumpAsync(instance);
+                var owner = GameManager.GetGameSession(instance.OwnerId)?.Player;
+                if (owner != null && IsInstanceActive(instance)) await ShowDestinationAsync(instance, owner, true);
             }
             catch (Exception e)
             {
@@ -503,7 +640,7 @@ namespace Ow.Game.Events
                 return;
 
             GameManager.SendCommandToMap(instance.Spacemap.Id, ActivatePortalCommand.write(instance.ExitPortal.TargetSpaceMapId, instance.ExitPortal.Id));
-            StartWarpAnimation(instance.Phoenix);
+            StartArrivalAnimation(instance.Phoenix, true);
             await Task.Delay(PhoenixPortalJumpDelayMs);
 
             RemoveTutorialCharacter(instance.Phoenix);
@@ -533,13 +670,9 @@ namespace Ow.Game.Events
 
         private Position ResolvePlayerPosition(Player player, Spacemap map)
         {
-            if (player.Position != null && player.Spacemap != null && player.Spacemap.VisualMapId == TutorialMapId)
-                return ClampToMap(map, player.Position);
-
-            if (player.LastPosition != null && player.LastPosition.map == TutorialMapId)
-                return ClampToMap(map, new Position(player.LastPosition.x, player.LastPosition.y));
-
-            return new Position(TutorialCenter.X, TutorialCenter.Y);
+            // Each login creates a fresh encounter. Do not reuse the old corner
+            // spawn; start just below the fight, outside the Streuners' cluster.
+            return ClampToMap(map, new Position(TutorialCenter.X, TutorialCenter.Y + 1250));
         }
 
         private static Position ClampToMap(Spacemap map, Position position)
@@ -581,29 +714,10 @@ namespace Ow.Game.Events
             return instance != null && !instance.CleanedUp && instance.Spacemap != null;
         }
 
-        private static void StartWarpAnimation(Character character)
+        private static void StartArrivalAnimation(Character character, bool departing = false)
         {
-            if (!IsCharacterActive(character))
-                return;
-
-            var shipLootId = character.Ship?.LootId ?? "";
-            GameManager.SendCommandToMap(
-                character.Spacemap.Id,
-                new VisualModifierCommand(character.Id, VisualModifierCommand.WARP_ANIMATION_EFFECT, 0, shipLootId, 0, true).writeCommand());
-
-            _ = StopWarpAnimationAsync(character, shipLootId);
-        }
-
-        private static async Task StopWarpAnimationAsync(Character character, string shipLootId)
-        {
-            await Task.Delay(WarpEffectDurationMs);
-
-            if (!IsCharacterActive(character))
-                return;
-
-            GameManager.SendCommandToMap(
-                character.Spacemap.Id,
-                new VisualModifierCommand(character.Id, VisualModifierCommand.WARP_ANIMATION_EFFECT, 0, shipLootId, 0, false).writeCommand());
+            if (!IsCharacterActive(character)) return;
+            GameManager.SendPacketToMap(character.Spacemap.Id, "0|n|" + (departing ? "Despawn" : "Spawn") + "|" + character.Id);
         }
 
         private static void RemoveTutorialCharacter(FakePlayer fakePlayer)

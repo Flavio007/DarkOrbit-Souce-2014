@@ -21,6 +21,7 @@ namespace Ow.Game.Events
         public void Start()
         {
             if (Active) return;
+            Portals.Clear();
             GameManager.SendPacketToAll("0|A|STD|Spaceball event started!");
             Character = new Objects.Spaceball(Randoms.CreateRandomID(), Type);
 
@@ -35,9 +36,10 @@ namespace Ow.Game.Events
                 var player = gameSession.Player;
                 player.SettingsManager.SendMenuBarsCommand();
 
-                foreach (var portal in Portals)
-                    GameManager.SendCommandToMap(Character.Spacemap.Id, portal.GetAssetCreateCommand());
+                Character.SendState(player);
             }
+            foreach (var portal in Portals)
+                GameManager.SendCommandToMap(Character.Spacemap.Id, portal.GetAssetCreateCommand());
 
             Character.Spacemap.AddCharacter(Character);
 
@@ -59,6 +61,7 @@ namespace Ow.Game.Events
 
             foreach (var portal in Portals)
                 portal.Remove();
+            Portals.Clear();
 
             Character.Spacemap.RemoveCharacter(Character);
             Program.TickManager.RemoveTick(Character);

@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='utf-8'?>
+<quests>
+  <quest id="1" title="Primeiros passos" titleKey="quest_title_first_assignment" description="Voe ate a estacao de controle de missoes da sua companhia no mapa inicial para receber suas primeiras ordens." descriptionKey="quest_description_first_assignment" sortOrder="1" minLevel="1" priority="0" factionId="0">
+    <conditions>
+      <condition id="visit_mission_control" type="visitMissionControl" wireId="1" wireType="0" target="1" descriptionKey="starter_objective_mission_control" />
+    </conditions>
+  </quest>
+  <quest id="101" title="Primeira patrulha" titleKey="quest_title_starter_101" description="Destrua 3 Streuners para reduzir a presenca alienigena nos mapas iniciais." descriptionKey="quest_description_starter_101" sortOrder="11" minLevel="1" priority="0" factionId="1" icon="0">
+    <conditions>
+      <condition id="kill_streuner" type="killNpc" wireId="1" target="3" descriptionKey="starter_objective_streuner" targetShipId="84" iconKey="questTarget/npc_84_icon.png" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="2000" />
+      <reward lootId="experience" amount="400" />
+      <reward lootId="uridium" amount="5" />
+    </rewards>
+  </quest>
+  <quest id="102" title="Suprimentos de emergencia" titleKey="quest_title_starter_102" description="Procure caixas bonus pelo mapa e colete 3 delas para abastecer suas primeiras viagens." descriptionKey="quest_description_starter_102" sortOrder="12" minLevel="1" priority="0" factionId="1" icon="1">
+    <conditions>
+      <condition id="collectBonusBox" type="collectBonusBox" wireId="1" target="3" descriptionKey="starter_objective_collectBonusBox" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="3000" />
+      <reward lootId="experience" amount="600" />
+      <reward lootId="uridium" amount="5" />
+    </rewards>
+  </quest>
+  <quest id="103" title="Recuperacao de materiais" titleKey="quest_title_starter_103" description="Colete 5 unidades de Prometium nos mapas iniciais para recuperar materiais para a companhia." descriptionKey="quest_description_starter_103" sortOrder="13" minLevel="2" priority="0" factionId="1" icon="1">
+    <conditions>
+      <condition id="collect_prometium" type="collectOre" wireId="1" target="5" descriptionKey="starter_objective_prometium" targetOre="1" iconKey="trade/ore_1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="5000" />
+      <reward lootId="experience" amount="1000" />
+      <reward lootId="uridium" amount="10" />
+    </rewards>
+  </quest>
+  <quest id="104" title="Pronto para o servico" titleKey="quest_title_starter_104" description="Destrua 8 Lordakias e colete 5 caixas bonus. Conclua os dois objetivos para receber a recompensa." descriptionKey="quest_description_starter_104" sortOrder="14" minLevel="3" priority="0" factionId="1" icon="0">
+    <conditions>
+      <condition id="kill_lordakia" type="killNpc" wireId="1" target="8" descriptionKey="starter_objective_lordakia" targetShipId="71" iconKey="questTarget/npc_71_icon.png" />
+      <condition id="collectBonusBox" type="collectBonusBox" wireId="2" target="5" descriptionKey="starter_objective_collectBonusBox" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="10000" />
+      <reward lootId="experience" amount="2000" />
+      <reward lootId="uridium" amount="20" />
+    </rewards>
+  </quest>
+  <quest id="201" title="Primeira patrulha" titleKey="quest_title_starter_201" description="Destrua 3 Streuners para reduzir a presenca alienigena nos mapas iniciais." descriptionKey="quest_description_starter_201" sortOrder="11" minLevel="1" priority="0" factionId="2" icon="0">
+    <conditions>
+      <condition id="kill_streuner" type="killNpc" wireId="1" target="3" descriptionKey="starter_objective_streuner" targetShipId="84" iconKey="questTarget/npc_84_icon.png" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="2000" />
+      <reward lootId="experience" amount="400" />
+      <reward lootId="uridium" amount="5" />
+    </rewards>
+  </quest>
+  <quest id="202" title="Suprimentos de emergencia" titleKey="quest_title_starter_202" description="Procure caixas bonus pelo mapa e colete 3 delas para abastecer suas primeiras viagens." descriptionKey="quest_description_starter_202" sortOrder="12" minLevel="1" priority="0" factionId="2" icon="1">
+    <conditions>
+      <condition id="collectBonusBox" type="collectBonusBox" wireId="1" target="3" descriptionKey="starter_objective_collectBonusBox" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="3000" />
+      <reward lootId="experience" amount="600" />
+      <reward lootId="uridium" amount="5" />
+    </rewards>
+  </quest>
+  <quest id="203" title="Recuperacao de materiais" titleKey="quest_title_starter_203" description="Colete 5 unidades de Prometium nos mapas iniciais para recuperar materiais para a companhia." descriptionKey="quest_description_starter_203" sortOrder="13" minLevel="2" priority="0" factionId="2" icon="1">
+    <conditions>
+      <condition id="collect_prometium" type="collectOre" wireId="1" target="5" descriptionKey="starter_objective_prometium" targetOre="1" iconKey="trade/ore_1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="5000" />
+      <reward lootId="experience" amount="1000" />
+      <reward lootId="uridium" amount="10" />
+    </rewards>
+  </quest>
+  <quest id="204" title="Pronto para o servico" titleKey="quest_title_starter_204" description="Destrua 8 Lordakias e colete 5 caixas bonus. Conclua os dois objetivos para receber a recompensa." descriptionKey="quest_description_starter_204" sortOrder="14" minLevel="3" priority="0" factionId="2" icon="0">
+    <conditions>
+      <condition id="kill_lordakia" type="killNpc" wireId="1" target="8" descriptionKey="starter_objective_lordakia" targetShipId="71" iconKey="questTarget/npc_71_icon.png" />
+      <condition id="collectBonusBox" type="collectBonusBox" wireId="2" target="5" descriptionKey="starter_objective_collectBonusBox" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="10000" />
+      <reward lootId="experience" amount="2000" />
+      <reward lootId="uridium" amount="20" />
+    </rewards>
+  </quest>
+  <quest id="301" title="Primeira patrulha" titleKey="quest_title_starter_301" description="Destrua 3 Streuners para reduzir a presenca alienigena nos mapas iniciais." descriptionKey="quest_description_starter_301" sortOrder="11" minLevel="1" priority="0" factionId="3" icon="0">
+    <conditions>
+      <condition id="kill_streuner" type="killNpc" wireId="1" target="3" descriptionKey="starter_objective_streuner" targetShipId="84" iconKey="questTarget/npc_84_icon.png" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="2000" />
+      <reward lootId="experience" amount="400" />
+      <reward lootId="uridium" amount="5" />
+    </rewards>
+  </quest>
+  <quest id="302" title="Suprimentos de emergencia" titleKey="quest_title_starter_302" description="Procure caixas bonus pelo mapa e colete 3 delas para abastecer suas primeiras viagens." descriptionKey="quest_description_starter_302" sortOrder="12" minLevel="1" priority="0" factionId="3" icon="1">
+    <conditions>
+      <condition id="collectBonusBox" type="collectBonusBox" wireId="1" target="3" descriptionKey="starter_objective_collectBonusBox" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="3000" />
+      <reward lootId="experience" amount="600" />
+      <reward lootId="uridium" amount="5" />
+    </rewards>
+  </quest>
+  <quest id="303" title="Recuperacao de materiais" titleKey="quest_title_starter_303" description="Colete 5 unidades de Prometium nos mapas iniciais para recuperar materiais para a companhia." descriptionKey="quest_description_starter_303" sortOrder="13" minLevel="2" priority="0" factionId="3" icon="1">
+    <conditions>
+      <condition id="collect_prometium" type="collectOre" wireId="1" target="5" descriptionKey="starter_objective_prometium" targetOre="1" iconKey="trade/ore_1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="5000" />
+      <reward lootId="experience" amount="1000" />
+      <reward lootId="uridium" amount="10" />
+    </rewards>
+  </quest>
+  <quest id="304" title="Pronto para o servico" titleKey="quest_title_starter_304" description="Destrua 8 Lordakias e colete 5 caixas bonus. Conclua os dois objetivos para receber a recompensa." descriptionKey="quest_description_starter_304" sortOrder="14" minLevel="3" priority="0" factionId="3" icon="0">
+    <conditions>
+      <condition id="kill_lordakia" type="killNpc" wireId="1" target="8" descriptionKey="starter_objective_lordakia" targetShipId="71" iconKey="questTarget/npc_71_icon.png" />
+      <condition id="collectBonusBox" type="collectBonusBox" wireId="2" target="5" descriptionKey="starter_objective_collectBonusBox" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="10000" />
+      <reward lootId="experience" amount="2000" />
+      <reward lootId="uridium" amount="20" />
+    </rewards>
+  </quest>
+</quests>

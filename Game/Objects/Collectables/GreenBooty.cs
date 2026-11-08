@@ -58,6 +58,8 @@ namespace Ow.Game.Objects.Collectables
                 }
 
                 player.Equipment.Items.BootyKeys--;
+                player.Data.bootyKeys = player.Equipment.Items.BootyKeys;
+                QueryManager.SavePlayer.Information(player);
 
                 player.SendPacket($"0|A|BK|{player.Equipment.Items.BootyKeys}");
            

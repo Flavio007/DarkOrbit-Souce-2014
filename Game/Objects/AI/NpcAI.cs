@@ -1,4 +1,4 @@
-using Ow.Game.Movements;
+﻿using Ow.Game.Movements;
 using Ow.Managers;
 using Ow.Utils;
 using System;
@@ -38,6 +38,9 @@ namespace Ow.Game.Objects.AI
         public void TickAI()
         {
             var now = DateTime.Now;
+            if (Npc.Destroyed || !Npc.Spacemap.ContainsCharacter(Npc)) return;
+            if ((Npc.Attacking && Npc.Selected == null) || (Npc.Selected != null && (!(Npc.Selected is Player selectedPlayer) || !CanChasePlayer(selectedPlayer, HasUnlimitedChaseRange()))))
+                Npc.Deselection();
             var ignoreDistanceForNpc = HasUnlimitedChaseRange();
             if (nextDecisionTime == DateTime.MinValue)
             {
@@ -72,31 +75,7 @@ namespace Ow.Game.Objects.AI
                 switch (AIOption)
                 {
                     case NpcAIOption.SEARCH_FOR_ENEMIES:
-                        foreach (var players in Npc.InRangeCharacters.Values)
-                        {
-                            if (players is Player)
-                            {
-                                var player = players as Player;
-
-                                if ((player.Storage.IsInSafeZone && player.Selected != Npc) || player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && !HasTargetLock(player) && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
-                                {
-                                    Npc.Attacking = false;
-                                    Npc.Selected = null;
-                                    if (Npc.Ship.Id != 80 && Npc.Ship.Id != 481 && Npc.Ship.Id != 881)
-                                        AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
-                                }
-                                else if (ignoreDistanceForNpc || Npc.Position.DistanceTo(player.Position) < Npc.AgroRange)
-                                {
-                                    if (Npc.Aggressive && !player.Storage.IsInSafeZone)
-                                        Npc.Attacking = true;
-
-                                    Npc.Selected = player;
-                                    if (Npc.Ship.Id != 80 && Npc.Ship.Id != 481 && Npc.Ship.Id != 881)
-                                        AIOption = NpcAIOption.FLY_TO_ENEMY;
-                                    break;
-                                }
-                            }
-                        }
+                        AcquireTarget(ignoreDistanceForNpc, true);
 
                         if (!Npc.Moving && Npc.Selected == null)
                         {
@@ -142,48 +121,14 @@ namespace Ow.Game.Objects.AI
                         }
                         break;
                     case NpcAIOption.MINION:
-                        foreach (var players in Npc.InRangeCharacters.Values)
-                            if (players is Player)
-                            {
-                                var player = players as Player;
-
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && !HasTargetLock(player) && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
-                                {
-                                    Npc.Attacking = false;
-                                    Npc.Selected = null;
-                                }
-                                else
-                                {
-                                    Npc.Selected = player;
-                                    if (Npc.Aggressive)
-                                        Npc.Attacking = true;
-                                    break;
-                                }
-                            }
+                        AcquireTarget(ignoreDistanceForNpc, false);
                         if (!Npc.Moving)
                         {
                             Movement.Move(Npc, new Position(RespawnX + Randoms.random.Next(-SWARM_RANGE, SWARM_RANGE), RespawnY + Randoms.random.Next(-SWARM_RANGE, SWARM_RANGE)));
                         }
                         break;
                     case NpcAIOption.ESCORT:
-                        foreach (var players in Npc.InRangeCharacters.Values)
-                            if (players is Player)
-                            {
-                                var player = players as Player;
-
-                                if (player.Storage.IsInDemilitarizedZone || player.Invisible || (!ignoreDistanceForNpc && !HasTargetLock(player) && Npc.Position.DistanceTo(player.Position) > Npc.RenderRange))
-                                {
-                                    Npc.Attacking = false;
-                                    Npc.Selected = null;
-                                }
-                                else
-                                {
-                                    Npc.Selected = player;
-                                    if (Npc.Aggressive)
-                                        Npc.Attacking = true;
-                                    break;
-                                }
-                            }
+                        AcquireTarget(ignoreDistanceForNpc, false);
                         if (!Npc.Moving)
                         {
                             Movement.Move(Npc, new Position(VIP.Position.X + Randoms.random.Next(-MINION_RANGE, MINION_RANGE), VIP.Position.Y + Randoms.random.Next(-MINION_RANGE, MINION_RANGE))); ;
@@ -266,17 +211,57 @@ namespace Ow.Game.Objects.AI
             return IsGalaxyGateNpc() || (Npc != null && Npc.UseMapWideChaseRange && Npc.AllMapRange && Npc.Spacemap != null && Npc.Spacemap.Options.RangeDisabled);
         }
 
-        private bool HasTargetLock(Player player)
+        public void Reset(Position position)
         {
-            return player != null && (Npc.Selected == player || player.Selected == Npc);
+            AIOption = NpcAIOption.SEARCH_FOR_ENEMIES;
+            RespawnX = position.X;
+            RespawnY = position.Y;
+            lastMovement = DateTime.MinValue;
+            nextDecisionTime = DateTime.MinValue;
+        }
+
+        public bool RetargetForDrawFire(Player player)
+        {
+            if (Npc.Destroyed || !Npc.Spacemap.ContainsCharacter(Npc) || !CanChasePlayer(player, HasUnlimitedChaseRange()))
+                return false;
+
+            // Deselection clears Attacking and the chase state. Taunt changes the
+            // target directly and keeps special minion/escort/mothership roles.
+            Npc.Selected = player;
+            Npc.Attacking = true;
+            if (AIOption == NpcAIOption.SEARCH_FOR_ENEMIES || AIOption == NpcAIOption.FLY_TO_ENEMY || AIOption == NpcAIOption.WAIT_PLAYER_MOVE)
+                AIOption = NpcAIOption.FLY_TO_ENEMY;
+            lastMovement = DateTime.MinValue;
+            nextDecisionTime = DateTime.Now;
+            return true;
+        }
+
+        private void AcquireTarget(bool ignoreDistance, bool chase)
+        {
+            if (Npc.Selected is Player current && CanChasePlayer(current, ignoreDistance))
+            {
+                if (chase && Npc.Attacking) AIOption = NpcAIOption.FLY_TO_ENEMY;
+                return;
+            }
+            if (!Npc.Aggressive) return;
+            var candidate = Npc.InRangeCharacters.Values.OfType<Player>()
+                .Where(player => CanChasePlayer(player, ignoreDistance) && !player.Storage.IsInSafeZone
+                    && (!chase || ignoreDistance || Npc.Position.DistanceTo(player.Position) < Npc.AgroRange))
+                .OrderBy(player => Npc.Position.DistanceTo(player.Position)).FirstOrDefault();
+            if (candidate == null) return;
+            Npc.Selected = candidate;
+            Npc.Attacking = true;
+            if (chase) AIOption = NpcAIOption.FLY_TO_ENEMY;
         }
 
         private bool CanChasePlayer(Player player, bool ignoreDistanceForNpc)
         {
-            return player != null
+            return player != null && !player.Destroyed && Npc.Spacemap.ContainsCharacter(player)
+                && player.UnderEmp <= DateTime.Now
+                && (!player.Storage.IsInSafeZone || player.Selected == Npc)
                 && !player.Storage.IsInDemilitarizedZone
                 && !player.Invisible
-                && (ignoreDistanceForNpc || HasTargetLock(player) || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
+                && (ignoreDistanceForNpc || Npc.Position.DistanceTo(player.Position) < Npc.RenderRange);
         }
 
         private bool IsWithinAttackRange(Player player)

@@ -32,6 +32,8 @@ namespace Ow.Game.Objects.Players.Managers
         public long jackpot = 0;
         public long extraEnergy = 0;
         public long repairCredits = 0;
+        public long jumpCredits = 0;
+        public int bootyKeys = 0;
         public Cargo cargo = new Cargo();
         public OreUpgradeBase laserUpgrade = new OreUpgradeBase();
         public OreUpgradeBase rocketUpgrade = new OreUpgradeBase();
@@ -298,14 +300,18 @@ namespace Ow.Game.Objects.Players.Managers
         public string proActionBarPosition = "50,85|0,120";
         public string proActionBarLayoutType = "0";
 
+        // Initial viewport anchors: 1000001 = right/bottom edge, 1000002 = horizontal center.
+        // WASM resolves these until the player saves an explicit window position.
         public Dictionary<string, Window> windows = new Dictionary<string, Window>()
         {
-            { "user", new Window(30, 30, 212, 88, false) },
-            { "ship", new Window(30, 30, 212, 88, false) },
+            { "featuresMenu", new Window(0, 0, 606, 38, true) },
+            { "user", new Window(1000001, 100, 212, 100, true) },
+            { "ship", new Window(15, 60, 212, 110, true) },
+            { "target", new Window(1000002, 60, 180, 112, true) },
             { "ship_warp", new Window(50, 50, 300, 210, false) },
             { "chat", new Window(10, 10, 300, 150, false) },
             { "group", new Window(50, 50, 196, 200, false) },
-            { "minimap", new Window(30, 30, 238, 180, false) },
+            { "minimap", new Window(1000001, 1000001, 228, 170, true) },
             { "spacemap", new Window(10, 10, 650, 475, false) },
             { "log", new Window(30, 30, 240, 150, false) },
             { "pet", new Window(50, 50, 260, 130, false) },
@@ -318,7 +324,7 @@ namespace Ow.Game.Objects.Players.Managers
             { "help", new Window(10, 10, 219, 121, false) },
             { "logout", new Window(50, 50, 200, 200, false) },
             { "refinement", new Window(50, 50, 455, 525, false) },
-            { "achievement", new Window(50, 50, 460, 180, false) },
+            { "achievement", new Window(50, 50, 460, 410, false) },
             { "quests", new Window(50, 50, 200, 200, false) },
             { "cli", new Window(50, 50, 200, 200, false) }
         };
@@ -458,11 +464,13 @@ namespace Ow.Game.Objects.Players.Managers
         };
 
         public Dictionary<short, string> SlotBarItems = new Dictionary<short, string>() {
-            { 1, AmmunitionManager.UCB_100 }
+            { 1, AmmunitionManager.LCB_10 },
+            { 2, AmmunitionManager.R_310 },
+            { 3, CpuManager.REPBOT_REP_S }
         };
 
         public Dictionary<short, string> PremiumSlotBarItems = new Dictionary<short, string>() {
-            { 1, DroneManager.DEFAULT_FORMATION }
+
         };
 
         public Dictionary<short, string> ProActionBarItems = new Dictionary<short, string>();
@@ -574,6 +582,7 @@ namespace Ow.Game.Objects.Players.Managers
                 case CpuManager.AUTO_HELLSTROM_CPU:
                 case CpuManager.AIM_01_CPU:
                 case CpuManager.AIM_02_CPU:
+                case CpuManager.NC_RRB_CPU:
                     return true;
                 default:
                     return false;
@@ -593,14 +602,7 @@ namespace Ow.Game.Objects.Players.Managers
             }
         }
 
-        public static string[] BuyCategory =
-        {
-            
-                /*"ammunition_laser_lcb-10", "ammunition_laser_mcb-25", "ammunition_laser_mcb-50",
-                "ammunition_laser_sab-50", "ammunition_rocket_r-310", "ammunition_rocket_plt-2026",
-                "ammunition_rocket_plt-2021", "ammunition_rocket_plt-3030"
-                */
-        };
+        public static string[] BuyCategory = AmmunitionManager.QuickBuyOffers.Select(o => o.Id).ToArray();
 
         public static string[] AbilitiesCategory =
         {
@@ -671,6 +673,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             leftItems.Add("user", "title_user");
             leftItems.Add("ship", "title_ship");
+            leftItems.Add("target", "Target");
             //leftItems.Add("ship_warp", "ttip_shipWarp_btn");
             leftItems.Add("chat", "title_chat");
             leftItems.Add("group", "title_group");
@@ -713,6 +716,11 @@ namespace Ow.Game.Objects.Players.Managers
                 }
             }
 
+            // Invisible persistence entry for the WASM feature menu group.
+            var featureMenu = windowSettings.windows["featuresMenu"];
+            topLeftMenuBarItems.Add(new UpdateWindowItemCommand(true, featureMenu.height, false, featureMenu.y, featureMenu.x,
+                new ClientUITooltipsCommand(new List<ClientUITooltipModule>()), "", featureMenu.width,
+                new ClientUITooltipsCommand(new List<ClientUITooltipModule>()), "featuresMenu"));
             var topLeftMenuBar = new ClientUIMenuBarModule(ClientUIMenuBarModule.GAME_FEATURE_BAR, topLeftMenuBarItems, windowSettings.gameFeatureBarPosition, windowSettings.gameFeatureBarLayoutType);
             menuBarsCommand.Add(topLeftMenuBar);
 
@@ -966,7 +974,7 @@ namespace Ow.Game.Objects.Players.Managers
 
                 ClientUISlotBarCategoryItemTimerModule categoryTimerModule =
                         new ClientUISlotBarCategoryItemTimerModule(GetCooldownTime(itemLootId),
-                                                                   new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), 90000000, itemLootId,
+                                                                   new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), 90000000, "quickbuy_"+itemLootId,
                                                                    false);
 
                 rocketLauncherItems.Add(new ClientUISlotBarCategoryItemModule(1, itemLootId == CpuManager.ROCKET_LAUNCHER ? GetRocketLauncherItemStatus(CpuManager.ROCKET_LAUNCHER, "ttip_rocketlauncher", Player.AttackManager.RocketLauncher.CurrentLoad, false, true) : GetItemStatus(itemLootId, "ttip_rocket", Player.GetAmmoCount(itemLootId)),
@@ -1182,7 +1190,7 @@ namespace Ow.Game.Objects.Players.Managers
 
                 ClientUISlotBarCategoryItemTimerModule categoryTimerModule =
                         new ClientUISlotBarCategoryItemTimerModule(GetCooldownTime(itemLootId),
-                                                                   new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), 90000000, itemLootId,
+                                                                   new ClientUISlotBarCategoryItemTimerStateModule(ClientUISlotBarCategoryItemTimerStateModule.short_2168), 90000000, "quickbuy_"+itemLootId,
                                                                    false);
 
                 buyItems.Add(new ClientUISlotBarCategoryItemModule(1, GetBuyItemStatus(itemLootId),
@@ -1630,15 +1638,14 @@ namespace Ow.Game.Objects.Players.Managers
 
         public ClientUISlotBarCategoryItemStatusModule GetBuyItemStatus(string pItemId)
         {
-
-            ClientUITooltipsCommand itemBarStatusTootip = new ClientUITooltipsCommand(GetBuyItemBarStatusTooltip(pItemId, "ttip_rocket", 1000, true, "uridium"));
-            ClientUITooltipsCommand slotBarStatusTooltip = new ClientUITooltipsCommand(GetBuySlotBarStatusTooltip(pItemId, "ttip_rocket", 1000, true, "uridium"));
-
-            return new ClientUISlotBarCategoryItemStatusModule(itemBarStatusTootip, true, pItemId, true,
-                                                               ClientUISlotBarCategoryItemStatusModule.BLUE, pItemId,
-                                                               0, false, true,
-                                                               slotBarStatusTooltip, true, false,
-                                                               0);
+            var offer=AmmunitionManager.GetQuickBuyOffer(pItemId);
+            if(offer==null)throw new ArgumentException("Unknown quick-buy ammunition", nameof(pItemId));
+            var tooltip=pItemId.StartsWith("ammunition_laser_")?"ttip_laser":"ttip_rocket";
+            var itemTooltip=new ClientUITooltipsCommand(GetBuyItemBarStatusTooltip(pItemId,tooltip,offer.Amount,true,offer.Currency,offer.Price));
+            var slotTooltip=new ClientUITooltipsCommand(GetBuySlotBarStatusTooltip(pItemId,tooltip,offer.Amount,false,offer.Currency,offer.Price));
+            return new ClientUISlotBarCategoryItemStatusModule(itemTooltip,true,pItemId,true,
+                ClientUISlotBarCategoryItemStatusModule.BLUE,"quickbuy_"+pItemId,offer.Amount,false,true,
+                slotTooltip,true,false,offer.Price);
         }
 
         public ClientUISlotBarCategoryItemStatusModule GetAbilityItemStatus(string pItemId, string pTooltipId, bool visible, bool descriptionEnabled = true, bool doubleClickToFire = false, bool buyEnable = false)
@@ -1802,7 +1809,7 @@ namespace Ow.Game.Objects.Players.Managers
         #endregion Normal GetSlotBarStatusTooltip()
 
         #region Buy GetBuyItemBarStatusTooltip()
-        public List<ClientUITooltipModule> GetBuyItemBarStatusTooltip(string pLootId, string pTooltipId, long pAmount, bool doubleClickToBuy, string priceType)
+        public List<ClientUITooltipModule> GetBuyItemBarStatusTooltip(string pLootId, string pTooltipId, long pAmount, bool doubleClickToBuy, string priceType, long price)
         {
             var tooltipItemBars = new List<ClientUITooltipModule>();
 
@@ -1843,7 +1850,7 @@ namespace Ow.Game.Objects.Players.Managers
             ClientUITooltipTextFormatModule class521_plain_price =
                     new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.PLAIN);
             ClientUITextReplacementModule x_721_2_price =
-                    new ClientUITextReplacementModule("%PRICE%", class521_plain_price, pAmount.ToString());
+                    new ClientUITextReplacementModule("%PRICE%", class521_plain_price, price.ToString());
             vec_721_2_price.Add(x_721_2_price);
 
             ClientUITooltipTextFormatModule class521_localized_2_price =
@@ -1873,7 +1880,7 @@ namespace Ow.Game.Objects.Players.Managers
         #endregion Buy GetBuyItemBarStatusTooltip()
 
         #region Buy GetBuySlotBarStatusTooltip()
-        public List<ClientUITooltipModule> GetBuySlotBarStatusTooltip(string pLootId, string pTooltipId, long pAmount, bool doubleClickToBuy, string priceType)
+        public List<ClientUITooltipModule> GetBuySlotBarStatusTooltip(string pLootId, string pTooltipId, long pAmount, bool doubleClickToBuy, string priceType, long price)
         {
             var tooltipSlotBars = new List<ClientUITooltipModule>();
 
@@ -1914,7 +1921,7 @@ namespace Ow.Game.Objects.Players.Managers
             ClientUITooltipTextFormatModule class521_plain_price =
                     new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.PLAIN);
             ClientUITextReplacementModule x_721_2_price =
-                    new ClientUITextReplacementModule("%PRICE%", class521_plain_price, pAmount.ToString());
+                    new ClientUITextReplacementModule("%PRICE%", class521_plain_price, price.ToString());
             vec_721_2_price.Add(x_721_2_price);
 
             ClientUITooltipTextFormatModule class521_localized_2_price =
@@ -2194,6 +2201,9 @@ namespace Ow.Game.Objects.Players.Managers
                     case CpuManager.AIM_01_CPU:
                     case CpuManager.AIM_02_CPU:
                         Player.CpuManager.ToggleAimCpu(pItemId);
+                        break;
+                    case CpuManager.NC_RRB_CPU:
+                        Player.CpuManager.ToggleAutomaticRepair();
                         break;
                     case CpuManager.REPBOT_REP_S:
                     case CpuManager.REPBOT_REP_1:

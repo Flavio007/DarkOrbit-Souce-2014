@@ -27,6 +27,39 @@ namespace Ow.Game
             ERROR
         }
 
+        private readonly object persistenceSync = new object();
+        private bool disconnected;
+        public bool SaveProgress()
+        {
+            lock (persistenceSync)
+            {
+                if (disconnected) return true;
+                bool success = true;
+                Action<string, Action> save = (name, action) => {
+                    try { action(); }
+                    catch (Exception e) { success = false; Logger.Log("error_log", "[Player save " + Player.Id + "/" + name + "] " + e); }
+                };
+                save("snapshot", () => {
+                    Player.UpdateCurrentCooldowns();
+                    Player.UpdateShipStatus();
+                    if (Player.Spacemap != null) {
+                        Player.LastPosition.map = Player.Spacemap.PersistAsVisualMapId ? Player.Spacemap.VisualMapId : Player.Spacemap.Id;
+                        Player.LastPosition.x = Player.Position.X;
+                        Player.LastPosition.y = Player.Position.Y;
+                    }
+                });
+                save("information", () => QueryManager.SavePlayer.Information(Player));
+                save("ammo", () => QueryManager.SavePlayer.Ammo(Player));
+                save("status", () => QueryManager.SavePlayer.Status(Player));
+                save("position", () => QueryManager.SavePlayer.Position(Player));
+                save("settings", () => Player.SaveSettings());
+                save("quests", () => Player.Quests?.FlushPersistence());
+                save("boosters", () => QueryManager.SavePlayer.Boosters(Player));
+                save("cpu", () => QueryManager.SavePlayer.CpuCharges(Player));
+                return success;
+            }
+        }
+
         public Player Player { get; set; }
         public GameClient Client { get; set; }
 
@@ -70,21 +103,21 @@ namespace Ow.Game
             }     
         }
 
-        public void Disconnect(DisconnectionType dcType)
+        public void Disconnect(DisconnectionType dcType, bool flushPending = false)
         {
+            lock (persistenceSync)
+            {
+            if (disconnected) return;
             try
             {
                 Player.Group?.UpdateTarget(Player, new List<command_i3O> { new GroupPlayerDisconnectedModule(true) });
-                Player.UpdateCurrentCooldowns();
-                Player.SaveSettings();
-                Player.UpdateShipStatus();
-                Player.Quests?.FlushPersistence();
-                QueryManager.SavePlayer.Information(Player);
-                QueryManager.SavePlayer.Boosters(Player);
-                QueryManager.SavePlayer.Position(Player);
-                QueryManager.SavePlayer.Ammo(Player);
-                QueryManager.SavePlayer.CpuCharges(Player);
-                QueryManager.SavePlayer.Status(Player);
+                // Never acknowledge a clean logout before persistence succeeds.
+                if (!SaveProgress()) {
+                    InProcessOfDisconnection = true;
+                    EstDisconnectionTime = DateTime.Now.AddSeconds(5);
+                    Player.SendPacket("0|UI|LOGOUT|CANCEL|save_failed");
+                    return;
+                }
 
                 Player.Storage.InRangeAssets.Clear();
                 Player.Storage.InRangeObjects.Clear();
@@ -111,8 +144,11 @@ namespace Ow.Game
                     }
                 }
 
+                if (flushPending) Player.SendPacket("0|l|" + Player.Id);
                 PrepareForDisconnect();
-                Client.Close();
+                disconnected = true;
+                if (flushPending) Client.CloseAfterSending();
+                else Client.Close();
                 InProcessOfDisconnection = false;
                 Program.TickManager.RemoveTick(this);
                 GameManager.GameSessions.TryRemove(Player.Id, out var gameSession);
@@ -123,6 +159,7 @@ namespace Ow.Game
             {
                 Out.WriteLine("Disconnect void exception: " + e, "GameSession.cs");
                 Logger.Log("error_log", $"- [GameSession.cs] Disconnect void exception: {e}");
+            }
             }
         }
     }

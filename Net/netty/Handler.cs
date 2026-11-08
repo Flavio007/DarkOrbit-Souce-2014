@@ -101,6 +101,13 @@ namespace Ow.Net.netty
 
                 gameSession = GameManager.GetGameSession(client.UserId);
                 if (gameSession == null) return;
+                if (gameSession.Player.ControlsLocked && Commands.TryGetValue(parser.ID, out var lockedHandler) &&
+                    (lockedHandler is MoveRequestHandler || lockedHandler is AttackLaserRequestHandler ||
+                     lockedHandler is AttackRocketRequestHandler || lockedHandler is SelectMenuBarItemHandler ||
+                     lockedHandler is ShipSelectRequestHandler || lockedHandler is CollectBoxRequestHandler ||
+                     lockedHandler is CollectOreRequestHandler || lockedHandler is PortalJumpRequestHandler ||
+                     lockedHandler is RefineOreRequestHandler || lockedHandler is SellOreRequestHandler || lockedHandler is TradeOreRequestHandler))
+                    return;
 
                 if (Commands.ContainsKey(parser.ID))
                 {

@@ -8,8 +8,41 @@ using Ow.Managers.MySQLManager;
 
 namespace Ow.Game.Objects.Players.Managers
 {
+    sealed class QuickBuyOffer
+    {
+        public readonly string Id, AmmoProperty, Name, Currency;
+        public readonly int Amount;
+        public readonly long Price;
+        public QuickBuyOffer(string id,string property,string name,string currency,int amount,long price)
+        { Id=id;AmmoProperty=property;Name=name;Currency=currency;Amount=amount;Price=price; }
+        // Work on detached snapshots; nothing is delivered until persistence commits.
+        public bool TryApply(DataBase data, Ammo ammo, out string error)
+        {
+            var balance=Currency=="credits"?data.credits:data.uridium;
+            if(balance<Price){error=Currency=="credits"?"Creditos insuficientes.":"Uridium insuficiente.";return false;}
+            var property=typeof(Ammo).GetProperty(AmmoProperty);
+            int current=(int)property.GetValue(ammo,null);
+            if(current<0||current>int.MaxValue-Amount){error="Limite de municao atingido.";return false;}
+            property.SetValue(ammo,current+Amount,null);
+            if(Currency=="credits")data.credits-=Price;else data.uridium-=Price;
+            error=null;return true;
+        }
+    }
     class AmmunitionManager
     {
+        // Same permanent ammunition and unit prices as the website shop (Functions.GetShop).
+        public static readonly QuickBuyOffer[] QuickBuyOffers = {
+            new QuickBuyOffer(LCB_10,"lcb10","LCB-10","credits",1000,10000),
+            new QuickBuyOffer(MCB_25,"mcb25","MCB-25","uridium",1000,500),
+            new QuickBuyOffer(MCB_50,"mcb50","MCB-50","uridium",1000,1000),
+            new QuickBuyOffer(SAB_50,"sab50","SAB-50","uridium",1000,1000),
+            new QuickBuyOffer(RSB_75,"rsb75","RSB-75","uridium",1000,5000),
+            new QuickBuyOffer(R_310,"r310","R-310","credits",100,10000),
+            new QuickBuyOffer(PLT_2026,"plt26","PLT-2026","credits",100,50000),
+            new QuickBuyOffer(PLT_2021,"plt21","PLT-2021","uridium",100,500),
+            new QuickBuyOffer(PLT_3030,"plt3030","PLT-3030","uridium",100,700)
+        };
+        public static QuickBuyOffer GetQuickBuyOffer(string id) { return QuickBuyOffers.FirstOrDefault(o=>o.Id==id); }
         public const string LCB_10 = "ammunition_laser_lcb-10";
         public const string MCB_25 = "ammunition_laser_mcb-25";
         public const string MCB_50 = "ammunition_laser_mcb-50";

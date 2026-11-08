@@ -1,0 +1,5869 @@
+{
+  "revision": 63014,
+  "quests": [
+    {
+      "title": "Far reaches of the universe",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Far_reaches_of_the_universe",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "travel",
+          "target": 15000,
+          "sequence": 1
+        },
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 1,
+          "sequence": 2
+        },
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 2,
+          "sequence": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "honor",
+          "amount": 80
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 20
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_193"
+    },
+    {
+      "title": "Laser malfunction I - Lordakia",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Laser_malfunction_I_-_Lordakia",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipId": 71,
+          "mapSector": 2,
+          "weapon": "ROCKET"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "honor",
+          "amount": 80
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 20
+        },
+        {
+          "lootId": "ammunition_rocket_r-310",
+          "amount": 20
+        }
+      ],
+      "attributes": {
+        "maxDeaths": 0,
+        "forbiddenWeapon": "LASER"
+      },
+      "titleKey": "quest_title_183"
+    },
+    {
+      "title": "The Lordakians are in for it now",
+      "level": 3,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/The_Lordakians_are_in_for_it_now",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 71,
+          "mapSector": 3,
+          "weapon": "ROCKET"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 16000
+        },
+        {
+          "lootId": "honor",
+          "amount": 160
+        },
+        {
+          "lootId": "credits",
+          "amount": 16000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 40
+        },
+        {
+          "lootId": "ammunition_rocket_plt-2026",
+          "amount": 40
+        }
+      ],
+      "attributes": {
+        "maxDeaths": 0,
+        "maxDamageTaken": 10000,
+        "forbiddenWeapon": "LASER"
+      },
+      "titleKey": "quest_title_185"
+    },
+    {
+      "title": "Laser malfunction I - Saimon",
+      "level": 3,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Laser_malfunction_I_-_Saimon",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipId": 75,
+          "mapSector": 3,
+          "weapon": "ROCKET"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 16000
+        },
+        {
+          "lootId": "honor",
+          "amount": 160
+        },
+        {
+          "lootId": "credits",
+          "amount": 16000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 40
+        },
+        {
+          "lootId": "ammunition_rocket_plt-2026",
+          "amount": 40
+        }
+      ],
+      "attributes": {
+        "maxDeaths": 0,
+        "forbiddenWeapon": "LASER"
+      },
+      "titleKey": "Laser malfunction I - Saimon"
+    },
+    {
+      "title": "Streuner or Devolarium",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Streuner_or_Devolarium",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 12,
+          "targetShipId": 84,
+          "alternativeGroup": "choice"
+        },
+        {
+          "type": "killNpc",
+          "target": 2,
+          "targetShipId": 72,
+          "alternativeGroup": "choice"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4000
+        },
+        {
+          "lootId": "honor",
+          "amount": 80
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 20
+        },
+        {
+          "lootId": "ammunition_laser_lcb-10",
+          "amount": 400
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_16"
+    },
+    {
+      "title": "Dead easy",
+      "level": 3,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Dead_easy",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 25,
+          "targetShipIds": "84,71,72",
+          "mapSectorMax": 3
+        },
+        {
+          "type": "collectOre",
+          "target": 10,
+          "targetOre": 1
+        },
+        {
+          "type": "collectOre",
+          "target": 10,
+          "targetOre": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4000
+        },
+        {
+          "lootId": "honor",
+          "amount": 40
+        },
+        {
+          "lootId": "credits",
+          "amount": 4000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 30
+        },
+        {
+          "lootId": "ammunition_laser_lcb-10",
+          "amount": 2000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_20"
+    },
+    {
+      "title": "Martyr",
+      "level": 4,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Martyr",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 60,
+          "targetMaps": "1-4"
+        },
+        {
+          "type": "stayOnMap",
+          "target": 60,
+          "targetMaps": "2-4"
+        },
+        {
+          "type": "stayOnMap",
+          "target": 60,
+          "targetMaps": "3-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 16000
+        },
+        {
+          "lootId": "honor",
+          "amount": 160
+        },
+        {
+          "lootId": "credits",
+          "amount": 16000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 40
+        }
+      ],
+      "attributes": {
+        "forbiddenWeapon": "ANY"
+      },
+      "titleKey": "quest_title_175"
+    },
+    {
+      "title": "Gather ore",
+      "level": 5,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Gather_ore",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectCargoOre",
+          "target": 20000,
+          "targetOre": 1,
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 84,
+          "mapRelation": "home",
+          "mapSector": 1,
+          "sequence": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 64000
+        },
+        {
+          "lootId": "honor",
+          "amount": 640
+        },
+        {
+          "lootId": "credits",
+          "amount": 64000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 80
+        },
+        {
+          "lootId": "ammunition_laser_mcb-25",
+          "amount": 640
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_166"
+    },
+    {
+      "title": "Resource shortage",
+      "level": 5,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Resource_shortage",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 300,
+          "targetOre": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 50000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 100
+        },
+        {
+          "lootId": "experience",
+          "amount": 750000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 600
+      },
+      "titleKey": "quest_title_148"
+    },
+    {
+      "title": "Sibelons strike back!",
+      "level": 5,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Sibelons_strike_back!",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 2,
+          "targetShipId": 74,
+          "mapSector": 4
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 64000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 50
+        },
+        {
+          "lootId": "experience",
+          "amount": 64000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_68"
+    },
+    {
+      "title": "Company expansion",
+      "level": 5,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_expansion",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 72,
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 73,
+          "sequence": 2
+        },
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 74,
+          "sequence": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 64000
+        },
+        {
+          "lootId": "honor",
+          "amount": 640
+        },
+        {
+          "lootId": "credits",
+          "amount": 64000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 50
+        },
+        {
+          "lootId": "ammunition_laser_mcb-25",
+          "amount": 640
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_23"
+    },
+    {
+      "title": "Get a move on (1)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 25,
+          "targetShipId": 73
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 75000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 100
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 600
+      },
+      "titleKey": "quest_title_142"
+    },
+    {
+      "title": "Get a move on (2)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(2)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 50,
+          "targetShipId": 73
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 120000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 150
+        },
+        {
+          "lootId": "experience",
+          "amount": 150000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 1200
+      },
+      "titleKey": "quest_title_143"
+    },
+    {
+      "title": "Get a move on (3)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(3)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetShipId": 73
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 175000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 250
+        },
+        {
+          "lootId": "experience",
+          "amount": 250000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 2700
+      },
+      "titleKey": "quest_title_144"
+    },
+    {
+      "title": "200!",
+      "level": 9,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/200!",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 200,
+          "targetShipId": 74,
+          "mapRelation": "home",
+          "mapSector": 4
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 6500000
+        },
+        {
+          "lootId": "credits",
+          "amount": 6500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_435"
+    },
+    {
+      "title": "Can't catch me!",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Can%27t_catch_me!",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 20,
+          "targetShipIds": "35,479"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 1000
+        },
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "ammunition_laser_mcb-50",
+          "amount": 2000
+        }
+      ],
+      "attributes": {
+        "maxDamageTaken": 500000
+      },
+      "titleKey": "quest_title_434"
+    },
+    {
+      "title": "Pure debauchery on map 4-5",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Pure_debauchery_on_map_4-5",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 100,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-5"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 7000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 1000
+        },
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 8000
+        },
+        {
+          "lootId": "ammunition_rocket_plt-2021",
+          "amount": 500
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_433"
+    },
+    {
+      "title": "Dance with death",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Dance_with_death",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 20,
+          "targetNpcName": "Uber Kristallon"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2000
+        },
+        {
+          "lootId": "credits",
+          "amount": 4000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 4000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 2000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_432"
+    },
+    {
+      "title": "Boss of bosses",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Boss_of_bosses",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "23,34",
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "24",
+          "sequence": 2
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "31",
+          "sequence": 3
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "25",
+          "sequence": 4
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "26",
+          "sequence": 5
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "27",
+          "sequence": 6
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "46",
+          "sequence": 7
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "28",
+          "sequence": 8
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "29,478",
+          "sequence": 9
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "35,479",
+          "sequence": 10
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 9000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1200000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 1000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_425"
+    },
+    {
+      "title": "Next level",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Next_level",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 160,
+          "targetShipId": 23
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4000000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 18000
+      },
+      "titleKey": "quest_title_424"
+    },
+    {
+      "title": "\"Uber\" quest",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/%22Uber%22_quest",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Streuner",
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Lordakia",
+          "sequence": 2
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Mordon",
+          "sequence": 3
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Saimon",
+          "sequence": 4
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Devolarium",
+          "sequence": 5
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Sibelonit",
+          "sequence": 6
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Sibelon",
+          "sequence": 7
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Lordakium",
+          "sequence": 8
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Kristallin",
+          "sequence": 9
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetNpcName": "Uber Kristallon",
+          "sequence": 10
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 10500000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3500
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 1500
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_423"
+    },
+    {
+      "title": "Scrounger's delight",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Scrounger%27s_delight",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 200,
+          "targetOre": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        },
+        {
+          "lootId": "credits",
+          "amount": 800000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        },
+        {
+          "lootId": "ammunition_laser_mcb-50",
+          "amount": 1000
+        }
+      ],
+      "attributes": {
+        "forbiddenWeapon": "LASER"
+      },
+      "titleKey": "quest_title_419"
+    },
+    {
+      "title": "It pays to move slowly",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/It_pays_to_move_slowly",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 100,
+          "targetShipId": 76
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 2500000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_418"
+    },
+    {
+      "title": "The Kristallant killer",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/The_Kristallant_killer",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 200,
+          "targetShipId": 78,
+          "alternativeGroup": "choice"
+        },
+        {
+          "type": "killNpc",
+          "target": 20,
+          "targetShipId": 79,
+          "alternativeGroup": "choice"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1750000
+        },
+        {
+          "lootId": "credits",
+          "amount": 900000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_417"
+    },
+    {
+      "title": "Kristallonian safari",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Kristallonian_safari",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 30,
+          "targetShipId": 79
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1700000
+        },
+        {
+          "lootId": "credits",
+          "amount": 800000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1750
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 9000
+      },
+      "titleKey": "quest_title_414"
+    },
+    {
+      "title": "Pull out all the stops",
+      "level": 11,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Pull_out_all_the_stops",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 80
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 6000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2000
+        },
+        {
+          "lootId": "credits",
+          "amount": 2500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 2000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_422"
+    },
+    {
+      "title": "Protegite research",
+      "level": 11,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Protegite_research",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetShipId": 81
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4500000
+        },
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2200
+        },
+        {
+          "lootId": "ammunition_laser_mcb-25",
+          "amount": 4000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 11400,
+        "requiredAmmo": "ammunition_laser_mcb-25"
+      },
+      "titleKey": "quest_title_421"
+    },
+    {
+      "title": "Tour de Force",
+      "level": 11,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Tour_de_Force",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 84,
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 71,
+          "sequence": 2
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 72,
+          "sequence": 3
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 73,
+          "sequence": 4
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 74,
+          "sequence": 5
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 75,
+          "sequence": 6
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 76,
+          "sequence": 7
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 77,
+          "sequence": 8
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 78,
+          "sequence": 9
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 79,
+          "sequence": 10
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 85,
+          "sequence": 11
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 81,
+          "sequence": 12
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipId": 80,
+          "sequence": 13
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 10000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 1000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_38"
+    },
+    {
+      "title": "Crystal dust",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Crystal_dust",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 12,
+          "targetShipId": 78
+        },
+        {
+          "type": "killNpc",
+          "target": 6,
+          "targetShipId": 79
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetShipIds": "29,478"
+        },
+        {
+          "type": "killNpc",
+          "target": 1,
+          "targetNpcName": "Uber Kristallon"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 20000
+        },
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_mcb-50",
+          "amount": 2000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_27"
+    },
+    {
+      "title": "StreuneR invasion (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 50,
+          "targetShipId": 85,
+          "mapSector": 8
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 50
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 1200
+      },
+      "titleKey": "quest_title_145"
+    },
+    {
+      "title": "StreuneR invasion (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetShipId": 85,
+          "mapSector": 8
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 75
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 2400
+      },
+      "titleKey": "quest_title_146"
+    },
+    {
+      "title": "StreuneR invasion (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 300,
+          "targetShipId": 85,
+          "mapSector": 8
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 100
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 4800
+      },
+      "titleKey": "quest_title_147"
+    },
+    {
+      "title": "StreuneR invasion (4)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Streuner_invasion_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 450,
+          "targetShipId": 85,
+          "mapSector": 8
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 150000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 7200
+      },
+      "titleKey": "quest_title_150"
+    },
+    {
+      "title": "StreuneR invasion (5)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(5)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 600,
+          "targetShipId": 85,
+          "mapSector": 8
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 400
+        },
+        {
+          "lootId": "experience",
+          "amount": 250000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 9600
+      },
+      "titleKey": "quest_title_151"
+    },
+    {
+      "title": "Plague of Sibelonites (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 25,
+          "targetShipId": 76
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 100000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 80000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 1200
+      },
+      "titleKey": "quest_title_139"
+    },
+    {
+      "title": "Plague of Sibelonites (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 75,
+          "targetShipId": 76
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 225000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        },
+        {
+          "lootId": "experience",
+          "amount": 150000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 3600
+      },
+      "titleKey": "quest_title_140"
+    },
+    {
+      "title": "Plague of Sibelonites (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetShipId": 76
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "experience",
+          "amount": 250000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_141"
+    },
+    {
+      "title": "Plague of Sibelonites (4)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 225,
+          "targetShipId": 76
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 750000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        },
+        {
+          "lootId": "experience",
+          "amount": 400000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 9000
+      },
+      "titleKey": "quest_title_152"
+    },
+    {
+      "title": "Plague of Sibelonites (5)",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(5)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 300,
+          "targetShipId": 76
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1200000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 5000
+        },
+        {
+          "lootId": "experience",
+          "amount": 600000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 12000
+      },
+      "titleKey": "quest_title_153"
+    },
+    {
+      "title": "Decrystallization (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 79
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 750000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        },
+        {
+          "lootId": "experience",
+          "amount": 250000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_78"
+    },
+    {
+      "title": "Decrystallization (2)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(2)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 25,
+          "targetShipId": 79
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1250000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 750
+        },
+        {
+          "lootId": "experience",
+          "amount": 500000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_79"
+    },
+    {
+      "title": "Decrystallization (3)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(3)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 75,
+          "targetShipId": 79
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 2500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        },
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_80"
+    },
+    {
+      "title": "Decrystallization (4)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 500,
+          "targetShipId": 78
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_84"
+    },
+    {
+      "title": "Decrystallization (5)",
+      "level": 15,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 100,
+          "targetShipId": 79
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 4000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2500
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_81"
+    },
+    {
+      "title": "Decrystallization (6)",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(6)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetShipId": 79
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 5000
+        },
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_82"
+    },
+    {
+      "title": "Mothership (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Mothership_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 77
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 250
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_75"
+    },
+    {
+      "title": "Mothership (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Mothership_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 25,
+          "targetShipId": 77
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 750000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        },
+        {
+          "lootId": "experience",
+          "amount": 175000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_76"
+    },
+    {
+      "title": "Mothership (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Mothership_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 75,
+          "targetShipId": 77
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1250
+        },
+        {
+          "lootId": "experience",
+          "amount": 250000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_77"
+    },
+    {
+      "title": "Mothership (4)",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Mothership_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetShipId": 77
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        },
+        {
+          "lootId": "experience",
+          "amount": 400000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_83"
+    },
+    {
+      "title": "Preventative measures (1)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 25,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        },
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_127"
+    },
+    {
+      "title": "Preventative measures (2)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(2)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 50,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2500
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_128"
+    },
+    {
+      "title": "Preventative measures (3)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(2)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 75,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3500
+        },
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_129"
+    },
+    {
+      "title": "Preventative measures (4)",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 100,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 5000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 7000
+        },
+        {
+          "lootId": "experience",
+          "amount": 5000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_161"
+    },
+    {
+      "title": "Preventative measures (5)",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 150,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 7500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 15000
+        },
+        {
+          "lootId": "experience",
+          "amount": 10000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_162"
+    },
+    {
+      "title": "Preventative measures (6)",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 200,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 15000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 30000
+        },
+        {
+          "lootId": "experience",
+          "amount": 20000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_163"
+    },
+    {
+      "title": "Provoking the VRU (1)",
+      "level": 13,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 20,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "experience",
+          "amount": 1500000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_113"
+    },
+    {
+      "title": "Provoking the VRU (2)",
+      "level": 13,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 35,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1750000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_116"
+    },
+    {
+      "title": "Provoking the VRU (3)",
+      "level": 13,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 70,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 4000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 6000
+        },
+        {
+          "lootId": "experience",
+          "amount": 5000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_119"
+    },
+    {
+      "title": "Provoking the VRU (4)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_VRU/MMO/EIC_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 100,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 8000
+        },
+        {
+          "lootId": "experience",
+          "amount": 7000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_122"
+    },
+    {
+      "title": "Provoking the VRU (5)",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_EIC/MMO/VRU_(5)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 150,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 9000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 15000
+        },
+        {
+          "lootId": "experience",
+          "amount": 10000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_125"
+    },
+    {
+      "title": "Steal VRU resources (1)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_VRU_resources_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 200,
+          "targetOre": 1,
+          "mapOwner": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 250000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 400
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3,
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_131"
+    },
+    {
+      "title": "Steal VRU resources (2)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_VRU_resources_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 220,
+          "targetOre": 2,
+          "mapOwner": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 270000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        },
+        {
+          "lootId": "experience",
+          "amount": 120000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3,
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_135"
+    },
+    {
+      "title": "Steal VRU resources (3)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_VRU_resources_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 240,
+          "targetOre": 3,
+          "mapOwner": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 300000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 600
+        },
+        {
+          "lootId": "experience",
+          "amount": 140000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3,
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_138"
+    },
+    {
+      "title": "Steal VRU resources (4)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/VRU/MMO_resources_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 300,
+          "targetOre": 3,
+          "mapOwner": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 450000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 800
+        },
+        {
+          "lootId": "experience",
+          "amount": 200000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3,
+        "timeLimitSeconds": 8400
+      },
+      "titleKey": "quest_title_154"
+    },
+    {
+      "title": "Steal VRU resources (5)",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/MMO/VRU_resources_(5)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 400,
+          "targetOre": 3,
+          "mapOwner": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 600000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1200
+        },
+        {
+          "lootId": "experience",
+          "amount": 500000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3,
+        "timeLimitSeconds": 12000
+      },
+      "titleKey": "quest_title_159"
+    },
+    {
+      "title": "Provoking the EIC (1)",
+      "level": 13,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 20,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "experience",
+          "amount": 1500000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_112"
+    },
+    {
+      "title": "Provoking the EIC (2)",
+      "level": 13,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 35,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1750000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_115"
+    },
+    {
+      "title": "Provoking the EIC (3)",
+      "level": 13,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 70,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 4000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 6000
+        },
+        {
+          "lootId": "experience",
+          "amount": 5000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_118"
+    },
+    {
+      "title": "Provoking the EIC (4)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_VRU/MMO/EIC_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 100,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 8000
+        },
+        {
+          "lootId": "experience",
+          "amount": 7000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_121"
+    },
+    {
+      "title": "Provoking the EIC (5)",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_EIC/MMO/VRU_(5)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 150,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 9000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 15000
+        },
+        {
+          "lootId": "experience",
+          "amount": 10000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_126"
+    },
+    {
+      "title": "Steal EIC resources (1)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC_resources_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 200,
+          "targetOre": 1,
+          "mapOwner": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 250000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 400
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2,
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_130"
+    },
+    {
+      "title": "Steal EIC resources (2)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC_resources_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 220,
+          "targetOre": 2,
+          "mapOwner": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 270000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        },
+        {
+          "lootId": "experience",
+          "amount": 120000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2,
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_134"
+    },
+    {
+      "title": "Steal EIC resources (3)",
+      "level": 13,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC_resources_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 240,
+          "targetOre": 3,
+          "mapOwner": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 300000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 600
+        },
+        {
+          "lootId": "experience",
+          "amount": 140000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2,
+        "timeLimitSeconds": 6000
+      },
+      "titleKey": "quest_title_137"
+    },
+    {
+      "title": "Steal EIC resources (4)",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/VRU/MMO_resources_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 300,
+          "targetOre": 3,
+          "mapOwner": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 450000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 800
+        },
+        {
+          "lootId": "experience",
+          "amount": 200000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2,
+        "timeLimitSeconds": 8400
+      },
+      "titleKey": "quest_title_155"
+    },
+    {
+      "title": "Steal EIC resources (5)",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/MMO/VRU_resources_(5)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 400,
+          "targetOre": 3,
+          "mapOwner": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 600000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1200
+        },
+        {
+          "lootId": "experience",
+          "amount": 500000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2,
+        "timeLimitSeconds": 12000
+      },
+      "titleKey": "quest_title_160"
+    },
+    {
+      "title": "Permanent provocation",
+      "level": 14,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Permanent_provocation",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 3600,
+          "mapRelation": "enemy",
+          "mapSector": 5,
+          "maxAbsenceSeconds": 600
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 1500
+        },
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_rocket_plt-2021",
+          "amount": 700
+        }
+      ],
+      "attributes": {
+        "forbidCloak": 1
+      },
+      "titleKey": "quest_title_437"
+    },
+    {
+      "title": "Idle your time away",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Idle_your_time_away",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 172800,
+          "mapSector": 1,
+          "ownerSlot": 1,
+          "alternativeGroup": "enemyBase"
+        },
+        {
+          "type": "stayOnMap",
+          "target": 172800,
+          "mapSector": 1,
+          "ownerSlot": 2,
+          "alternativeGroup": "enemyBase"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 4000
+        },
+        {
+          "lootId": "credits",
+          "amount": 4000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 4000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 4000
+        }
+      ],
+      "attributes": {
+        "playerFactionVariants": 1
+      },
+      "titleKey": "quest_title_426"
+    },
+    {
+      "title": "Foreign territory",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Foreign_territory",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 900,
+          "mapSector": 1,
+          "ownerSlot": 1,
+          "alternativeGroup": "enemyBase",
+          "requireCloak": -1
+        },
+        {
+          "type": "stayOnMap",
+          "target": 900,
+          "mapSector": 1,
+          "ownerSlot": 2,
+          "alternativeGroup": "enemyBase",
+          "requireCloak": -1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 30000
+        },
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        }
+      ],
+      "attributes": {
+        "maxDamageTaken": 400000,
+        "playerFactionVariants": 1
+      },
+      "titleKey": "quest_title_172"
+    },
+    {
+      "title": "On the other side",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/On_the_other_side",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 100,
+          "targetShipId": 84,
+          "mapRelation": "enemy",
+          "mapSector": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 6000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 60000
+        },
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 4000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 30000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_45"
+    },
+    {
+      "title": "Top of the food chain (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Top_of_the_food_chain_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 2,
+          "targetNpcName": "Battleray"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 550
+        },
+        {
+          "lootId": "honor",
+          "amount": 350
+        },
+        {
+          "lootId": "credits",
+          "amount": 450000
+        },
+        {
+          "lootId": "experience",
+          "amount": 550000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_808"
+    },
+    {
+      "title": "Top of the food chain (2)",
+      "level": 12,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetNpcName": "Battleray"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 2500
+        },
+        {
+          "lootId": "honor",
+          "amount": 650
+        },
+        {
+          "lootId": "credits",
+          "amount": 1750000
+        },
+        {
+          "lootId": "experience",
+          "amount": 2250000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_809"
+    },
+    {
+      "title": "Top of the food chain (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Top_of_the_food_chain_(3)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 30,
+          "targetNpcName": "Battleray"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 6500
+        },
+        {
+          "lootId": "honor",
+          "amount": 1500
+        },
+        {
+          "lootId": "credits",
+          "amount": 5000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 6000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_810"
+    },
+    {
+      "title": "Top of the food chain (4)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Top_of_the_food_chain_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 100,
+          "targetNpcName": "Battleray"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 10000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2750
+        },
+        {
+          "lootId": "credits",
+          "amount": 12000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 12500000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_811"
+    },
+    {
+      "title": "Undesirables (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 25,
+          "targetNpcName": "Annihilator"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 850
+        },
+        {
+          "lootId": "credits",
+          "amount": 750000
+        },
+        {
+          "lootId": "experience",
+          "amount": 750000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_804"
+    },
+    {
+      "title": "Undesirables (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 75,
+          "targetNpcName": "Annihilator"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 2500
+        },
+        {
+          "lootId": "credits",
+          "amount": 2250000
+        },
+        {
+          "lootId": "experience",
+          "amount": 2500000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_805"
+    },
+    {
+      "title": "Undesirables (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 200,
+          "targetNpcName": "Annihilator"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 6000
+        },
+        {
+          "lootId": "honor",
+          "amount": 6000
+        },
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 6500000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_806"
+    },
+    {
+      "title": "Undesirables (4)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 850,
+          "targetNpcName": "Annihilator"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 25000
+        },
+        {
+          "lootId": "honor",
+          "amount": 20000
+        },
+        {
+          "lootId": "credits",
+          "amount": 25000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 27500000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_807"
+    },
+    {
+      "title": "Speed (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Speed_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 60,
+          "targetNpcName": "Saboteur"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "credits",
+          "amount": 550000
+        },
+        {
+          "lootId": "experience",
+          "amount": 650000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_800"
+    },
+    {
+      "title": "Speed (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Speed_(2)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 175,
+          "targetNpcName": "Saboteur"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 2750
+        },
+        {
+          "lootId": "credits",
+          "amount": 1750000
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_801"
+    },
+    {
+      "title": "Speed (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Speed_(3)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 600,
+          "targetNpcName": "Saboteur"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 10000
+        },
+        {
+          "lootId": "honor",
+          "amount": 7000
+        },
+        {
+          "lootId": "credits",
+          "amount": 5750000
+        },
+        {
+          "lootId": "experience",
+          "amount": 6500000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_802"
+    },
+    {
+      "title": "Speed (4)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Speed_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 1500,
+          "targetNpcName": "Saboteur"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 20000
+        },
+        {
+          "lootId": "honor",
+          "amount": 15000
+        },
+        {
+          "lootId": "credits",
+          "amount": 15000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 16250000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_803"
+    },
+    {
+      "title": "Orbital explosives expert (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 50,
+          "targetNpcName": "Barracuda"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 750
+        },
+        {
+          "lootId": "credits",
+          "amount": 500000
+        },
+        {
+          "lootId": "experience",
+          "amount": 450000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_796"
+    },
+    {
+      "title": "Orbital explosives expert (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(2)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 125,
+          "targetNpcName": "Barracuda"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 1750
+        },
+        {
+          "lootId": "credits",
+          "amount": 1250000
+        },
+        {
+          "lootId": "experience",
+          "amount": 1250000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_797"
+    },
+    {
+      "title": "Orbital explosives expert (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(3)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 500,
+          "targetNpcName": "Barracuda"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 7500
+        },
+        {
+          "lootId": "honor",
+          "amount": 5000
+        },
+        {
+          "lootId": "credits",
+          "amount": 5000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 5250000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_798"
+    },
+    {
+      "title": "Orbital explosives expert (4)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(4)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 1250,
+          "targetNpcName": "Barracuda"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 17500
+        },
+        {
+          "lootId": "honor",
+          "amount": 12000
+        },
+        {
+          "lootId": "credits",
+          "amount": 12500000
+        },
+        {
+          "lootId": "experience",
+          "amount": 13000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_799"
+    },
+    {
+      "title": "Little monsters (1)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 60,
+          "targetNpcName": "Interceptor"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 150
+        },
+        {
+          "lootId": "credits",
+          "amount": 180000
+        },
+        {
+          "lootId": "experience",
+          "amount": 200000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_792"
+    },
+    {
+      "title": "Little monsters (2)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 150,
+          "targetNpcName": "Interceptor"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 350
+        },
+        {
+          "lootId": "credits",
+          "amount": 450000
+        },
+        {
+          "lootId": "experience",
+          "amount": 450000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_793"
+    },
+    {
+      "title": "Little monsters (3)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 750,
+          "targetNpcName": "Interceptor"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 1750
+        },
+        {
+          "lootId": "honor",
+          "amount": 3000
+        },
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_794"
+    },
+    {
+      "title": "Little monsters (4)",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 2500,
+          "targetNpcName": "Interceptor"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "uridium",
+          "amount": 5000
+        },
+        {
+          "lootId": "honor",
+          "amount": 10000
+        },
+        {
+          "lootId": "credits",
+          "amount": 10000000
+        },
+        {
+          "lootId": "experience",
+          "amount": 10000000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_795"
+    },
+    {
+      "title": "Company Wars II: A question of honor! (VRU) (Goliath)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(VRU)_(Goliath)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 10,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 700000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        },
+        {
+          "lootId": "experience",
+          "amount": 700000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_102"
+    },
+    {
+      "title": "Company Wars II: A question of honor! (MMO) (Goliath)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(MMO)_(Goliath)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 10,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 700000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1500
+        },
+        {
+          "lootId": "experience",
+          "amount": 700000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_100"
+    },
+    {
+      "title": "Company Wars II: A question of honor! (VRU) (BigBoy)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(VRU)_(BigBoy)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 20,
+          "enemyTarget": 1,
+          "shipFamily": "bigboy",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 600000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "experience",
+          "amount": 600000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_99"
+    },
+    {
+      "title": "Company Wars II: A question of honor! (MMO) (BigBoy)",
+      "level": 8,
+      "source": "",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 20,
+          "enemyTarget": 1,
+          "shipFamily": "bigboy",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 600000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "experience",
+          "amount": 600000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_97"
+    },
+    {
+      "title": "Company Wars II: A question of honor! (VRU) (Vengeance)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(VRU)_(Vengeance)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 30,
+          "enemyTarget": 1,
+          "shipFamily": "vengeance",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 800
+        },
+        {
+          "lootId": "experience",
+          "amount": 500000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_96"
+    },
+    {
+      "title": "Company Wars II: A question of honor! (MMO) (Vengeance)",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(MMO)_(Vengeance)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 30,
+          "enemyTarget": 1,
+          "shipFamily": "vengeance",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 800
+        },
+        {
+          "lootId": "experience",
+          "amount": 500000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_94"
+    },
+    {
+      "title": "Company Wars III: You've come very far ... (VRU) (Goliath)",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Goliath)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 50,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 5000
+        },
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_111"
+    },
+    {
+      "title": "Company Wars III: You've come very far ... (EIC) (Goliath)",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Goliath)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 50,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 5000
+        },
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_110"
+    },
+    {
+      "title": "Company Wars III: You've come very far ... (VRU) (BigBoy)",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(BigBoy)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 100,
+          "enemyTarget": 1,
+          "shipFamily": "bigboy",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_108"
+    },
+    {
+      "title": "Company Wars III: You've come very far ... (EIC) (BigBoy)",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(BigBoy)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 100,
+          "enemyTarget": 1,
+          "shipFamily": "bigboy",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        },
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_107"
+    },
+    {
+      "title": "Company Wars III: You've come very far ... (VRU) (Vengeance)",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Vengeance)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 150,
+          "enemyTarget": 1,
+          "shipFamily": "vengeance",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_105"
+    },
+    {
+      "title": "Company Wars III: You've come very far ... (EIC) (Vengeance)",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Vengeance)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 150,
+          "enemyTarget": 1,
+          "shipFamily": "vengeance",
+          "targetFactionId": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 2
+      },
+      "titleKey": "quest_title_104"
+    },
+    {
+      "title": "Evil nemesis: The Goliath",
+      "level": 12,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Evil_nemesis:_The_Goliath_(VRU)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 1000,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 20000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 10000
+        },
+        {
+          "lootId": "credits",
+          "amount": 20000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 30000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 10000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_431"
+    },
+    {
+      "title": "Hunt the hunter",
+      "level": 17,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Hunt_the_hunter",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-2"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-3"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-4"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-2"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-3"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-4"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-2"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-3"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-4"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "4-1"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "4-2"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "4-3"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "4-4"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-5"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-6"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-7"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "1-8"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-5"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-6"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-7"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "2-8"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-5"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-6"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-7"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "3-8"
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "targetMaps": "4-5"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 8000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 5000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 5000
+        }
+      ],
+      "attributes": {
+        "targetFactionVariants": 1
+      },
+      "titleKey": "quest_title_439",
+      "titleKeysByTargetFaction": {
+        "1": "quest_title_441",
+        "2": "quest_title_439",
+        "3": "quest_title_440"
+      }
+    },
+    {
+      "title": "The Navigator",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/The_Navigator",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 10700,
+          "y": 7100,
+          "radius": 300,
+          "mapSector": 1,
+          "mapRelation": "home",
+          "sequence": 1
+        },
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 1400,
+          "y": 7100,
+          "radius": 300,
+          "mapSector": 1,
+          "mapRelation": "home",
+          "sequence": 2
+        },
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 1400,
+          "y": 3900,
+          "radius": 300,
+          "mapSector": 1,
+          "mapRelation": "home",
+          "sequence": 3
+        },
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 10700,
+          "y": 7100,
+          "radius": 300,
+          "mapSector": 1,
+          "mapRelation": "home",
+          "sequence": 4
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 4000
+        },
+        {
+          "lootId": "honor",
+          "amount": 400
+        },
+        {
+          "lootId": "credits",
+          "amount": 4000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 10
+        },
+        {
+          "lootId": "ammunition_laser_lcb-10",
+          "amount": 400
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_190"
+    },
+    {
+      "title": "Explore your home galaxy",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Explore_your_home_galaxy",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "visitPortal",
+          "target": 1,
+          "mapSector": 1,
+          "mapRelation": "home",
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 3,
+          "targetShipId": 84,
+          "sequence": 2
+        },
+        {
+          "type": "visitHomeBase",
+          "target": 1,
+          "mapSector": 1,
+          "mapRelation": "home",
+          "sequence": 3
+        },
+        {
+          "type": "killNpc",
+          "target": 3,
+          "targetShipId": 84,
+          "sequence": 4
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 2000
+        },
+        {
+          "lootId": "honor",
+          "amount": 20
+        },
+        {
+          "lootId": "credits",
+          "amount": 2000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 20
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_17"
+    },
+    {
+      "title": "Test of courage",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Test_of_courage",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "travel",
+          "target": 10000,
+          "inRadiation": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "honor",
+          "amount": 80
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 20
+        },
+        {
+          "lootId": "ammunition_laser_lcb-10",
+          "amount": 80
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 60,
+        "maxDeaths": 0
+      },
+      "titleKey": "quest_title_42"
+    },
+    {
+      "title": "Gatherer",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Gatherer",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 1,
+          "sequence": 1
+        },
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 2,
+          "sequence": 2
+        },
+        {
+          "type": "collectOre",
+          "target": 3,
+          "targetOre": 3,
+          "sequence": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 2000
+        },
+        {
+          "lootId": "honor",
+          "amount": 20
+        },
+        {
+          "lootId": "credits",
+          "amount": 2000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 20
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_32"
+    },
+    {
+      "title": "A mixed bag of rocks",
+      "level": 2,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/A_mixed_bag_of_rocks",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 10,
+          "targetOre": 1
+        },
+        {
+          "type": "collectOre",
+          "target": 10,
+          "targetOre": 2
+        },
+        {
+          "type": "collectOre",
+          "target": 10,
+          "targetOre": 3
+        },
+        {
+          "type": "elapsed",
+          "target": 600
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 2000
+        },
+        {
+          "lootId": "honor",
+          "amount": 50
+        },
+        {
+          "lootId": "experience",
+          "amount": 1000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_12"
+    },
+    {
+      "title": "Crossing guard",
+      "level": 3,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Crossing_guard",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "damageNpc",
+          "target": 60000,
+          "targetShipIds": "71,73,74"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 16000
+        },
+        {
+          "lootId": "honor",
+          "amount": 160
+        },
+        {
+          "lootId": "credits",
+          "amount": 16000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 40
+        }
+      ],
+      "attributes": {
+        "forbiddenKillShipIds": "71,73,74",
+        "timeLimitSeconds": 600
+      },
+      "titleKey": "quest_title_179"
+    },
+    {
+      "title": "Hunter or gatherer",
+      "level": 3,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Hunter_or_gatherer",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 1,
+          "branch": "gather",
+          "sequence": 1
+        },
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 2,
+          "branch": "gather",
+          "sequence": 2
+        },
+        {
+          "type": "collectOre",
+          "target": 5,
+          "targetOre": 3,
+          "branch": "gather",
+          "sequence": 3
+        },
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 71,
+          "branch": "hunt",
+          "sequence": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipId": 72,
+          "branch": "hunt",
+          "sequence": 2,
+          "alternativeGroup": "second"
+        },
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipId": 73,
+          "branch": "hunt",
+          "sequence": 2,
+          "alternativeGroup": "second"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 16000
+        },
+        {
+          "lootId": "honor",
+          "amount": 160
+        },
+        {
+          "lootId": "credits",
+          "amount": 16000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 30
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_34"
+    },
+    {
+      "title": "The specialist",
+      "level": 4,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/The_specialist",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 5,
+          "targetShipIds": "84,71"
+        },
+        {
+          "type": "damageNpc",
+          "target": 100000,
+          "targetShipIds": "72,74",
+          "weapon": "LASER"
+        },
+        {
+          "type": "damagePlayers",
+          "target": 40000,
+          "shipFamily": "goliath,vengeance",
+          "weapon": "ROCKET",
+          "enemyTarget": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 32000
+        },
+        {
+          "lootId": "honor",
+          "amount": 320
+        },
+        {
+          "lootId": "credits",
+          "amount": 32000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 30
+        },
+        {
+          "lootId": "ammunition_laser_mcb-25",
+          "amount": 320
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_33"
+    },
+    {
+      "title": "The competition",
+      "level": 5,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/The_competition",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stealCargoBox",
+          "target": 10,
+          "shipFamily": "goliath",
+          "enemyTarget": 1,
+          "requireCloak": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 64000
+        },
+        {
+          "lootId": "honor",
+          "amount": 640
+        },
+        {
+          "lootId": "credits",
+          "amount": 64000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 80
+        },
+        {
+          "lootId": "ammunition_laser_mcb-25",
+          "amount": 640
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_41"
+    },
+    {
+      "title": "Thievery",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Thievery",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stealCargoBox",
+          "target": 30,
+          "enemyTarget": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 128000
+        },
+        {
+          "lootId": "honor",
+          "amount": 1280
+        },
+        {
+          "lootId": "credits",
+          "amount": 128000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 100
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 100
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 1200
+      },
+      "titleKey": "quest_title_167"
+    },
+    {
+      "title": "Death Race",
+      "level": 9,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Death_Race",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 21000,
+          "y": 13500,
+          "targetMaps": "4-4"
+        },
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 28000,
+          "y": 1400,
+          "targetMaps": "4-4"
+        },
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 28000,
+          "y": 25600,
+          "targetMaps": "4-4"
+        },
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 7000,
+          "y": 13500,
+          "targetMaps": "4-4"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 666666
+        },
+        {
+          "lootId": "honor",
+          "amount": 6666
+        },
+        {
+          "lootId": "credits",
+          "amount": 666666
+        },
+        {
+          "lootId": "uridium",
+          "amount": 666
+        }
+      ],
+      "attributes": {
+        "maxDeaths": 0
+      },
+      "titleKey": "quest_title_44"
+    },
+    {
+      "title": "Blind man's bluff",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Blind_man%27s_bluff",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "damageTaken",
+          "target": 523000,
+          "mapSector": 5,
+          "sequence": 1
+        },
+        {
+          "type": "stayOnMap",
+          "target": 180,
+          "targetMaps": "4-4",
+          "requireCloak": -1,
+          "maxHpPercent": 10,
+          "sequence": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 500000
+        },
+        {
+          "lootId": "honor",
+          "amount": 5000
+        },
+        {
+          "lootId": "credits",
+          "amount": 500000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        }
+      ],
+      "attributes": {
+        "maxDeaths": 0
+      },
+      "titleKey": "quest_title_180"
+    },
+    {
+      "title": "Wormhole research",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Wormhole_research",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "visitPosition",
+          "target": 1,
+          "x": 21000,
+          "y": 13000,
+          "targetMaps": "4-5",
+          "sequence": 1
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "mapRelation": "home",
+          "mapSector": 1,
+          "sequence": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 250000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2500
+        },
+        {
+          "lootId": "credits",
+          "amount": 250000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 250
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_170"
+    },
+    {
+      "title": "Child's play",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Child%27s_play",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stealCargoBox",
+          "target": 1,
+          "enemyTarget": 1,
+          "targetMaps": "4-5"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 250000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2500
+        },
+        {
+          "lootId": "credits",
+          "amount": 250000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 250
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_169"
+    },
+    {
+      "title": "All-out war",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/All-out_war",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "visitMap",
+          "target": 1,
+          "targetMaps": "4-1"
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "targetMaps": "4-2"
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "targetMaps": "4-3"
+        },
+        {
+          "type": "killPlayers",
+          "target": 10,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetMaps": "4-1,4-2,4-3,4-4,4-5"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 20000
+        },
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_mcb-50",
+          "amount": 1000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_30"
+    },
+    {
+      "title": "Crush the Cubikons",
+      "level": 11,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Crush_the_Cubikons",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "damageNpc",
+          "target": 1000000,
+          "targetShipId": 80
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 10000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        }
+      ],
+      "attributes": {
+        "timeLimitSeconds": 1800,
+        "maxDamageTaken": 100000,
+        "maxDeaths": 0
+      },
+      "titleKey": "quest_title_39"
+    },
+    {
+      "title": "Foreign occupation 1",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 900,
+          "mapSector": 6,
+          "ownerSlot": 1,
+          "continuous": 1
+        },
+        {
+          "type": "stayOnMap",
+          "target": 900,
+          "mapSector": 6,
+          "ownerSlot": 2,
+          "continuous": 1
+        },
+        {
+          "type": "killPlayers",
+          "target": 1,
+          "enemyTarget": 1,
+          "mapSector": 6,
+          "ownerSlot": 1
+        },
+        {
+          "type": "killPlayers",
+          "target": 1,
+          "enemyTarget": 1,
+          "mapSector": 6,
+          "ownerSlot": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 1000
+        },
+        {
+          "lootId": "credits",
+          "amount": 1000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 1000
+        },
+        {
+          "lootId": "ammunition_rocket_plt-2021",
+          "amount": 250
+        }
+      ],
+      "attributes": {
+        "forbidCloak": 1,
+        "maxDeaths": 1,
+        "playerFactionVariants": 1
+      },
+      "titleKey": "quest_title_443"
+    },
+    {
+      "title": "Foreign occupation 2",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 1800,
+          "mapSector": 7,
+          "ownerSlot": 1,
+          "continuous": 1
+        },
+        {
+          "type": "stayOnMap",
+          "target": 1800,
+          "mapSector": 7,
+          "ownerSlot": 2,
+          "continuous": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 2000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 2000
+        },
+        {
+          "lootId": "credits",
+          "amount": 2000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_mcb-50",
+          "amount": 1000
+        }
+      ],
+      "attributes": {
+        "forbidCloak": 1,
+        "maxDeaths": 2,
+        "playerFactionVariants": 1,
+        "maxKills": 2
+      },
+      "titleKey": "quest_title_444"
+    },
+    {
+      "title": "Foreign occupation 3",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 2700,
+          "mapSector": 7,
+          "ownerSlot": 1,
+          "continuous": 1
+        },
+        {
+          "type": "stayOnMap",
+          "target": 2700,
+          "mapSector": 7,
+          "ownerSlot": 2,
+          "continuous": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 3000
+        },
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        }
+      ],
+      "attributes": {
+        "forbidCloak": 1,
+        "maxDeaths": 1,
+        "playerFactionVariants": 1
+      },
+      "titleKey": "quest_title_445"
+    },
+    {
+      "title": "Foreign occupation 4",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "stayOnMap",
+          "target": 3600,
+          "mapSector": 6,
+          "ownerSlot": 1,
+          "continuous": 1
+        },
+        {
+          "type": "stayOnMap",
+          "target": 3600,
+          "mapSector": 6,
+          "ownerSlot": 2,
+          "continuous": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 3000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 3000
+        },
+        {
+          "lootId": "credits",
+          "amount": 3000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 3000
+        }
+      ],
+      "attributes": {
+        "forbidCloak": 1,
+        "maxDeaths": 1,
+        "playerFactionVariants": 1
+      },
+      "titleKey": "quest_title_446"
+    },
+    {
+      "title": "Downfall of the Kristallonians",
+      "level": 15,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Downfall_of_the_Kristallonians",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 4,
+          "targetShipId": 79,
+          "targetMaps": "1-7"
+        },
+        {
+          "type": "killNpc",
+          "target": 4,
+          "targetShipId": 79,
+          "targetMaps": "2-7"
+        },
+        {
+          "type": "killNpc",
+          "target": 4,
+          "targetShipId": 79,
+          "targetMaps": "3-7"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 5000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 50000
+        },
+        {
+          "lootId": "credits",
+          "amount": 5000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 2000
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_25"
+    },
+    {
+      "title": "Violence breeds violence",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Violence_breeds_violence",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "mapRelation": "home",
+          "mapSector": 2,
+          "sequence": 1
+        },
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "mapRelation": "enemy",
+          "mapSector": 2,
+          "sequence": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 128000
+        },
+        {
+          "lootId": "honor",
+          "amount": 1280
+        },
+        {
+          "lootId": "credits",
+          "amount": 128000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 100
+        },
+        {
+          "lootId": "ammunition_laser_mcb-25",
+          "amount": 1280
+        }
+      ],
+      "attributes": {},
+      "titleKey": "quest_title_40"
+    },
+    {
+      "title": "Top secret",
+      "level": 16,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Top_secret",
+      "objectiveSource": "https://darkorbitwiki.com/missions/challenges/",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 10,
+          "targetOre": 1,
+          "mapRelation": "enemy",
+          "mapSector": 1
+        },
+        {
+          "type": "killNpc",
+          "target": 10,
+          "targetShipId": 84,
+          "mapRelation": "enemy",
+          "mapSector": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 6000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 60000
+        },
+        {
+          "lootId": "credits",
+          "amount": 6000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 2000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 20000
+        }
+      ],
+      "attributes": {
+        "maxDamageTaken": 100000
+      },
+      "titleKey": "quest_title_168"
+    },
+    {
+      "title": "Evil nemesis: The Goliath",
+      "level": 10,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Evil_nemesis:_The_Goliath_(VRU)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 1000,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 20000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 10000
+        },
+        {
+          "lootId": "credits",
+          "amount": 20000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 30000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 10000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_429"
+    },
+    {
+      "title": "First strike",
+      "level": 8,
+      "titleKey": "quest_title_442",
+      "source": "https://darkorbit.fandom.com/wiki/Quest/First_strike",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Reconstructed from the documented doubling rule and the original ten ship classes, in base ship ID order (1..10); final Goliath target is 512.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 1,
+          "shipFamily": "phoenix",
+          "enemyTarget": 1,
+          "sequence": 1
+        },
+        {
+          "type": "killPlayers",
+          "target": 2,
+          "shipFamily": "yamato",
+          "enemyTarget": 1,
+          "sequence": 2
+        },
+        {
+          "type": "killPlayers",
+          "target": 4,
+          "shipFamily": "leonov",
+          "enemyTarget": 1,
+          "sequence": 3
+        },
+        {
+          "type": "killPlayers",
+          "target": 8,
+          "shipFamily": "defcom",
+          "enemyTarget": 1,
+          "sequence": 4
+        },
+        {
+          "type": "killPlayers",
+          "target": 16,
+          "shipFamily": "liberator",
+          "enemyTarget": 1,
+          "sequence": 5
+        },
+        {
+          "type": "killPlayers",
+          "target": 32,
+          "shipFamily": "piranha",
+          "enemyTarget": 1,
+          "sequence": 6
+        },
+        {
+          "type": "killPlayers",
+          "target": 64,
+          "shipFamily": "nostromo",
+          "enemyTarget": 1,
+          "sequence": 7
+        },
+        {
+          "type": "killPlayers",
+          "target": 128,
+          "shipFamily": "vengeance",
+          "enemyTarget": 1,
+          "sequence": 8
+        },
+        {
+          "type": "killPlayers",
+          "target": 256,
+          "shipFamily": "bigboy",
+          "enemyTarget": 1,
+          "sequence": 9
+        },
+        {
+          "type": "killPlayers",
+          "target": 512,
+          "shipFamily": "goliath",
+          "enemyTarget": 1,
+          "sequence": 10
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 12000000
+        },
+        {
+          "lootId": "honor",
+          "amount": 10000
+        },
+        {
+          "lootId": "credits",
+          "amount": 14000000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 10000
+        },
+        {
+          "lootId": "ammunition_laser_ucb-100",
+          "amount": 4000
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "title": "Wanderlust",
+      "level": 9,
+      "titleKey": "quest_title_420",
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Wanderlust",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "800 AU converted at 100 internal map units per minimap coordinate unit; this is the same scaling used by coordinate quests.",
+      "conditions": [
+        {
+          "type": "travel",
+          "target": 80000,
+          "targetMaps": "4-4",
+          "sequence": 1
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "mapRelation": "home",
+          "mapSector": 1,
+          "sequence": 2
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 1000000
+        },
+        {
+          "lootId": "credits",
+          "amount": 700000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 500
+        }
+      ],
+      "attributes": {}
+    },
+    {
+      "title": "Terbium Hunt",
+      "titleKey": "quest_title_1024",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Terbium_Hunt_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 40,
+          "targetOre": 3,
+          "mapSector": 3,
+          "mapRelation": "home"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "jumpCredits",
+          "amount": 2
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Earn Credits",
+      "titleKey": "quest_title_1028",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Earn_Credits_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "sellOre",
+          "target": 1000,
+          "targetOre": 4
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "logdisks",
+          "amount": 2
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Defense Patrol",
+      "titleKey": "quest_title_1000",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Defense_Patrol_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 20,
+          "targetShipId": 71
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "mapSector": 2,
+          "mapRelation": "home",
+          "sequence": 1
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "mapSector": 3,
+          "mapRelation": "home",
+          "sequence": 2
+        },
+        {
+          "type": "visitMap",
+          "target": 1,
+          "mapSector": 4,
+          "mapRelation": "home",
+          "sequence": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "repairCredits",
+          "amount": 2
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Mordon Hunt!",
+      "titleKey": "quest_title_1004",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Mordon_Hunt!_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 20,
+          "targetShipId": 73
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "extraEnergy",
+          "amount": 5
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Research and Development",
+      "titleKey": "quest_title_1005",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Research_and_Development",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "collectOre",
+          "target": 20,
+          "targetOre": 1
+        },
+        {
+          "type": "collectOre",
+          "target": 20,
+          "targetOre": 2
+        },
+        {
+          "type": "collectOre",
+          "target": 20,
+          "targetOre": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "jumpCredits",
+          "amount": 2
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "A Powerful Enemy",
+      "titleKey": "quest_title_1006",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/A_Powerful_Enemy_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 3,
+          "targetShipId": 72
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 200
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Rocket Attack",
+      "titleKey": "quest_title_1007",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Rocket_Attack_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 30,
+          "targetShipId": 75,
+          "weapon": "ROCKET"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "bootyKeys",
+          "amount": 1
+        }
+      ],
+      "attributes": {
+        "daily": 1,
+        "forbiddenWeapon": "LASER"
+      }
+    },
+    {
+      "title": "Prometium Deficiency",
+      "titleKey": "quest_title_1021",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Prometium_Deficiency_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "sellOre",
+          "target": 5000,
+          "targetOre": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "repairCredits",
+          "amount": 2
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Down with Streuners!",
+      "titleKey": "quest_title_1023",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Down_with_Streuners!_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "killNpc",
+          "target": 50,
+          "targetShipId": 84
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "extraEnergy",
+          "amount": 5
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    },
+    {
+      "title": "Duranium Supply",
+      "titleKey": "quest_title_1003",
+      "level": 1,
+      "source": "https://darkorbit.fandom.com/wiki/Duranium_Supply_(Daily_Quest)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/nyx-mission-faq.102728/",
+      "conditions": [
+        {
+          "type": "collectCargoOre",
+          "target": 100,
+          "targetOre": 5
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "honor",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 8000
+        },
+        {
+          "lootId": "credits",
+          "amount": 8000
+        },
+        {
+          "lootId": "logdisks",
+          "amount": 2
+        }
+      ],
+      "attributes": {
+        "daily": 1
+      }
+    }
+  ]
+}

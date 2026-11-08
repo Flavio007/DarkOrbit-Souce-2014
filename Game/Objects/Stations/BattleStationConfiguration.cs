@@ -1,4 +1,4 @@
-using Ow.Game.Movements;
+﻿using Ow.Game.Movements;
 using Ow.Managers;
 using Ow.Net.netty.commands;
 using Ow.Utils;
@@ -208,7 +208,7 @@ namespace Ow.Game.Objects.Stations
 
     static class BattleStationConfiguration
     {
-        private const string DefaultConfigRelativePath = "config\\battle_stations.xml";
+        private static readonly string DefaultConfigRelativePath = Path.Combine("config", "battle_stations.xml");
         private static readonly Dictionary<int, int> LegacyUpgradeLevelMap = new Dictionary<int, int>
         {
             { 1, 1 },

@@ -20,6 +20,7 @@ namespace Ow.Net.netty.handlers
             var player = gameSession.Player;
             var position = new Position(read.targetX, read.targetY);
             Movement.Move(player, position);
+            if(player.Moving&&player.MovementTime>=250)player.Achievements?.Report("fly");
         }
     }
 }

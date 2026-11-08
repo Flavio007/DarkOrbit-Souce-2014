@@ -782,7 +782,8 @@ namespace Ow.Game.Objects.Players.Managers
 
         public bool CanUseRepairBot()
         {
-            return HasActiveRepairBot() || IsCpuEquipped(NC_RRB_CPU);
+            return HasActiveRepairBot() && (Player.Storage.RepairBotActivated ||
+                (IsCpuEquipped(NC_RRB_CPU) && Player.Settings.InGameSettings.selectedCpus.Contains(NC_RRB_CPU)));
         }
 
         public int GetSelectedRepairBotId()
@@ -903,16 +904,26 @@ namespace Ow.Game.Objects.Players.Managers
                     break;
             }
 
-            if (Player.CurrentHitPoints < Player.MaxHitPoints && !Player.AttackingOrUnderAttack() && !Player.Moving)
-                Player.RepairBot(true);
-            else if (Player.Storage.RepairBotActivated)
+            if (Player.Storage.RepairBotActivated)
                 Player.RepairBot(false);
+            else if (Player.CurrentHitPoints < Player.MaxHitPoints && !Player.AttackingOrUnderAttack() && !Player.Moving)
+                Player.RepairBot(true);
 
             Player.SettingsManager.SendNewItemStatus(REPBOT_REP_S);
             Player.SettingsManager.SendNewItemStatus(REPBOT_REP_1);
             Player.SettingsManager.SendNewItemStatus(REPBOT_REP_2);
             Player.SettingsManager.SendNewItemStatus(REPBOT_REP_3);
             Player.SettingsManager.SendNewItemStatus(REPBOT_REP_4);
+        }
+
+        public void ToggleAutomaticRepair()
+        {
+            if(!EnsureCpuEquipped(NC_RRB_CPU,"NC-RRB"))return;
+            if(Player.Settings.InGameSettings.selectedCpus.Contains(NC_RRB_CPU)) {
+                RemoveSelectedCpu(NC_RRB_CPU);
+                if(Player.Storage.RepairBotActivated)Player.RepairBot(false);
+            } else AddSelectedCpu(NC_RRB_CPU);
+            Player.SettingsManager.SendNewItemStatus(NC_RRB_CPU);
         }
 
         public void ToggleAimCpu(string cpu)
@@ -1012,6 +1023,7 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 AddSelectedCpu(CLK_XL);
                 Player.Invisible = true;
+                Player.Quests?.OnCloakChanged();
                 string cloakPacket = "0|n|INV|" + Player.Id + "|1";
                 Player.SendPacket(cloakPacket);
                 Player.SendPacketToInRangePlayers(cloakPacket);

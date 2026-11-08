@@ -1,4 +1,4 @@
-using Ow.Game.Movements;
+﻿using Ow.Game.Movements;
 using Ow.Game.Objects.Players;
 using Ow.Managers;
 using Ow.Utils;
@@ -63,7 +63,7 @@ namespace Ow.Game.Objects.AI
         private const int TargetOrbitDistance = 550;
         private const int DestinationTolerance = 120;
         private const int RepathTolerance = 200;
-        private const string DefaultConfigRelativePath = "config\\fake_ships.xml";
+        private static readonly string DefaultConfigRelativePath = Path.Combine("config", "fake_ships.xml");
 
         public static void LoadConfiguredFakeShips(string path = null)
         {

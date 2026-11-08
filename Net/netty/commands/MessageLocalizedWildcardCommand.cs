@@ -37,5 +37,14 @@ namespace Ow.Net.netty.commands
             param1.write(var_3317.write());
             return param1.Message.ToArray();
         }
+
+        // Embedded notifications (e.g. killscreen tooltips) have no length;
+        // only a standalone network command needs the framing prefix.
+        public byte[] writeCommand()
+        {
+            var packet = new ByteArray();
+            packet.write(write());
+            return packet.ToByteArray();
+        }
     }
 }

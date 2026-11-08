@@ -1,0 +1,2075 @@
+{
+  "sourceFile": "Mission list _ DarkOrbit _ Fandom.html",
+  "revision": 63014,
+  "scope": "Catalog membership and normal mission levels come exclusively from the saved revision 63014. Linked individual pages and corroborating descriptions of those same classic quests supply the objective and reward facts.",
+  "missions": [
+    {
+      "level": 1,
+      "title": "First Assignment",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/First_Assignment"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1001
+      ]
+    },
+    {
+      "level": 1,
+      "title": "The Navigator",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/The_Navigator"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        20100
+      ]
+    },
+    {
+      "level": 1,
+      "title": "Show us what you're made of!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Show_us_what_you%27re_made_of!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1002
+      ]
+    },
+    {
+      "level": 1,
+      "title": "Ore wanted now!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Ore_wanted_now!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1003
+      ]
+    },
+    {
+      "level": 1,
+      "title": "Collecting mission",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Collecting_mission"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1004
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Far reaches of the universe",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Far_reaches_of_the_universe"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        20500
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Explore your home galaxy",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Explore_your_home_galaxy"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        20600
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Laser malfunction I - Lordakia",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Laser_malfunction_I_-_Lordakia"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        20700
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Lordakians sighted!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Lordakians_sighted!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1005
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Show us what you're made of! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Show_us_what_you%27re_made_of!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1006
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Terbium wanted now!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Terbium_wanted_now!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1007
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Ore wanted now! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Ore_wanted_now!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1008
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Collecting mission (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Collecting_mission_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1009
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Test of courage",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Test_of_courage"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        21300
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Gatherer",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Gatherer"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        21400
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Endurium shortage",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Endurium_shortage"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1010
+      ]
+    },
+    {
+      "level": 2,
+      "title": "Streuner or Devolarium",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Streuner_or_Devolarium"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        21600
+      ]
+    },
+    {
+      "level": 2,
+      "title": "A mixed bag of rocks",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/A_mixed_bag_of_rocks"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        21700
+      ]
+    },
+    {
+      "level": 3,
+      "title": "The Lordakians are in for it now",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/The_Lordakians_are_in_for_it_now"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        21800
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Laser malfunction I - Saimon",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Laser_malfunction_I_-_Saimon"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        21900
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Crossing guard",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Crossing_guard"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        22000
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Wretched Saimonites!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Wretched_Saimonites!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1011
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Battle of the Mordons!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Battle_of_the_Mordons!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1012
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Lordakians sighted! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Lordakians_sighted!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1013
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Show us what you're made of! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Show_us_what_you%27re_made_of!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1014
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Terbium wanted now! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Terbium_wanted_now!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1015
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Ore wanted now! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Ore_wanted_now!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1016
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Collecting mission (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Collecting_mission_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1017
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Hunter or gatherer",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Hunter_or_gatherer"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        22800
+      ]
+    },
+    {
+      "level": 3,
+      "title": "Dead easy",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Dead_easy"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        22900
+      ]
+    },
+    {
+      "level": 4,
+      "title": "Martyr",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Martyr"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        23000
+      ]
+    },
+    {
+      "level": 4,
+      "title": "Wretched Saimonites! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Wretched_Saimonites!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1018
+      ]
+    },
+    {
+      "level": 4,
+      "title": "Devolarian invasion!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Devolarian_invasion!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1019
+      ]
+    },
+    {
+      "level": 4,
+      "title": "Battle of the Mordons! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Battle_of_the_Mordons!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1020
+      ]
+    },
+    {
+      "level": 4,
+      "title": "Lordakians sighted! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Lordakians_sighted!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1021
+      ]
+    },
+    {
+      "level": 4,
+      "title": "The specialist",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/The_specialist"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        23500
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Gather ore",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Gather_ore"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        23600
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Resource shortage",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Resource_shortage"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        23700
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Wretched Saimonites! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Wretched_Saimonites!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1023
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Sibelons strike back!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Sibelons_strike_back!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        23900
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Devolarian invasion! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Devolarian_invasion!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1024
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Battle of the Mordons! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Battle_of_the_Mordons!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1025
+      ]
+    },
+    {
+      "level": 5,
+      "title": "The competition",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/The_competition"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        24200
+      ]
+    },
+    {
+      "level": 5,
+      "title": "Company expansion",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_expansion"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        24300
+      ]
+    },
+    {
+      "level": 6,
+      "title": "Thievery",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Thievery"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        24400
+      ]
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The VRU has crossed the line! (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Goliath)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The MMO has crossed the line! (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Goliath)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The VRU has crossed the line! (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(BigBoy)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The MMO has crossed the line! (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(BigBoy)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The VRU has crossed the line! (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Vengeance)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Company Wars I: The MMO has crossed the line! (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Vengeance)"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 6,
+      "title": "Sibelons strike back! (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Sibelons_strike_back!_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1026
+      ]
+    },
+    {
+      "level": 6,
+      "title": "Devolarian invasion! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Devolarian_invasion!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1027
+      ]
+    },
+    {
+      "level": 7,
+      "title": "Sibelons strike back! (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Sibelons_strike_back!_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        1028
+      ]
+    },
+    {
+      "level": 8,
+      "title": "First strike",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/First_strike"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        25400
+      ]
+    },
+    {
+      "level": 8,
+      "title": "David vs. Goliath",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/David_vs._Goliath"
+      ],
+      "inCatalog": false,
+      "questIds": []
+    },
+    {
+      "level": 8,
+      "title": "Get a move on (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        25600
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Get a move on (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        25700
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Get a move on (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        25800
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Company Wars II: A question of honor! (VRU) (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(VRU)_(Goliath)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        25910,
+        25920
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Company Wars II: A question of honor! (MMO) (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(MMO)_(Goliath)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26020,
+        26030
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Company Wars II: A question of honor! (VRU) (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(VRU)_(BigBoy)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26110,
+        26120
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Company Wars II: A question of honor! (MMO) (BigBoy)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        26220,
+        26230
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Company Wars II: A question of honor! (VRU) (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(VRU)_(Vengeance)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26310,
+        26320
+      ]
+    },
+    {
+      "level": 8,
+      "title": "Company Wars II: A question of honor! (MMO) (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_II:_A_question_of_honor!_(MMO)_(Vengeance)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26420,
+        26430
+      ]
+    },
+    {
+      "level": 9,
+      "title": "200!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/200!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26500
+      ]
+    },
+    {
+      "level": 9,
+      "title": "Wanderlust",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Wanderlust"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26600
+      ]
+    },
+    {
+      "level": 9,
+      "title": "Death Race",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Death_Race"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26700
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Can't catch me!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Can%27t_catch_me!"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26800
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Pure debauchery on map 4-5",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Pure_debauchery_on_map_4-5"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        26900
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Evil nemesis: The Goliath",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Evil_nemesis:_The_Goliath"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27020,
+        27030
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Dance with death",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Dance_with_death"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27100
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Boss of bosses",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Boss_of_bosses"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27200
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Next level",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Next_level"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27300
+      ]
+    },
+    {
+      "level": 10,
+      "title": "\"Uber\" quest",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/%22Uber%22_quest"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27400
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Scrounger's delight",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Scrounger%27s_delight"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27500
+      ]
+    },
+    {
+      "level": 10,
+      "title": "It pays to move slowly",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/It_pays_to_move_slowly"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27600
+      ]
+    },
+    {
+      "level": 10,
+      "title": "The Kristallant killer",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/The_Kristallant_killer"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27700
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Kristallonian safari",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Kristallonian_safari"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27800
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Blind man's bluff",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Blind_man%27s_bluff"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        27900
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Wormhole research",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Wormhole_research"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28000
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Child's play",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Child%27s_play"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28100
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Quest/Company Wars III: You've come very far ... (VRU) (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Goliath)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28210,
+        28220
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Company Wars III: You've come very far ... (EIC) (Goliath)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Goliath)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28310,
+        28330
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Quest/Company Wars III: You've come very far ... (VRU) (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(BigBoy)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28410,
+        28420
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Company Wars III: You've come very far ... (EIC) (BigBoy)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(BigBoy)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28510,
+        28530
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Company Wars III: You've come very far ... (VRU) (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Vengeance)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28610,
+        28620
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Company Wars III: You've come very far ... (EIC) (Vengeance)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_III:_You%27ve_come_very_far_..._(VRU)_(Vengeance)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28710,
+        28730
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Quest/All-out war",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/All-out_war"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28800
+      ]
+    },
+    {
+      "level": 10,
+      "title": "Quest/Crystal dust",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Crystal_dust"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        28900
+      ]
+    },
+    {
+      "level": 11,
+      "title": "Quest/Pull out all the stops",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Pull_out_all_the_stops"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29000
+      ]
+    },
+    {
+      "level": 11,
+      "title": "Quest/Protegite research",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Protegite_research"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29100
+      ]
+    },
+    {
+      "level": 11,
+      "title": "Quest/Crush the Cubikons",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Crush_the_Cubikons"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29200
+      ]
+    },
+    {
+      "level": 11,
+      "title": "Quest/Tour de Force",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Tour_de_Force"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29300
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Top of the food chain (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Top_of_the_food_chain_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29400
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Top of the food chain (2)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        29500
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Top of the food chain (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Top_of_the_food_chain_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29600
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Top of the food chain (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Top_of_the_food_chain_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29700
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Undesirables (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29800
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Undesirables (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        29900
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Undesirables (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30000
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Undesirables (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Undesirables_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30100
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Speed (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Speed_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30200
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Speed (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Speed_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30300
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Speed (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Speed_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30400
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Speed (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Speed_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30500
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Orbital explosives expert (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30600
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Orbital explosives expert (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30700
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Orbital explosives expert (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30800
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Orbital explosives expert (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Orbital_explosives_expert_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        30900
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Little monsters (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31000
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Little monsters (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31100
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Little monsters (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31200
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Little monsters (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Little_monsters_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31300
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Evil nemesis: The Goliath",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Evil_nemesis:_The_Goliath_(VRU)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31410,
+        31420
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/StreuneR invasion (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31500
+      ]
+    },
+    {
+      "level": 12,
+      "title": "StreuneR invasion (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31600
+      ]
+    },
+    {
+      "level": 12,
+      "title": "StreuneR invasion (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31700
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Plague of Sibelonites (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31800
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Plague of Sibelonites (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        31900
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Plague of Sibelonites (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32000
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Decrystallization (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32100
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Quest/Mothership (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Mothership_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32200
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Mothership (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Mothership_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32300
+      ]
+    },
+    {
+      "level": 12,
+      "title": "Mothership (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Mothership_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32400
+      ]
+    },
+    {
+      "level": 13,
+      "title": "StreuneR invasion (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Streuner_invasion_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32500
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Quest/StreuneR invasion (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/StreuneR_invasion_(5)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32600
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Quest/Steal VRU resources (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_VRU_resources_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32710,
+        32720
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Steal VRU resources (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_VRU_resources_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32810,
+        32820
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Steal VRU resources (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_VRU_resources_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        32910,
+        32920
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Quest/Steal EIC resources (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC_resources_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        33010,
+        33030
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Steal EIC resources (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC_resources_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        33110,
+        33130
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Steal EIC resources (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC_resources_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        33210,
+        33230
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Quest/Preventative measures (1)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(1)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        33300
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Provoking the VRU (1)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        33410,
+        33420
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Provoking the VRU (2)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        33510,
+        33520
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Provoking the VRU (3)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        33610,
+        33620
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Provoking the EIC (1)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        33710,
+        33730
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Provoking the EIC (2)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        33810,
+        33830
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Provoking the EIC (3)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        33910,
+        33930
+      ]
+    },
+    {
+      "level": 13,
+      "title": "Quest/Decrystallization (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34000
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Quest/Permanent provocation",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Permanent_provocation"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34100
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Steal EIC resources (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/VRU/MMO_resources_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34210,
+        34230
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Steal VRU resources (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/VRU/MMO_resources_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34310,
+        34320
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Quest/Plague of Sibelonites (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34400
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Quest/Preventative measures (2)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34500
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Preventative measures (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(2)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34600
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Provoking the VRU (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_VRU/MMO/EIC_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34710,
+        34720
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Provoking the EIC (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_VRU/MMO/EIC_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34810,
+        34830
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Quest/Decrystallization (3)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(3)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        34900
+      ]
+    },
+    {
+      "level": 14,
+      "title": "Quest/Decrystallization (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35000
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Foreign occupation 4",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35110,
+        35120,
+        35130
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Foreign occupation 3",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35210,
+        35220,
+        35230
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Foreign occupation 2",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35310,
+        35320,
+        35330
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Quest/Foreign occupation 1",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Foreign_occupation_1"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35410,
+        35420,
+        35430
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Quest/Preventative measures (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35500
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Preventative measures (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35600
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Preventative measures (6)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Preventative_measures_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35700
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Provoking the EIC (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_EIC/MMO/VRU_(5)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35810,
+        35830
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Provoking the VRU (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Provoking_the_EIC/MMO/VRU_(5)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        35910,
+        35920
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Quest/Decrystallization (5)",
+      "links": [],
+      "inCatalog": true,
+      "questIds": [
+        36000
+      ]
+    },
+    {
+      "level": 15,
+      "title": "Quest/Downfall of the Kristallonians",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Downfall_of_the_Kristallonians"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36100
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Violence breeds violence",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Violence_breeds_violence"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36200
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Idle your time away",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Idle_your_time_away"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36310,
+        36320,
+        36330
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Foreign territory",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Foreign_territory"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36410,
+        36420,
+        36430
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Top secret",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Top_secret"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36500
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Steal EIC resources (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/MMO/VRU_resources_(5)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36610,
+        36630
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Steal VRU resources (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Steal_EIC/MMO/VRU_resources_(5)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36710,
+        36720
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Plague of Sibelonites (5)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Plague_of_Sibelonites_(5)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36800
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Mothership (4)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Mothership_(4)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        36900
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/Decrystallization (6)",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Decrystallization_(6)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37000
+      ]
+    },
+    {
+      "level": 16,
+      "title": "Quest/On the other side",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/On_the_other_side"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37100
+      ]
+    },
+    {
+      "level": 17,
+      "title": "Quest/Hunt the hunter",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Hunt_the_hunter"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37212,
+        37213,
+        37221,
+        37223,
+        37231,
+        37232
+      ]
+    },
+    {
+      "level": 17,
+      "title": "Quest/Hunt the hunter",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Quest/Hunt_the_hunter"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37212,
+        37213,
+        37221,
+        37223,
+        37231,
+        37232
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Terbium Hunt",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Terbium_Hunt_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37400
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Earn Credits",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Earn_Credits_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37500
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Defense Patrol",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Defense_Patrol_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37600
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Mordon Hunt!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Mordon_Hunt!_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37700
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Research and Development",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Research_and_Development"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37800
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "A Powerful Enemy",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/A_Powerful_Enemy_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        37900
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Rocket Attack",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Rocket_Attack_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        38000
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Prometium Deficiency",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Prometium_Deficiency_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        38100
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Down with Streuners!",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Down_with_Streuners!_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        38200
+      ]
+    },
+    {
+      "level": 1,
+      "category": "daily",
+      "levelSource": "Not specified in captured list; default minimum level is 1.",
+      "title": "Duranium Supply",
+      "links": [
+        "https://darkorbit.fandom.com/wiki/Duranium_Supply_(Daily_Quest)"
+      ],
+      "inCatalog": true,
+      "questIds": [
+        38300
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 ﻿using Ow.Game;
 using Ow.Managers;
+using Ow.Game.Movements;
 using Ow.Net.netty.commands;
 using Ow.Net.netty.requests;
 using System;
@@ -93,9 +94,58 @@ namespace Ow.Net.netty.handlers
             string[] packet = read.message.Split('|');
             if (packet.Length == 0 || string.IsNullOrWhiteSpace(packet[0]))
                 return;
+            if (player.ControlsLocked && packet[0] != "PNG") return;
 
             switch (packet[0])
             {
+                case ServerCommands.QUESTFM_INFO:
+                    if (packet.Length == 3 && packet[1] == ServerCommands.QUESTFM_PRIVILEGE_QUEST &&
+                        int.TryParse(packet[2], out var highlightedQuestId))
+                        player.Quests?.HighlightAcceptedQuest(highlightedQuestId);
+                    break;
+                  case "BUY":
+                      if(packet.Length==2)player.Achievements?.QuickBuy(packet[1]);
+                      break;
+                  case "PNG":
+                    if (packet.Length == 2 && packet[1] == "WASM")
+                        player.SendPacket("0|A|WASM_PONG|" + Ow.Game.Ticks.TickManager.CurrentTickId);
+                    break;
+                case "CLI":
+                    // The client is untrusted: authorize each command on the authenticated player.
+                    if (player.RankId != 21) return;
+                    if (packet.Length != 4 || packet[1].ToUpperInvariant() != "SET" || !int.TryParse(packet[3], out var value) || value < 0)
+                    {
+                        player.SendPacket("0|CLI|Uso: SET MAP/HP/SHD/SHIP valor");
+                        break;
+                    }
+                    switch (packet[2].ToUpperInvariant())
+                    {
+                        case "HP":
+                            player.CurrentHitPoints = Math.Min(value, player.MaxHitPoints);
+                            player.UpdateStatus();
+                            player.SendPacket($"0|CLI|HP atualizado: {player.CurrentHitPoints}");
+                            break;
+                        case "SHD":
+                            player.CurrentShieldPoints = Math.Min(value, player.MaxShieldPoints);
+                            player.UpdateStatus();
+                            player.SendPacket($"0|CLI|Escudo atualizado: {player.CurrentShieldPoints}");
+                            break;
+                        case "SHIP":
+                            if (GameManager.GetShip(value) == null) { player.SendPacket("0|CLI|Nave inexistente"); break; }
+                            player.ChangeShip(value);
+                            player.SendPacket($"0|CLI|Nave atualizada: {value}");
+                            break;
+                        case "MAP":
+                            var map = GameManager.GetSpacemap(value);
+                            if (map == null || player.Storage.Jumping) { player.SendPacket("0|CLI|Mapa indisponivel"); break; }
+                            player.SendPacket($"0|CLI|Saltando para o mapa {value}");
+                            player.Jump(value, new Position(map.Limits[1].X / 2, map.Limits[1].Y / 2));
+                            break;
+                        default:
+                            player.SendPacket("0|CLI|Comando desconhecido");
+                            break;
+                    }
+                    break;
                 case ServerCommands.SET_STATUS:
                     if (packet.Length < 3) break;
                     switch (packet[1])

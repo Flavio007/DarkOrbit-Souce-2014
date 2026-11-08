@@ -10,31 +10,22 @@ namespace Ow.Utils
 {
     class Logger
     {
+        private static readonly object WriteLock = new object();
         public static void Log(string fileName, string message)
         {
             var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + Path.DirectorySeparatorChar + "logs" + Path.DirectorySeparatorChar;
-
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
 
             fileName += $"_{DateTime.Now.ToString("dd.MM.yyyy")}.txt";
 
             try
             {
-                if (!File.Exists(path))
+                lock (WriteLock)
                 {
-                    using (FileStream fs = File.Create(path + fileName))
+                    Directory.CreateDirectory(path);
+                    using (StreamWriter sw = File.AppendText(Path.Combine(path, fileName)))
                     {
-                        fs.Flush();
-                        fs.Close();
+                        sw.WriteLine($"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] " + message);
                     }
-                }
-
-                using (StreamWriter sw = File.AppendText(path + fileName))
-                {
-                    sw.WriteLine($"[{DateTime.Now.ToString("dd.MM.yyyy HH: mm:ss")}] " + message);
-                    sw.Flush();
-                    sw.Close();
                 }
             }
             catch (Exception e)

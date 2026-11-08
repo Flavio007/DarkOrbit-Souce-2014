@@ -44,6 +44,7 @@ namespace Ow.Game.Objects.Players.Skills
                 affectedTargetIds.Clear();
                 var effectTargetIds = new List<int> { Player.Id };
 
+                Player.CpuManager.DisableCloak();
                 Player.AddVisualModifier(VisualModifierCommand.DRAW_FIRE_OWNER, 0, "", 0, true);
 
                 foreach (var character in Player.InRangeCharacters.Values)
@@ -58,9 +59,11 @@ namespace Ow.Game.Objects.Players.Skills
 
                     if (character.Position.DistanceTo(Player.Position) < 500)
                     {
+                        if (character is Npc npc && (npc.NpcAI == null || !npc.NpcAI.RetargetForDrawFire(Player)))
+                            continue;
                         affectedTargetIds.Add(character.Id);
                         character.AddVisualModifier(VisualModifierCommand.DRAW_FIRE_TARGET, 0, "", 0, true);
-                        character.Deselection();
+                        if (!(character is Npc)) character.Deselection();
 
                         if (character is Player player)
                         {
@@ -70,7 +73,7 @@ namespace Ow.Game.Objects.Players.Skills
                             player.SelectEntity(Player.Id);
                             player.EnableAttack(player.Settings.InGameSettings.selectedLaser);
                         }
-                        else
+                        else if (!(character is Npc))
                             character.Selected = Player;
                     }
                 }
@@ -81,7 +84,6 @@ namespace Ow.Game.Objects.Players.Skills
                 Player.SendCommandToInRangePlayers(abilityEffectActivationCommand);
 
                 Player.SendCooldown(LootId, Duration, true);
-                Player.CpuManager.DisableCloak();
 
                 cooldown = DateTime.Now;
             }

@@ -223,6 +223,7 @@ namespace Ow.Game.Objects
                         }
                     }
 
+                    (character.Value as Player)?.Quests?.RecordDamage(Math.Max(0, Math.Min(Maths.GetPercentage(kamikazedmg, 95), character.Value.CurrentHitPoints)));
                     character.Value.CurrentHitPoints -= Maths.GetPercentage(kamikazedmg, 95);
                     character.Value.CurrentShieldPoints -= Maths.GetPercentage(kamikazedmg, 5);
                     if (character.Value.CurrentHitPoints - Maths.GetPercentage(kamikazedmg, 95) <= 0 || character.Value.CurrentHitPoints <= 0)
@@ -364,7 +365,7 @@ namespace Ow.Game.Objects
                 if (target is Player && (target as Player).Storage.Sentinel)
                     damageShd -= Maths.GetPercentage(damageShd, 30);
 
-                var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, Owner.AttackManager.GetSelectedLaser(), false, false);
+                var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, Owner.AttackManager.GetSelectedLaser(), target.ShieldMechanics(), false);
                 SendCommandToInRangePlayers(laserRunCommand);
 
                 var attackHitCommand =
@@ -375,10 +376,12 @@ namespace Ow.Game.Objects
 
                 SendCommandToInRangePlayers(attackHitCommand);
 
-                if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints == 0)
+                (target as Player)?.Quests?.RecordDamage(Math.Max(0, Math.Min(damageHp, target.CurrentHitPoints)));
+            if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints == 0)
                     target.Destroy(this, DestructionType.PET);
                 else
                     target.CurrentHitPoints -= damageHp;
+
 
                 target.CurrentShieldPoints -= damageShd;
                 target.LastCombatTime = DateTime.Now;

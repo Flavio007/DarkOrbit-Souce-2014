@@ -26,6 +26,16 @@ using Ow.Game.Events;
 
 namespace Ow.Game
 {
+    // Classic low-map IDs: MMO 1..4, EIC 5..8, VRU 9..12.
+    internal static class LowMapRadar
+    {
+        public static int Sector(int map) { return map >= 1 && map <= 12 ? (map - 1) % 4 + 1 : 0; }
+        public static int Owner(int map) { return Sector(map) != 0 ? (map - 1) / 4 + 1 : 0; }
+        public static bool Enemy(int viewerFaction, int subjectFaction) { return viewerFaction >= 1 && viewerFaction <= 3 && subjectFaction >= 1 && subjectFaction <= 3 && viewerFaction != subjectFaction; }
+        public static bool Warning(int map, int viewerFaction, int subjectFaction) { return (Sector(map) == 1 || Sector(map) == 2) && Enemy(viewerFaction, subjectFaction); }
+        public static bool Shared(int map, int viewerFaction, int subjectFaction) { return Sector(map) == 1 && viewerFaction == Owner(map) && Enemy(viewerFaction, subjectFaction); }
+    }
+
     class OptionsBase
     {
         public bool StarterMap { get; set; }
@@ -225,6 +235,8 @@ namespace Ow.Game
 
             if (CollectablesBase == null || CollectablesBase.Count < 1) return;
 
+            var mineralVeins = new List<Tuple<int, Position>>();
+            var mineralPositions = new List<Position>();
             foreach (var collectable in CollectablesBase)
             {
                 if (collectable == null || collectable.Amount <= 0) continue;
@@ -235,12 +247,67 @@ namespace Ow.Game
                 int minY;
                 int maxY;
                 GetCollectableBounds(collectable.TopLeft, collectable.BottomRight, out minX, out maxX, out minY, out maxY);
+                if (collectable.TypeId >= 1 && collectable.TypeId <= 3)
+                {
+                    // Generate once per map load. Each mineral keeps its place in its vein on respawn.
+                    foreach (var position in GenerateMineralVeins(collectable.TypeId, collectable.Amount,
+                        minX, maxX, minY, maxY, mineralVeins, mineralPositions))
+                        new Ore(collectable.TypeId, oreType, position, this, collectable.Respawnable,
+                            position.X, position.X, position.Y, position.Y);
+                    continue;
+                }
                 for (int i = 0; i < collectable.Amount; i++)
                 {
                     var spawnPosition = RandomPositionInBounds(minX, maxX, minY, maxY);
                     new Ore(collectable.TypeId, oreType, spawnPosition, this, collectable.Respawnable, minX, maxX, minY, maxY);
                 }
             }
+        }
+
+        // Ordinary ores only: 8-16 deposits per vein, 480-unit radius, separated mineral types.
+        internal List<Position> GenerateMineralVeins(int type, int amount, int minX, int maxX, int minY, int maxY,
+            List<Tuple<int, Position>> veins, List<Position> occupied)
+        {
+            const int radius = 480, portalClearance = 1800, spacing = 85;
+            var result = new List<Position>();
+            var portals = Activatables.Values.OfType<Portal>().Where(p => p.Visible && !p.Random).ToArray();
+            Func<Position, Position, double> distanceSquared = (a, b) =>
+                (double)(a.X - b.X) * (a.X - b.X) + (double)(a.Y - b.Y) * (a.Y - b.Y);
+            Func<Position, bool> safe = p => p.X >= minX && p.X <= maxX && p.Y >= minY && p.Y <= maxY
+                && portals.All(portal => distanceSquared(p, portal.Position) >= portalClearance * portalClearance);
+            while (result.Count < amount)
+            {
+                Position center = null;
+                for (int attempt = 0; attempt < 1024; attempt++)
+                {
+                    var candidate = RandomPositionInBounds(minX, maxX, minY, maxY);
+                    if (!safe(candidate) || veins.Any(v => distanceSquared(candidate, v.Item2) <
+                        (v.Item1 == type ? 900 * 900 : 1300 * 1300))) continue;
+                    center = candidate;
+                    break;
+                }
+                // Never fall back to spawning on a portal or mixing veins in a cramped configured region.
+                if (center == null) break;
+                veins.Add(Tuple.Create(type, center));
+                var remaining = amount - result.Count;
+                var veinSize = remaining <= 16 ? remaining : Randoms.random.Next(8, 17);
+                if (remaining > veinSize && remaining - veinSize < 8) veinSize = remaining - 8;
+                int placed = 0;
+                for (int attempt = 0; attempt < 2048 && placed < veinSize; attempt++)
+                {
+                    var angle = Randoms.random.NextDouble() * Math.PI * 2;
+                    var r = Math.Sqrt(Randoms.random.NextDouble()) * radius;
+                    var position = new Position(center.X + (int)(Math.Cos(angle) * r), center.Y + (int)(Math.Sin(angle) * r));
+                    if (!safe(position) || occupied.Any(p => distanceSquared(p, position) < spacing * spacing)) continue;
+                    result.Add(position);
+                    occupied.Add(position);
+                    placed++;
+                }
+                if (placed == 0) break;
+            }
+            if (result.Count != amount)
+                Console.WriteLine($"[Mineral veins] Map {Id}, ore {type}: {result.Count}/{amount} safe deposits (configured region too small).");
+            return result;
         }
 
         private void GetCollectableBounds(List<int> topLeft, List<int> bottomRight, out int minX, out int maxX, out int minY, out int maxY)
@@ -273,25 +340,36 @@ namespace Ow.Game
             return Math.Max(min, Math.Min(max, value));
         }
 
+        private readonly ConcurrentDictionary<int, int> threatCounts = new ConcurrentDictionary<int, int>();
+        public int EnemyPlayerCount(Player viewer)
+        {
+            if (viewer == null || LowMapRadar.Sector(VisualMapId) == 0) return 0;
+            return Characters.Values.OfType<Player>().Count(p => p != viewer && !p.Destroyed && ContainsCharacter(p) && LowMapRadar.Enemy(viewer.FactionId, p.FactionId));
+        }
+        private void SendThreat(Player viewer, int count, bool force = false)
+        {
+            if (!force && threatCounts.TryGetValue(viewer.Id, out var old) && old == count) return;
+            threatCounts[viewer.Id] = count;
+            // Flash reads the capped level; WASM also reads the exact count.
+            viewer.SendPacket("0|n|w|" + Math.Min(5, count) + "|" + count);
+        }
+
         public void CharacterTicker()
         {
+            var lowMapPlayers = LowMapRadar.Sector(VisualMapId) == 0 ? new Player[0] : Characters.Values.OfType<Player>().Where(p => !p.Destroyed && ContainsCharacter(p)).ToArray();
             foreach (var character in Characters.Values)
             {
                 foreach (var otherCharacter in Characters.Values.Where(x => x.Id != character.Id && !x.Equals(character)))
                 {
-                    var keepVisibleByTargetLock = character.SelectedCharacter == otherCharacter || otherCharacter.SelectedCharacter == character;
-                    var loadRange = character.RenderRange;
-                    if (otherCharacter.RenderRange > loadRange)
-                        loadRange = otherCharacter.RenderRange;
-
-                    if (character.InRange(otherCharacter, loadRange) || character.AllMapRange || keepVisibleByTargetLock)
+                    if (CanSeeCharacter(character, otherCharacter))
                         character.AddInRangeCharacter(otherCharacter);
-                    else if ((!character.AllMapRange || character.SelectedCharacter == null || (character.SelectedCharacter != null && !character.SelectedCharacter.Equals(otherCharacter))) && !keepVisibleByTargetLock)
+                    else
                         character.RemoveInRangeCharacter(otherCharacter);
                 }
 
                 if (character is Player player)
                 {
+                    if (LowMapRadar.Sector(VisualMapId) != 0) SendThreat(player, lowMapPlayers.Count(p => p != player && LowMapRadar.Enemy(player.FactionId, p.FactionId)));
                     foreach (var obj in Objects.Values)
                     {
                         if (obj is Collectable collectable)
@@ -385,7 +463,7 @@ namespace Ow.Game
 
                 if (inRange)
                 {
-                    if (!(entity is BattleStation) && !(entity is Satellite))
+                    if (!(entity is BattleStation) && !(entity is Satellite) && !(entity is OreTradeStation embeddedTrade && embeddedTrade.FactionStation != null))
                         onBlockedMinePosition = true;
 
                     if (entity is HomeStation homeStation)
@@ -423,6 +501,11 @@ namespace Ow.Game
                 if (activateButton)
                 {
                     if (entity is Portal portal && !portal.Working)
+                        status = MapAssetActionAvailableCommand.OFF;
+                    if ((entity is QuestGiverStation || entity is OreTradeStation) && entity.FactionId != Player.FactionId)
+                        status = MapAssetActionAvailableCommand.OFF;
+
+                    if (entity is OreTradeStation factionTrade && factionTrade.FactionStation != null && !factionTrade.CanTrade(Player))
                         status = MapAssetActionAvailableCommand.OFF;
 
                     //TODO check old = if (entity is BattleStation battleStation && battleStation.Clan.Id != 0 && !battleStation.InBuildingState && battleStation.Clan.Id != Player.Clan.Id)
@@ -511,11 +594,8 @@ namespace Ow.Game
 
             foreach (var poi in POIs.Values)
             {
-                if (poi.Type == POITypes.RADIATION)
-                {
-                    if (Player.Position.DistanceTo(poi.ShapeCords[0]) > poi.ShapeCords[1].X)
-                        inRadiationZone = true;
-                }
+                if (poi.Active && poi.Type == POITypes.RADIATION && poi.Contains(positionX, positionY))
+                    inRadiationZone = true;
             }
 
             if (Player.Storage.IsInRadiationZone != inRadiationZone)
@@ -580,16 +660,13 @@ namespace Ow.Game
             if (player == null)
                 return;
 
+            SendThreat(player, EnemyPlayerCount(player), true);
             foreach (var character in Characters.Values.ToList())
             {
                 if (character == null || character.Id == player.Id || character.Destroyed)
                     continue;
 
-                var loadRange = player.RenderRange;
-                if (character.RenderRange > loadRange)
-                    loadRange = character.RenderRange;
-
-                if (player.AllMapRange || character.AllMapRange || player.InRange(character, loadRange))
+                if (CanSeeCharacter(player, character))
                     player.AddInRangeCharacter(character);
             }
         }
@@ -638,21 +715,47 @@ namespace Ow.Game
             return success;
         }
 
+        public bool ContainsCharacter(Character character)
+        {
+            return character != null && character.Spacemap == this
+                && Characters.TryGetValue(character.Id, out var current) && ReferenceEquals(current, character);
+        }
+
+        public bool CanSeeCharacter(Character viewer, Character subject)
+        {
+            if (viewer == subject || viewer == null || subject == null || viewer.Destroyed || subject.Destroyed
+                || !ContainsCharacter(viewer) || !ContainsCharacter(subject)) return false;
+            var range = viewer.RenderRange == -1 || subject.RenderRange == -1
+                ? -1 : Math.Max(viewer.RenderRange, subject.RenderRange);
+            // Tutorial radar sees every ship; combat and NPC aggro keep their own ranges.
+            return (viewer is Player defender && subject is Player intruder && LowMapRadar.Shared(VisualMapId, defender.FactionId, intruder.FactionId))
+                || (viewer is Player && VisualMapId == Events.TutorialManager.TutorialMapId)
+                || viewer.AllMapRange || subject.AllMapRange || viewer.InRange(subject, range);
+        }
+
         public bool RemoveCharacter(Character character)
         {
-            var success = Characters.TryRemove(character.Id, out character);
+            var success = ((ICollection<KeyValuePair<int, Character>>)Characters).Remove(new KeyValuePair<int, Character>(character.Id, character));
             if (success)
             {
                 if (character is Player leavingPlayer)
                 {
+                    threatCounts.TryRemove(leavingPlayer.Id, out var ignoredThreat);
                     foreach (var battleStation in Activatables.Values.OfType<BattleStation>())
                         battleStation.HideSectorControlProgressBar(leavingPlayer);
                 }
 
                 CharacterRemoved?.Invoke(this, new CharacterArgs(character));
 
-                foreach (var otherCharacter in Characters.Values.Where(x => x.InRangeCharacters.ContainsKey(character.Id)))
+                foreach (var otherCharacter in Characters.Values)
+                {
+                    if (otherCharacter.Selected == character)
+                        otherCharacter.Deselection();
                     otherCharacter.RemoveInRangeCharacter(character);
+                }
+                character.Deselection();
+                foreach (var visible in character.InRangeCharacters.Values)
+                    character.RemoveInRangeCharacter(visible);
             }
             return success;
         }

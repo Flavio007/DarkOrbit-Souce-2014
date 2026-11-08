@@ -98,7 +98,14 @@ namespace Ow.Game
         {
             // Preserve the old value for out-of-scope ships/designs while the
             // extension system is intentionally limited to ship IDs 1..10.
-            return Supports(ship) ? MaximumLevel : LegacyFallbackLevel;
+            return Supports(ship) ? MinimumLevel : LegacyFallbackLevel;
+        }
+
+        public static int ResolveLevel(Ship ship,int equippedLasers,bool hasLf2,bool hasLf3)
+        {
+            if(!Supports(ship))return GetDefaultLevel(ship);
+            if(ship.LaserSlots>0&&equippedLasers>=ship.LaserSlots&&hasLf3)return MaximumLevel;
+            return hasLf2||hasLf3?2:MinimumLevel;
         }
 
         public static int NormalizeLevel(Ship ship, int requestedLevel)
@@ -216,6 +223,7 @@ namespace Ow.Game
         public string Name { get; set; }
         public int Id { get; set; }
         public int Damage { get; set; }
+        public int LaserSlots { get; set; }
         public int BaseHitpoints { get; set; }
         public int BaseShieldPoints { get; set; }
         public int BaseShieldAbsorption { get; set; }

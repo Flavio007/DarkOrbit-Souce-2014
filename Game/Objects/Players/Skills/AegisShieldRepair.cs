@@ -50,6 +50,7 @@ namespace Ow.Game.Objects.Players.Skills
 
             if (aegisIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
+                targetIds.Clear();
                 Active = true;
 
                 var target = Player.Selected;
@@ -62,6 +63,11 @@ namespace Ow.Game.Objects.Players.Skills
                         targetIds.Add(target.Id);
                 }
 
+                var visualTargets = new List<int>(targetIds) { Player.Id };
+                var activation = AbilityEffectActivationCommand.write(104, Player.Id, visualTargets);
+                Player.SendCommand(activation);
+                Player.SendCommandToInRangePlayers(activation);
+
                 Player.SendCooldown(LootId, Duration, true);
                 Player.CpuManager.DisableCloak();
 
@@ -72,22 +78,15 @@ namespace Ow.Game.Objects.Players.Skills
         public override void Disable()
         {
             Active = false;
+            var visualTargets = new List<int>(targetIds) { Player.Id };
+            var stop = AbilityStopCommand.write(104, Player.Id, visualTargets);
+            var deactivation = AbilityEffectDeActivationCommand.write(104, Player.Id, visualTargets);
+            Player.SendCommand(stop);
+            Player.SendCommand(deactivation);
+            Player.SendCommandToInRangePlayers(stop);
+            Player.SendCommandToInRangePlayers(deactivation);
             targetIds.Clear();
             Player.SendCooldown(LootId, EffectiveCooldown);
-
-            var abilityStopCommand = AbilityStopCommand.write(104, Player.Id, targetIds);
-            var abilityEffectDeActivationCommand = AbilityEffectDeActivationCommand.write(104, Player.Id, targetIds);
-
-            foreach (var id in targetIds)
-            {
-                var player = GameManager.GetPlayerById(id);
-
-                player.SendCommand(abilityStopCommand);
-                player.SendCommand(abilityEffectDeActivationCommand);
-            }
-
-            Player.SendCommand(abilityStopCommand);
-            Player.SendCommand(abilityEffectDeActivationCommand);
         }
 
         public DateTime HealTime = new DateTime();
@@ -103,11 +102,6 @@ namespace Ow.Game.Objects.Players.Skills
 
                     if (player != null && player.Position.DistanceTo(Player.Position) < 500)
                     {
-                        var abilityEffectActivationCommand = AbilityEffectActivationCommand.write(104, Player.Id, targetIds);
-
-                        Player.SendCommand(abilityEffectActivationCommand);
-                        Player.SendCommandToInRangePlayers(abilityEffectActivationCommand);
-
                         player.Heal(25000, Player.Id, HealType.SHIELD);
                     }
                 }

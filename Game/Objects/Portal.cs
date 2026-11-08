@@ -87,6 +87,8 @@ namespace Ow.Game.Objects
 
                 player.Spacemap.AddAndInitPlayer(player);
                 player.Storage.Jumping = false;
+                player.Quests?.ReportProgress("jump");
+                if(player.Spacemap.Id==(player.FactionId==1?2:player.FactionId==2?6:10))player.Achievements?.Report("jump");
             }
             catch (Exception e)
             {

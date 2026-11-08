@@ -21,7 +21,9 @@ namespace Ow.Game
             Spacemap = map;
             Range = range;
 
-            Spacemap.Objects.TryAdd(Id, this);
+            // Collectables register after their hash and collection metadata are ready.
+            if (!(this is Objects.Collectable))
+                Spacemap.Objects.TryAdd(Id, this);
         }
     }
 }

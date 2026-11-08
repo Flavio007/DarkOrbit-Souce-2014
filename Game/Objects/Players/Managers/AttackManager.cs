@@ -1,4 +1,4 @@
-using Ow.Game.Events;
+﻿using Ow.Game.Events;
 using Ow.Game.Objects;
 using Ow.Game.Objects.Players.Skills;
 using Ow.Game.Objects.Players.Techs;
@@ -27,7 +27,7 @@ namespace Ow.Game.Objects.Players.Managers
 
         private readonly object pendingIncomingDamageLock = new object();
         private readonly Dictionary<string, PendingIncomingDamageHit> pendingIncomingDamageHits = new Dictionary<string, PendingIncomingDamageHit>();
-        private static readonly TimeSpan IncomingDamageFlushInterval = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan IncomingDamageFlushInterval = TimeSpan.FromMilliseconds(250);
 
         public RocketLauncher RocketLauncher { get; set; }
         public bool Attacking = false;
@@ -86,13 +86,21 @@ namespace Ow.Game.Objects.Players.Managers
             }
 
             var key = GetPendingIncomingDamageKey(damageType);
+            var now = DateTime.Now;
+            PendingIncomingDamageHit expired = null;
 
             lock (pendingIncomingDamageLock)
             {
+                if (pendingIncomingDamageHits.TryGetValue(key, out var old) &&
+                    old.QueuedAt.Add(IncomingDamageFlushInterval) <= now)
+                {
+                    expired = old;
+                    pendingIncomingDamageHits.Remove(key);
+                }
                 if (pendingIncomingDamageHits.TryGetValue(key, out var pendingDamageHit))
                 {
                     pendingDamageHit.AttackerId = attackerId;
-                    pendingDamageHit.Damage += damage;
+                    pendingDamageHit.Damage = (int)Math.Min(int.MaxValue, (long)pendingDamageHit.Damage + damage);
                 }
                 else
                     pendingIncomingDamageHits[key] = new PendingIncomingDamageHit
@@ -100,9 +108,12 @@ namespace Ow.Game.Objects.Players.Managers
                         AttackerId = attackerId,
                         DamageType = damageType,
                         Damage = damage,
-                        QueuedAt = DateTime.Now
+                        QueuedAt = now
                     };
             }
+            // Do not merge a new shot into an expired window if the player tick ran late.
+            if (expired != null)
+                SendIncomingDamageHit(expired.AttackerId, expired.DamageType, expired.Damage);
         }
 
         public void QueueIncomingDamageHit(Player attacker, Player target, DamageType damageType, int damage, bool aggregate = true)
@@ -246,6 +257,7 @@ namespace Ow.Game.Objects.Players.Managers
                             damage -= Maths.GetPercentage(damage, 80);
                     }
 
+                    UpdateAttacker(target, Player);
                     Damage(Player, target, DamageType.LASER, damage, Player.ShieldPenetration);
 
                     if (Player.Storage.AutoRocket)
@@ -258,8 +270,6 @@ namespace Ow.Game.Objects.Players.Managers
                         else if (RocketLauncher.CurrentLoad <= 0)
                             RocketLauncher.ReloadingActive = true;
                     }
-
-                    UpdateAttacker(target, Player);
 
                     if (Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.RSB_75)
                     {
@@ -344,9 +354,13 @@ namespace Ow.Game.Objects.Players.Managers
             Player.SendPacket(rocketRunPacket);
             Player.SendPacketToInRangePlayers(rocketRunPacket);
 
+            var targetLife = enemy.LifeVersion;
+            var firingMap = Player.Spacemap;
             await Task.Delay(1000);
+            if (enemy.LifeVersion != targetLife || enemy.Destroyed || enemy.Spacemap != firingMap
+                || Player.Spacemap != firingMap || Player.Destroyed || (enemy is Character flightTarget && !firingMap.ContainsCharacter(flightTarget))) return;
 
-            UpdateAttacker(enemy, Player);
+            UpdateAttacker(enemy, Player, true);
 
             switch (GetSelectedRocket())
             {
@@ -458,8 +472,13 @@ namespace Ow.Game.Objects.Players.Managers
 
             RocketLauncher.ResetLoadAfterFire();
 
+            var targetLife = enemy.LifeVersion;
+            var firingMap = Player.Spacemap;
             await Task.Delay(1000);
+            if (enemy.LifeVersion != targetLife || enemy.Destroyed || enemy.Spacemap != firingMap
+                || Player.Spacemap != firingMap || Player.Destroyed || (enemy is Character flightTarget && !firingMap.ContainsCharacter(flightTarget))) return;
 
+            UpdateAttacker(enemy, Player, true);
             if (!enemy.Destroyed && totalDamage != 0)
             {
                 if (launcherId == (int)DamageType.SHIELD_ABSORBER_ROCKET_URIDIUM || launcherId == (int)DamageType.SHIELD_ABSORBER_ROCKET_CREDITS)
@@ -469,14 +488,14 @@ namespace Ow.Game.Objects.Players.Managers
                 else
                 {
                     Damage(Player, enemy, damageType, totalDamage, 0);
-                    Absorbation(Player, enemy, damageType, totalDamage);
+                    if (!enemy.Destroyed && enemy.LifeVersion == targetLife)
+                        Absorbation(Player, enemy, damageType, totalDamage);
                 }
             }
 
-            UpdateAttacker(enemy, Player);
         }
 
-        public void UpdateAttacker(Attackable target, Player player)
+        public void UpdateAttacker(Attackable target, Player player, bool projectile = false)
         {
             if (!target.Destroyed)
             {
@@ -487,6 +506,8 @@ namespace Ow.Game.Objects.Players.Managers
                     target.Attackers.TryAdd(player.Id, new Attacker(player));
                 else
                     target.Attackers[player.Id].Refresh();
+                if (projectile && target.Attackers.TryGetValue(player.Id, out var projectileAttacker))
+                    projectileAttacker.QuestProjectileTime = DateTime.Now;
             }
         }
 
@@ -562,7 +583,7 @@ namespace Ow.Game.Objects.Players.Managers
                 IshCooldown = DateTime.Now;
                 Player.SendCooldown(AmmunitionManager.ISH_01, TimeManager.ISH_COOLDOWN);
 
-                var ishPacket = "0|n|ISH|" + Player.Id;
+                var ishPacket = "0|n|ISH|" + Player.Id + "|" + TimeManager.ISH_DURATION;
                 Player.SendPacket(ishPacket);
                 Player.SendPacketToInRangePlayers(ishPacket);
             }
@@ -666,8 +687,7 @@ namespace Ow.Game.Objects.Players.Managers
             {
                 if (target is Player targetPlayer && attacker != null && attacker.Id != targetPlayer.Id)
                 {
-                    if (!ShouldAggregateIncomingDamage(target, damageType, attacker))
-                        QueueDamageHit(target, damageType, damage, target.Id);
+                    QueueDamageHit(target, damageType, damage, target.Id);
 
                     targetPlayer.AttackManager.QueueIncomingDamageHit(attacker, targetPlayer, damageType, damage, ShouldAggregateIncomingDamage(target, damageType, attacker));
                 }
@@ -841,8 +861,7 @@ namespace Ow.Game.Objects.Players.Managers
 
                 if (target is Player queuedTargetPlayer && attacker != null && attacker.Id != queuedTargetPlayer.Id)
                 {
-                    if (!ShouldAggregateIncomingDamage(target, damageType, attacker))
-                        QueueDamageHit(target, damageType, attackHitCommand, target.Id);
+                    QueueDamageHit(target, damageType, attackHitCommand, target.Id);
 
                     queuedTargetPlayer.AttackManager.QueueIncomingDamageHit(attacker, queuedTargetPlayer, damageType, attackHitCommand, ShouldAggregateIncomingDamage(target, damageType, attacker));
                 }
@@ -866,12 +885,16 @@ namespace Ow.Game.Objects.Players.Managers
                 Player.CurrentShieldPoints += sabDamage;
             }
 
+            RecordQuestHit(attacker, target, damageType, damageHp);
             if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
             {
                 FlushPendingDamageHitsForTarget(target);
                 if (target is Player destroyedTargetPlayer)
                     destroyedTargetPlayer.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(attacker);
                 target.Destroy(Player, DestructionType.PLAYER);
+                if (Player.Settings.InGameSettings.selectedLaser == AmmunitionManager.CBO_100)
+                    Player.UpdateStatus();
+                return;
             }
             else
             {
@@ -887,6 +910,7 @@ namespace Ow.Game.Objects.Players.Managers
                         target.CurrentNanoHull -= damageHp;
                 } else
                     target.CurrentHitPoints -= damageHp;
+
             }
 
             target.CurrentShieldPoints -= damageShd;
@@ -945,6 +969,7 @@ namespace Ow.Game.Objects.Players.Managers
 
             damage = target.ClampHitpointDamage(damage);
 
+            if (toHp) RecordQuestHit(attacker, target, damageType, damage);
             if (toHp && toDestroy && (damage >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0)))
             {
                 if (damageType == DamageType.RADIATION)
@@ -953,6 +978,7 @@ namespace Ow.Game.Objects.Players.Managers
                     target.Destroy(null, DestructionType.MINE);
                 else
                     target.Destroy(attacker, DestructionType.PLAYER);
+                return;
             }
             else if (toHp)
             {
@@ -969,6 +995,7 @@ namespace Ow.Game.Objects.Players.Managers
                 }
                 else
                     target.CurrentHitPoints -= damage;
+
             }
 
             if (toShd)
@@ -980,8 +1007,7 @@ namespace Ow.Game.Objects.Players.Managers
                 {
                     var aggregate = attacker.AttackManager.ShouldAggregateIncomingDamage(target, damageType, attacker);
 
-                    if (!aggregate)
-                        attacker.AttackManager.QueueDamageHit(target, damageType, damage, target.Id);
+                    attacker.AttackManager.QueueDamageHit(target, damageType, damage, target.Id);
 
                     queuedStaticTargetPlayer.AttackManager.QueueIncomingDamageHit(attacker, queuedStaticTargetPlayer, damageType, damage, aggregate);
                 }
@@ -1001,6 +1027,20 @@ namespace Ow.Game.Objects.Players.Managers
             }
 
             target.UpdateStatus();
+        }
+
+        private static void RecordQuestHit(Player attacker, Attackable target, DamageType type, int requested)
+        {
+            var applied = Math.Max(0, Math.Min(requested, target.CurrentHitPoints + target.CurrentNanoHull));
+            if (applied == 0) return;
+            target.QuestLastHitWeapon = type.ToString();
+            (target as Player)?.Quests?.RecordDamage(applied);
+            attacker?.Quests?.RecordWeapon(type.ToString());
+            if (target is Npc && requested >= target.CurrentHitPoints) attacker?.Quests?.CheckForbiddenKill((target as Character)?.Ship.Id ?? 0);
+            attacker?.Quests?.ReportProgress(target is Npc ? "damageNpc" : "damagePlayers", applied, (target as Character)?.Ship.Id ?? 0,
+                targetFactionId: target.FactionId, weapon: type.ToString());
+            attacker?.Quests?.ReportProgress("damage", applied, (target as Character)?.Ship.Id ?? 0,
+                targetFactionId: target.FactionId, weapon: type.ToString());
         }
 
         public void AttackMissed(Attackable target, DamageType damageType)

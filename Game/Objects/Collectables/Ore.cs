@@ -41,7 +41,11 @@ namespace Ow.Game.Objects.Collectables
 
             var applied = player.ChangeCargo(OreType, amount, false);
             if (applied > 0)
+            {
+                player.Quests?.ReportProgress("collectOre", applied, targetOre: (int)OreType);
+                player.Achievements?.Report("ore",applied,(int)OreType);
                 player.SendPacket($"0|{ServerCommands.BOX_COLLECT_RESPONSE}|{ServerCommands.BOX_CONTENT_ORE}|{ResourceKey}|{applied}");
+            }
         }
 
         public override byte[] GetCollectableCreateCommand()

@@ -1,6 +1,8 @@
-using Ow.Game.Objects.Players.Managers;
+﻿using Ow.Game.Objects.Players.Managers;
 using Ow.Game.Objects.Stations;
 using Ow.Managers;
+using Ow.Managers.MySQLManager;
+using Newtonsoft.Json.Linq;
 using Ow.Net.netty;
 using Ow.Net.netty.commands;
 using Ow.Net.netty.requests;
@@ -11,6 +13,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Threading.Tasks;
 
 namespace Ow.Game.Objects.Players
 {
@@ -36,6 +39,60 @@ namespace Ow.Game.Objects.Players
         public int Target { get; set; }
         public int WireId { get; set; }
         public uint WireType { get; set; }
+        public int TargetShipId { get; set; }
+        public int TargetOre { get; set; }
+        public string IconKey { get; set; }
+        public string TargetNpcName { get; set; }
+        public string Branch { get; set; }
+        public int RequireCloak { get; set; }
+        public int MaxHpPercent { get; set; } = 100;
+        public bool InRadiation { get; set; }
+        public int MapSectorMax { get; set; }
+        public string TargetShipIds { get; set; }
+        public string ShipFamily { get; set; }
+        public string TargetMaps { get; set; }
+        public int MapOwner { get; set; }
+        public int MapSector { get; set; }
+        public bool EnemyTarget { get; set; }
+        public int TargetMapId { get; set; }
+        public int TargetFactionId { get; set; }
+        public int Sequence { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Radius { get; set; }
+        public string Weapon { get; set; }
+        public string AlternativeGroup { get; set; }
+        public int MaxAbsenceSeconds { get; set; }
+        public bool Continuous { get; set; }
+        public string MapRelation { get; set; }
+        private bool MatchesNpcName(int shipId)
+        {
+            var ship = GameManager.GetShip(shipId);
+            if (ship == null) return false;
+            Func<string, string> normalize = value => new string((value ?? "").Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+            return normalize(ship.Name) == normalize(TargetNpcName);
+        }
+
+        private bool MatchesShipFamily(int shipId)
+        {
+            var ship = GameManager.GetShip(shipId);
+            if (ship == null) return false;
+            return ShipFamily.Split(',').Any(family =>
+            {
+                var key = "ship_" + family.Trim().ToLowerInvariant();
+                return string.Equals(ship.LootId, key, StringComparison.OrdinalIgnoreCase) ||
+                    (ship.LootId ?? "").StartsWith(key + "_design_", StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
+        public bool MatchesEvent(string type, int shipId, int ore)
+        {
+            return string.Equals(Type, type, StringComparison.OrdinalIgnoreCase) &&
+                (string.IsNullOrWhiteSpace(TargetNpcName) || MatchesNpcName(shipId)) &&
+                (TargetShipId == 0 || TargetShipId == shipId) &&
+                (string.IsNullOrWhiteSpace(TargetShipIds) || TargetShipIds.Split(',').Any(id => id.Trim() == shipId.ToString())) &&
+                (string.IsNullOrWhiteSpace(ShipFamily) || MatchesShipFamily(shipId)) && (TargetOre == 0 || TargetOre == ore);
+        }
     }
 
     internal sealed class QuestRewardDefinition
@@ -56,6 +113,16 @@ namespace Ow.Game.Objects.Players
         public int Priority { get; set; }
         public short Icon { get; set; }
         public int FactionId { get; set; }
+        public bool Daily { get; set; }
+        public string ForbiddenKillShipIds { get; set; }
+        public string RequiredAmmo { get; set; }
+        public int MaxTravel { get; set; } = -1;
+        public bool ForbidCloak { get; set; }
+        public string ForbiddenWeapon { get; set; }
+        public int TimeLimitSeconds { get; set; }
+        public int MaxKills { get; set; } = -1;
+        public int MaxDeaths { get; set; } = -1;
+        public int MaxDamageTaken { get; set; } = -1;
         public List<QuestConditionDefinition> Conditions { get; private set; }
         public List<QuestRewardDefinition> Rewards { get; private set; }
 
@@ -68,7 +135,7 @@ namespace Ow.Game.Objects.Players
 
     internal static class QuestCatalog
     {
-        private const string ConfigFile = "config\\quests.xml";
+        private static readonly string ConfigFile = Path.Combine("config", "quests.xml");
         private static readonly object SyncRoot = new object();
         private static Dictionary<int, QuestDefinition> definitions;
 
@@ -76,7 +143,7 @@ namespace Ow.Game.Objects.Players
         {
             EnsureLoaded();
             lock (SyncRoot)
-                return definitions.Values.OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToList();
+                return definitions.Values.OrderBy(x => x.MinLevel).ThenBy(x => x.SortOrder).ThenBy(x => x.Id).ToList();
         }
 
         public static QuestDefinition Get(int id)
@@ -137,6 +204,16 @@ namespace Ow.Game.Objects.Players
                                 MinLevel = Math.Max(1, Int(e, "minLevel", Int(e, "level", 1))),
                                 Priority = Int(e, "priority", 0),
                                 Icon = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, Int(e, "icon", 0))),
+                                Daily = Int(e, "daily", 0) != 0,
+                                ForbiddenKillShipIds = Value(e, "forbiddenKillShipIds", ""),
+                                RequiredAmmo = Value(e, "requiredAmmo", ""),
+                                MaxTravel = Int(e, "maxTravel", -1),
+                                ForbidCloak = Int(e, "forbidCloak", 0) != 0,
+                                ForbiddenWeapon = Value(e, "forbiddenWeapon", ""),
+                                TimeLimitSeconds = Math.Max(0, Int(e, "timeLimitSeconds", 0)),
+                                MaxKills = Int(e, "maxKills", -1),
+                                MaxDeaths = Int(e, "maxDeaths", -1),
+                                MaxDamageTaken = Int(e, "maxDamageTaken", -1),
                                 FactionId = Int(e, "factionId", 0)
                             };
                             var conditions = e.Elements().FirstOrDefault(x => string.Equals(x.Name.LocalName, "conditions", StringComparison.OrdinalIgnoreCase));
@@ -152,6 +229,32 @@ namespace Ow.Game.Objects.Players
                                         Id = conditionId,
                                         Type = Value(c, "type", conditionId),
                                         DescriptionKey = Value(c, "descriptionKey", ""),
+                                        TargetNpcName = Value(c, "targetNpcName", ""),
+                                        Branch = Value(c, "branch", ""),
+                                        RequireCloak = Int(c, "requireCloak", 0),
+                                        MaxHpPercent = Int(c, "maxHpPercent", 100),
+                                        InRadiation = Int(c, "inRadiation", 0) != 0,
+                                        MapSectorMax = Int(c, "mapSectorMax", 0),
+                                        TargetShipIds = Value(c, "targetShipIds", ""),
+                                        ShipFamily = Value(c, "shipFamily", ""),
+                                        TargetMaps = Value(c, "targetMaps", ""),
+                                        MapOwner = Int(c, "mapOwner", 0),
+                                        MapSector = Int(c, "mapSector", 0),
+                                        EnemyTarget = Int(c, "enemyTarget", 0) != 0,
+                                        TargetShipId = Int(c, "targetShipId", 0),
+                                        TargetOre = Int(c, "targetOre", 0),
+                                        IconKey = Value(c, "iconKey", ""),
+                                        TargetMapId = Int(c, "targetMapId", 0),
+                                        TargetFactionId = Int(c, "targetFactionId", 0),
+                                        Sequence = Int(c, "sequence", 0),
+                                        MaxAbsenceSeconds = Math.Max(0, Int(c, "maxAbsenceSeconds", 0)),
+                                        Continuous = Int(c, "continuous", 0) != 0,
+                                        MapRelation = Value(c, "mapRelation", ""),
+                                        Weapon = Value(c, "weapon", ""),
+                                        AlternativeGroup = Value(c, "alternativeGroup", ""),
+                                        X = Int(c, "x", 0),
+                                        Y = Int(c, "y", 0),
+                                        Radius = Math.Max(1, Int(c, "radius", 300)),
                                         Target = Math.Max(1, Int(c, "target", Int(c, "amount", 1))),
                                         WireId = Math.Max(1, Int(c, "wireId", index)),
                                         WireType = (uint)Math.Max(0, Int(c, "wireType", ResolveWireType(Value(c, "type", conditionId))))
@@ -183,13 +286,13 @@ namespace Ow.Game.Objects.Players
             {
                 Id = Quests.QUEST_ID_PARTING_ADVICE,
                 Title = Quests.QuestName,
-                TitleKey = "quest_title_1",
-                Description = "Join a clan.",
-                DescriptionKey = "quest_description_1_{faction}",
+                TitleKey = "quest_title_first_assignment",
+                Description = "Voe ate a estacao de controle de missoes da sua companhia no mapa inicial.",
+                DescriptionKey = "quest_description_first_assignment",
                 SortOrder = 1,
                 MinLevel = 1
             };
-            q.Conditions.Add(new QuestConditionDefinition { Id = "join_clan", Type = "joinClan", DescriptionKey = "q2_condition_JOIN_CLAN", Target = 1, WireId = 1, WireType = 62 });
+            q.Conditions.Add(new QuestConditionDefinition { Id = "visit_mission_control", Type = "visitMissionControl", DescriptionKey = "starter_objective_mission_control", Target = 1, WireId = 1, WireType = 0 });
             return q;
         }
 
@@ -203,10 +306,18 @@ namespace Ow.Game.Objects.Players
                 case "killnpcs": return 27;
                 case "killplayers": return 28;
                 case "collect": return 5;
+                case "collectore": return 5;
                 case "collectbonusbox": return 52;
                 case "visitmap": return 31;
                 case "jump": return 39;
                 case "travel": return 13;
+                case "stayonmap": return 31;
+                case "visitposition": return 0;
+                case "damage": return 0;
+                case "sellore": return 5;
+                case "collectcargoore": return 5;
+                case "collectcargobox": return 5;
+                case "radiation": return 0;
                 default: return 0;
             }
         }
@@ -240,7 +351,7 @@ namespace Ow.Game.Objects.Players
         public const int QUEST_STATE_COMPLETED = 2;
         private const int QUEST_GIVER_RANGE = 700;
 
-        public const string QuestName = "Parting Advice";
+        public const string QuestName = "Primeiros passos";
         public Player Player { get; set; }
         public int QuestState = QUEST_STATE_AVAILABLE;
         public int ActiveQuestId = 0;
@@ -250,6 +361,7 @@ namespace Ow.Game.Objects.Players
         public bool ReloadingActive = false;
 
         private const int MAX_NORMAL_QUEST_SLOTS = 5;
+        private const int MAX_DAILY_QUEST_SLOTS = 12;
         private readonly Dictionary<int, QuestPlayerState> states = new Dictionary<int, QuestPlayerState>();
         private readonly HashSet<int> dirtyQuestIds = new HashSet<int>();
         private bool persistenceDirty;
@@ -261,15 +373,37 @@ namespace Ow.Game.Objects.Players
             InitializeCatalogStates();
         }
 
+        private DateTime lastObjectiveTick = DateTime.UtcNow;
+
         public void Tick()
         {
+            ResetDailyQuests();
             if (OpenQuestGiverId != 0 && !CanUseQuestGiver(OpenQuestGiverId))
                 OpenQuestGiverId = 0;
+            var now = DateTime.UtcNow;
+            if ((now - lastObjectiveTick).TotalSeconds >= 1)
+            {
+                // Count observed online seconds only; reconnects never award offline time.
+                lastObjectiveTick = now;
+                EnforceRestrictions();
+                ResetContinuousObjectives();
+                if (Player != null && !Player.Destroyed && Player.Spacemap != null && Player.Position != null)
+                {
+                    ReportProgress("stayOnMap");
+                    ReportProgress("visitMap");
+                    ReportProgress("visitPosition");
+                    if (Player.Spacemap.Activatables.Values.OfType<Portal>().Any(portal => Player.Position.DistanceTo(portal.Position) <= 400)) ReportProgress("visitPortal");
+                    if (Player.Spacemap.Activatables.Values.OfType<HomeStation>().Any(station => station.FactionId == Player.FactionId && Player.Position.DistanceTo(station.Position) <= 700)) ReportProgress("visitHomeBase");
+                    ReportProgress("elapsed");
+                }
+                if (Player != null && !Player.Destroyed && Player.Storage.IsInRadiationZone) ReportProgress("radiation");
+            }
             TryCompleteClanQuest();
         }
 
         public void OpenWindow()
         {
+            ResetDailyQuests();
             SyncAcceptedTracker();
             // The Mission Control button opens the quest catalogue even when
             // the player is not currently interacting with a quest-giver.
@@ -308,7 +442,74 @@ namespace Ow.Game.Objects.Players
 
         public void Sync()
         {
+            EnsureStarterMission();
             SyncAcceptedTracker();
+        }
+
+        private void EnsureStarterMission()
+        {
+            if (Player?.Spacemap == null || Player.Spacemap.VisualMapId == Ow.Game.Events.TutorialManager.TutorialMapId)
+                return;
+            var state = GetStateIfKnown(QUEST_ID_PARTING_ADVICE);
+            if (state == null || state.State != QUEST_STATE_AVAILABLE) return;
+            state.State = QUEST_STATE_ACTIVE;
+            state.Progress.Clear();
+            PersistMutation(state);
+            RefreshCompatibilityState();
+            SendModernQuestUpdate(QuestCatalog.Get(QUEST_ID_PARTING_ADVICE));
+            var station = Player.Spacemap.Activatables.Values.OfType<QuestGiverStation>().FirstOrDefault(x => x.FactionId == Player.FactionId);
+            if (station != null) _ = PreviewMissionControlAsync(station);
+        }
+
+        private async Task PreviewMissionControlAsync(QuestGiverStation station)
+        {
+            try
+            {
+                await Task.Delay(600);
+                if (Player?.Spacemap != station.Spacemap || GameManager.GetGameSession(Player.Id)?.Player != Player ||
+                    GetStateIfKnown(QUEST_ID_PARTING_ADVICE)?.State != QUEST_STATE_ACTIVE) return;
+                Player.SendPacket("0|A|STD|Voe ate esta estacao de controle de missoes para receber suas primeiras ordens.");
+                await Player.CameraVisitAsync(station.Position.X, station.Position.Y, 1.5, 1.25);
+            }
+            catch (Exception e) { Logger.Log("error_log", $"- [Quests.cs] PreviewMissionControlAsync: {e}"); }
+        }
+
+        // Snapshot eligibility before destruction clears targets and combat state.
+        public static List<Player> KillRecipients(Player killer, Attackable victim)
+        {
+            var recipients = new List<Player>();
+            if (killer == null) return recipients;
+            recipients.Add(killer);
+            var group = killer.Group;
+            if (group == null || victim?.Spacemap == null || !(victim is Npc || victim is Player)) return recipients;
+            var now = DateTime.Now;
+            foreach (var member in group.Members.Values.ToArray())
+            {
+                if (member == null || member == killer || ReferenceEquals(member, victim) ||
+                    member.Group != group || member.Destroyed || member.GameSession == null ||
+                    member.Spacemap != victim.Spacemap) continue;
+                Attacker attack;
+                var attackingVictim = victim.Attackers.TryGetValue(member.Id, out attack) &&
+                    ReferenceEquals(attack.Player, member) && attack.LastRefresh.AddSeconds(10) > now;
+                // A lethal first shot is recorded before lastAttackTime is updated.
+                if (!member.AttackingOrUnderAttack() && !attackingVictim) continue;
+                if (victim is Player)
+                {
+                    if (!ReferenceEquals(member.Selected, victim) || !attackingVictim ||
+                        !(member.AttackManager.Attacking || attack.QuestProjectileTime.AddSeconds(3) > now)) continue;
+                }
+                if (!recipients.Contains(member)) recipients.Add(member);
+            }
+            return recipients;
+        }
+
+        private int highlightedQuestId;
+        public void HighlightAcceptedQuest(int questId)
+        {
+            var state = GetStateIfKnown(questId);
+            if (state == null || state.State != QUEST_STATE_ACTIVE || !BelongsToFaction(QuestCatalog.Get(questId))) return;
+            highlightedQuestId = questId;
+            Player.SendPacket($"0|{ServerCommands.QUESTFM_INFO}|{ServerCommands.QUESTFM_HIGHLIGHT_QUEST}|{questId}");
         }
 
         public void SyncAcceptedTracker()
@@ -321,13 +522,16 @@ namespace Ow.Game.Objects.Players
                 SendConditionUpdates(definition, state);
             }
 
-            var highlighted = accepted.FirstOrDefault();
+            var highlighted = accepted.FirstOrDefault(state => state.QuestId == highlightedQuestId) ?? accepted.FirstOrDefault();
+            if (highlighted != null)
+                highlightedQuestId = highlighted.QuestId;
             if (highlighted != null)
                 Player.SendPacket($"0|{ServerCommands.QUESTFM_INFO}|{ServerCommands.QUESTFM_HIGHLIGHT_QUEST}|{highlighted.QuestId}");
         }
 
         public bool HandleAcceptQuest(int questId)
         {
+            ResetDailyQuests();
             var definition = QuestCatalog.Get(questId);
             if (definition == null || !CanUseQuestGiver(OpenQuestGiverId) || !IsEligible(definition))
                 return false;
@@ -335,7 +539,10 @@ namespace Ow.Game.Objects.Players
             if (state.State == QUEST_STATE_COMPLETED || state.State == QUEST_STATE_ACTIVE)
                 return true;
 
+            if (AcceptedStates().Count(active => QuestCatalog.Get(active.QuestId).Daily == definition.Daily) >= (definition.Daily ? MAX_DAILY_QUEST_SLOTS : MAX_NORMAL_QUEST_SLOTS)) return false;
+            state.Progress.Clear();
             state.State = QUEST_STATE_ACTIVE;
+            state.Progress["$started"] = (int)(DateTime.UtcNow - new DateTime(2020, 1, 1)).TotalSeconds;
             bool completed;
             Evaluate(definition, state, out completed);
             PersistMutation(state);
@@ -389,7 +596,7 @@ namespace Ow.Game.Objects.Players
         public void SendModernQuestDetails(int questId)
         {
             var definition = QuestCatalog.Get(questId);
-            if (definition == null || !CanUseQuestGiver(OpenQuestGiverId))
+            if (definition == null || (definition.FactionId != 0 && definition.FactionId != Player.FactionId))
                 return;
             var wire = BuildModernDefinition(definition);
             Player.SendCommand(new QuestDetailsUpdateCommand(wire, null, QuestNettyModule.FromWire(QuestRatingModule.write())).write());
@@ -420,6 +627,7 @@ namespace Ow.Game.Objects.Players
 
         public bool ReportProgress(int questId, string conditionId, int currentValue)
         {
+            EnforceRestrictions();
             var definition = QuestCatalog.Get(questId);
             var state = GetStateIfKnown(questId);
             if (definition == null || state == null || state.State != QUEST_STATE_ACTIVE || string.IsNullOrWhiteSpace(conditionId))
@@ -447,21 +655,37 @@ namespace Ow.Game.Objects.Players
             return true;
         }
 
-        public int ReportProgress(string conditionType, int amount = 1)
+        public int ReportProgress(string conditionType, int amount = 1, int targetShipId = 0, int targetOre = 0, int targetFactionId = 0, string weapon = "")
         {
             if (string.IsNullOrWhiteSpace(conditionType) || amount <= 0)
                 return 0;
 
+            if (string.Equals(conditionType, "travel", StringComparison.OrdinalIgnoreCase))
+                foreach (var active in AcceptedStates())
+                {
+                    int traveled;
+                    active.Progress.TryGetValue("$travel", out traveled);
+                    active.Progress["$travel"] = (int)Math.Min(int.MaxValue, (long)traveled + amount);
+                    PersistMutation(active);
+                }
+            EnforceRestrictions();
             var updates = new List<Tuple<int, string, int>>();
             foreach (var state in states.Values.Where(x => x.State == QUEST_STATE_ACTIVE))
             {
                 var definition = QuestCatalog.Get(state.QuestId);
-                if (definition == null)
+                if (definition == null || !BelongsToFaction(definition))
                     continue;
-                foreach (var condition in definition.Conditions.Where(x => string.Equals(x.Type, conditionType, StringComparison.OrdinalIgnoreCase)))
+                foreach (var condition in definition.Conditions.Where(x => x.MatchesEvent(conditionType, targetShipId, targetOre) &&
+                    MatchesMap(x) &&
+                    (!x.EnemyTarget || targetFactionId >= 1 && targetFactionId <= 3 && targetFactionId != Player.FactionId) &&
+                    (x.TargetFactionId == 0 || x.TargetFactionId == targetFactionId) &&
+                    (string.IsNullOrEmpty(x.Weapon) || string.Equals(x.Weapon, weapon, StringComparison.OrdinalIgnoreCase)) &&
+                    (x.Sequence == 0 || definition.Conditions.Where(previous => previous.Branch == x.Branch && previous.Sequence > 0 && previous.Sequence < x.Sequence).All(previous => Current(previous, state) >= previous.Target)) &&
+                    (!string.Equals(conditionType, "visitPosition", StringComparison.OrdinalIgnoreCase) || Player.Position != null &&
+                        Math.Pow((double)Player.Position.X - x.X, 2) + Math.Pow((double)Player.Position.Y - x.Y, 2) <= (double)x.Radius * x.Radius)))
                 {
                     var current = Current(condition, state);
-                    updates.Add(Tuple.Create(definition.Id, condition.Id, current + amount));
+                    updates.Add(Tuple.Create(definition.Id, condition.Id, (int)Math.Min(int.MaxValue, (long)current + amount)));
                 }
             }
 
@@ -495,6 +719,17 @@ namespace Ow.Game.Objects.Players
                         }
                         catch { state.Progress = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase); }
                 }
+            var starter = GetStateIfKnown(QUEST_ID_PARTING_ADVICE);
+            if (starter != null && (starter.Progress.ContainsKey("join_clan") ||
+                (starter.State == QUEST_STATE_COMPLETED && !starter.Progress.ContainsKey("visit_mission_control"))))
+            {
+                starter.State = QUEST_STATE_AVAILABLE;
+                starter.Progress.Clear();
+            }
+            // A continuous stay cannot span a disconnect.
+            foreach (var active in AcceptedStates())
+                foreach (var condition in QuestCatalog.Get(active.QuestId).Conditions.Where(c => c.Continuous))
+                    if (Current(condition, active) < condition.Target) active.Progress[condition.Id] = 0;
             persistenceDirty = false;
             dirtyQuestIds.Clear();
             RefreshCompatibilityState();
@@ -540,7 +775,180 @@ namespace Ow.Game.Objects.Players
 
         private List<QuestPlayerState> AcceptedStates()
         {
-            return states.Values.Where(x => x.State == QUEST_STATE_ACTIVE && QuestCatalog.Get(x.QuestId) != null).OrderBy(x => QuestCatalog.Get(x.QuestId).SortOrder).ThenBy(x => x.QuestId).ToList();
+            return states.Values.Where(x => x.State == QUEST_STATE_ACTIVE && BelongsToFaction(QuestCatalog.Get(x.QuestId))).OrderBy(x => QuestCatalog.Get(x.QuestId).MinLevel).ThenBy(x => QuestCatalog.Get(x.QuestId).SortOrder).ThenBy(x => x.QuestId).ToList();
+        }
+
+        private static int DailyDate => (int)(DateTime.UtcNow.Date - new DateTime(2020, 1, 1)).TotalDays;
+
+        private void ResetDailyQuests()
+        {
+            foreach (var state in states.Values.Where(state => state.State == QUEST_STATE_COMPLETED).ToList())
+            {
+                var definition = QuestCatalog.Get(state.QuestId);
+                int completedDay;
+                if (definition == null || !definition.Daily || !state.Progress.TryGetValue("$completedDay", out completedDay) || completedDay >= DailyDate) continue;
+                state.State = QUEST_STATE_AVAILABLE;
+                state.Progress.Clear();
+                PersistMutation(state);
+                RefreshCompatibilityState();
+            }
+        }
+
+        private bool MatchesMap(QuestConditionDefinition condition)
+        {
+            if (Player?.Spacemap == null) return false;
+            if (condition.RequireCloak == 1 && !Player.Invisible || condition.RequireCloak == -1 && Player.Invisible) return false;
+            if (condition.MaxHpPercent < 100 && (long)Player.CurrentHitPoints * 100 >= (long)Player.MaxHitPoints * condition.MaxHpPercent) return false;
+            if (condition.InRadiation && !Player.Storage.IsInRadiationZone) return false;
+            if (condition.MapSectorMax > 0 && (LowMapRadar.Sector(Player.Spacemap.VisualMapId) == 0 || LowMapRadar.Sector(Player.Spacemap.VisualMapId) > condition.MapSectorMax)) return false;
+            if (!string.IsNullOrWhiteSpace(condition.TargetMaps) && !condition.TargetMaps.Split(',').Any(name => string.Equals(name.Trim(), Player.Spacemap.Name, StringComparison.OrdinalIgnoreCase))) return false;
+            if (condition.MapOwner > 0 && Player.Spacemap.FactionId != condition.MapOwner) return false;
+            if (condition.MapSector > 0)
+            {
+                var pieces = (Player.Spacemap.Name ?? "").Split('-');
+                int sector;
+                if (pieces.Length != 2 || pieces[0] == "4" || !int.TryParse(pieces[1], out sector) || sector != condition.MapSector) return false;
+            }
+            if (condition.TargetMapId != 0 && Player.Spacemap.VisualMapId != condition.TargetMapId) return false;
+            if (string.Equals(condition.MapRelation, "enemy", StringComparison.OrdinalIgnoreCase))
+                return Player.Spacemap.FactionId > 0 && Player.Spacemap.FactionId != Player.FactionId;
+            if (string.Equals(condition.MapRelation, "home", StringComparison.OrdinalIgnoreCase))
+                return Player.Spacemap.FactionId == Player.FactionId;
+            return true;
+        }
+
+        private void ResetContinuousObjectives()
+        {
+            var now = (int)(DateTime.UtcNow - new DateTime(2020, 1, 1)).TotalSeconds;
+            foreach (var state in AcceptedStates())
+            {
+                var definition = QuestCatalog.Get(state.QuestId);
+                foreach (var condition in definition.Conditions.Where(c => c.Continuous || c.MaxAbsenceSeconds > 0))
+                {
+                    if (Current(condition, state) >= condition.Target) continue;
+                    var key = "$away:" + condition.Id;
+                    if (Current(condition, state) == 0 && !state.Progress.ContainsKey(key)) continue;
+                    if (MatchesMap(condition) && !Player.Destroyed)
+                    {
+                        if (state.Progress.Remove(key)) PersistMutation(state);
+                        continue;
+                    }
+                    int away;
+                    if (!state.Progress.TryGetValue(key, out away))
+                    {
+                        state.Progress[key] = now;
+                        PersistMutation(state);
+                        away = now;
+                    }
+                    if (condition.MaxAbsenceSeconds > 0 && now - away > condition.MaxAbsenceSeconds)
+                    {
+                        HandleAbortQuest(definition.Id);
+                        break;
+                    }
+                    if (condition.Continuous && Current(condition, state) > 0)
+                    {
+                        state.Progress[condition.Id] = 0;
+                        PersistMutation(state);
+                        SendConditionUpdates(definition, state);
+                    }
+                }
+            }
+        }
+
+        public void CheckForbiddenKill(int shipId)
+        {
+            foreach (var active in AcceptedStates())
+            {
+                var filter = QuestCatalog.Get(active.QuestId).ForbiddenKillShipIds;
+                if (!string.IsNullOrEmpty(filter) && filter.Split(',').Any(id => id.Trim() == shipId.ToString()))
+                    HandleAbortQuest(active.QuestId);
+            }
+        }
+
+        public void RecordAmmo(string ammo)
+        {
+            foreach (var active in AcceptedStates())
+            {
+                var required = QuestCatalog.Get(active.QuestId).RequiredAmmo;
+                if (!string.IsNullOrEmpty(required) && !string.Equals(required, ammo, StringComparison.OrdinalIgnoreCase))
+                    HandleAbortQuest(active.QuestId);
+            }
+        }
+
+        public void RecordWeapon(string weapon)
+        {
+            foreach (var state in AcceptedStates())
+            {
+                var definition = QuestCatalog.Get(state.QuestId);
+                if (!string.IsNullOrEmpty(definition.ForbiddenWeapon) &&
+                    (definition.ForbiddenWeapon == "ANY" || string.Equals(definition.ForbiddenWeapon, weapon, StringComparison.OrdinalIgnoreCase)))
+                    HandleAbortQuest(definition.Id);
+            }
+        }
+
+        public void RecordDamage(int amount)
+        {
+            if (amount <= 0) return;
+            foreach (var state in AcceptedStates())
+            {
+                int previous;
+                state.Progress.TryGetValue("$damage", out previous);
+                state.Progress["$damage"] = (int)Math.Min(int.MaxValue, (long)previous + amount);
+                PersistMutation(state);
+            }
+            EnforceRestrictions();
+            ReportProgress("damageTaken", amount);
+        }
+
+        public void RecordKill()
+        {
+            foreach (var state in AcceptedStates())
+            {
+                int previous;
+                state.Progress.TryGetValue("$kills", out previous);
+                state.Progress["$kills"] = previous + 1;
+                PersistMutation(state);
+            }
+            EnforceRestrictions();
+        }
+
+        public void OnCloakChanged() { EnforceRestrictions(); }
+
+        public void RecordDeath()
+        {
+            foreach (var state in AcceptedStates())
+            {
+                int previous;
+                state.Progress.TryGetValue("$deaths", out previous);
+                state.Progress["$deaths"] = previous + 1;
+                PersistMutation(state);
+            }
+            EnforceRestrictions();
+        }
+
+        private void EnforceRestrictions()
+        {
+            var now = (int)(DateTime.UtcNow - new DateTime(2020, 1, 1)).TotalSeconds;
+            foreach (var state in AcceptedStates())
+            {
+                var definition = QuestCatalog.Get(state.QuestId);
+                int started, deaths, damage, kills, traveled;
+                state.Progress.TryGetValue("$travel", out traveled);
+                state.Progress.TryGetValue("$kills", out kills);
+                state.Progress.TryGetValue("$started", out started);
+                state.Progress.TryGetValue("$deaths", out deaths);
+                state.Progress.TryGetValue("$damage", out damage);
+                if ((definition.MaxTravel >= 0 && traveled > definition.MaxTravel) ||
+                    (definition.ForbidCloak && Player.Invisible) ||
+                    (definition.TimeLimitSeconds > 0 && started > 0 && now - started >= definition.TimeLimitSeconds) ||
+                    (definition.MaxKills >= 0 && kills > definition.MaxKills) ||
+                    (definition.MaxDeaths >= 0 && deaths > definition.MaxDeaths) ||
+                    (definition.MaxDamageTaken >= 0 && damage > definition.MaxDamageTaken))
+                {
+                    HandleAbortQuest(definition.Id);
+                    Player.SendPacket("0|A|STD|Missão cancelada: prazo ou limite excedido: " + definition.Title);
+                }
+            }
         }
 
         private bool Evaluate(QuestDefinition definition, QuestPlayerState state, out bool completed)
@@ -560,6 +968,15 @@ namespace Ow.Game.Objects.Players
                 if (current < Math.Max(1, condition.Target))
                     all = false;
             }
+            if (definition.Conditions.Count > 0)
+            {
+                Func<IEnumerable<QuestConditionDefinition>, bool> complete = conditions => conditions
+                    .GroupBy(c => string.IsNullOrEmpty(c.AlternativeGroup) ? "condition:" + c.Id : "alternative:" + c.AlternativeGroup)
+                    .All(group => group.Any(c => Current(c, state) >= c.Target));
+                var mandatory = definition.Conditions.Where(c => string.IsNullOrEmpty(c.Branch));
+                var branches = definition.Conditions.Where(c => !string.IsNullOrEmpty(c.Branch)).GroupBy(c => c.Branch).ToList();
+                all = complete(mandatory) && (branches.Count == 0 || branches.Any(branch => complete(branch)));
+            }
             if (all && state.State == QUEST_STATE_ACTIVE)
             {
                 state.State = QUEST_STATE_COMPLETED;
@@ -570,6 +987,15 @@ namespace Ow.Game.Objects.Players
 
         private int Current(QuestConditionDefinition condition, QuestPlayerState state)
         {
+            if (state.State == QUEST_STATE_COMPLETED) return Math.Max(1, condition.Target);
+            if (string.Equals(condition.Type, "visitMissionControl", StringComparison.OrdinalIgnoreCase))
+            {
+                int visited;
+                if (state.Progress.TryGetValue(condition.Id, out visited) && visited > 0) return 1;
+                if (Player?.Spacemap == null || Player.Spacemap.VisualMapId != Player.GetBaseMapId()) return 0;
+                return Player.Spacemap.Activatables.Values.OfType<QuestGiverStation>()
+                    .Any(station => CanUseQuestGiver(station.Id)) ? 1 : 0;
+            }
             if (string.Equals(condition.Type, "joinClan", StringComparison.OrdinalIgnoreCase))
             {
                 int persisted;
@@ -615,16 +1041,17 @@ namespace Ow.Game.Objects.Players
                 var state = GetState(definition.Id);
                 if (!Include(definition, state))
                     continue;
-                quests.Add(QuestNettyModule.FromWire(QuestListItemModule.write(definition.Id, definition.SortOrder, definition.MinLevel, definition.Priority, ModernStatus(definition, state), definition.Title, QuestTitleKey(definition))));
+                quests.Add(QuestNettyModule.FromWire(QuestListItemModule.write(definition.Id, definition.MinLevel * 1000 + definition.SortOrder, definition.MinLevel, definition.Priority, ModernStatus(definition, state), definition.Title, QuestTitleKey(definition))));
             }
             // The wire order is daily slots first, normal slots second.
-            Player.SendCommand(new QuestListUpdateCommand(0, GetNormalQuestSlotsRemaining(), false, quests).write());
+            Player.SendCommand(new QuestListUpdateCommand(0, GetQuestSlotsRemaining(), false, quests).write());
         }
 
-        private int GetNormalQuestSlotsRemaining()
+        private int GetQuestSlotsRemaining()
         {
-            var active = states.Values.Count(x => x.State == QUEST_STATE_ACTIVE);
-            return Math.Max(0, MAX_NORMAL_QUEST_SLOTS - active);
+            var active = AcceptedStates();
+            var daily = active.Count(x => QuestCatalog.Get(x.QuestId).Daily);
+            return Math.Max(0, MAX_NORMAL_QUEST_SLOTS - (active.Count - daily)) + Math.Max(0, MAX_DAILY_QUEST_SLOTS - daily);
         }
 
         private void SendModernQuestUpdate(QuestDefinition definition)
@@ -635,6 +1062,14 @@ namespace Ow.Game.Objects.Players
             Player.SendCommand(new QuestUpdateCommand(quest).write());
         }
 
+        private bool ConditionActive(QuestDefinition definition, QuestPlayerState state, QuestConditionDefinition condition)
+        {
+            return state.State == QUEST_STATE_ACTIVE &&
+                (condition.Sequence == 0 || definition.Conditions
+                    .Where(previous => previous.Branch == condition.Branch && previous.Sequence > 0 && previous.Sequence < condition.Sequence)
+                    .All(previous => Current(previous, state) >= previous.Target));
+        }
+
         private void SendConditionUpdates(QuestDefinition definition, QuestPlayerState state)
         {
             if (definition == null || state == null)
@@ -643,7 +1078,7 @@ namespace Ow.Game.Objects.Players
             foreach (var condition in definition.Conditions)
             {
                 var completed = Current(condition, state) >= Math.Max(1, condition.Target);
-                Player.SendPacket($"0|{ServerCommands.QUESTFM_INFO}|{ServerCommands.QUESTFM_UPDATE}|{definition.Id}|{condition.WireId}|{Current(condition, state)}|{(completed ? 1 : 0)}|{(state.State == QUEST_STATE_ACTIVE ? 1 : 0)}");
+                Player.SendPacket($"0|{ServerCommands.QUESTFM_INFO}|{ServerCommands.QUESTFM_UPDATE}|{definition.Id}|{condition.WireId}|{Current(condition, state)}|{(completed ? 1 : 0)}|{(ConditionActive(definition, state, condition) ? 1 : 0)}");
             }
         }
 
@@ -666,10 +1101,11 @@ namespace Ow.Game.Objects.Players
                 var current = Current(condition, playerState);
                 var completed = current >= Math.Max(1, condition.Target);
                 var conditionState = QuestNettyModule.FromWire(QuestConditionStateModule.write(
-                    current, playerState.State == QUEST_STATE_ACTIVE, completed));
+                    current, ConditionActive(definition, playerState, condition), completed));
                 var entries = string.IsNullOrWhiteSpace(condition.DescriptionKey)
                     ? new List<string>()
                     : new List<string> { condition.DescriptionKey };
+                if (!string.IsNullOrWhiteSpace(condition.IconKey)) entries.Add("icon:" + condition.IconKey);
                 var conditionModule = QuestNettyModule.FromWire(QuestConditionModule.write(
                     condition.WireId, entries, condition.WireType, 0, condition.Target, false,
                     conditionState, new List<QuestNettyModule>()));
@@ -685,15 +1121,29 @@ namespace Ow.Game.Objects.Players
 
         private void SendQuestCompleted(QuestDefinition definition)
         {
+            if (definition.Daily)
+            {
+                var state = GetState(definition.Id);
+                state.Progress["$completedDay"] = DailyDate;
+                PersistMutation(state);
+            }
             GrantRewards(definition);
+            QueryManager.SavePlayer.Information(Player);
+            if (definition.Rewards.Any(reward => reward.LootId.StartsWith("ammunition_", StringComparison.OrdinalIgnoreCase)))
+                QueryManager.SavePlayer.Ammo(Player);
+            QueryManager.WriteLogbook(Player,"quest","Missão concluída: "+definition.Title+".");
+            Player.Achievements?.Report("quest");
             Player.SendPacket($"0|{ServerCommands.QUESTFM_INFO}|{ServerCommands.QUESTFM_ACCOMPLISH_QUEST}|{definition.Id}");
             var replacements = new List<MessageWildcardReplacementModule> { new MessageWildcardReplacementModule("%quest_name%", definition.Title, new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.PLAIN)) };
-            Player.SendCommand(new MessageLocalizedWildcardCommand("q2_accomplished_quest", new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), replacements).write());
-            Player.SendPacket($"0|A|STD|[Quest] Completed quest {definition.Id}: {definition.Title}");
+            Player.SendCommand(new MessageLocalizedWildcardCommand("q2_accomplished_quest", new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), replacements).writeCommand());
+            SendModernQuestList(false);
         }
 
         private bool Include(QuestDefinition definition, QuestPlayerState state)
         {
+            if (!BelongsToFaction(definition)) return false;
+            if (state.State == QUEST_STATE_ACTIVE)
+                return true;
             var f = Player.Settings == null ? null : Player.Settings.ClassY2T;
             if (f == null || (!f.questsAvailableFilter && !f.questsUnavailableFilter && !f.questsCompletedFilter))
                 return true;
@@ -702,10 +1152,18 @@ namespace Ow.Game.Objects.Players
             return f.questsUnavailableFilter;
         }
 
+        private bool BelongsToFaction(QuestDefinition definition)
+        {
+            return definition != null && Player != null && (definition.FactionId == 0 || definition.FactionId == Player.FactionId);
+        }
+
         private bool IsEligible(QuestDefinition definition)
         {
-            return definition != null && Player != null && Player.Level >= definition.MinLevel &&
-                   (definition.FactionId == 0 || definition.FactionId == Player.FactionId);
+            if (definition == null || Player == null || Player.Level < definition.MinLevel || !BelongsToFaction(definition)) return false;
+            var state = GetStateIfKnown(definition.Id);
+            if (state != null && state.State == QUEST_STATE_ACTIVE) return true;
+            return AcceptedStates().Count(active => QuestCatalog.Get(active.QuestId).Daily == definition.Daily) <
+                (definition.Daily ? MAX_DAILY_QUEST_SLOTS : MAX_NORMAL_QUEST_SLOTS);
         }
 
         private short ModernStatus(QuestDefinition definition, QuestPlayerState state)
@@ -740,11 +1198,42 @@ namespace Ow.Game.Objects.Players
                     case "jackpot":
                         Player.ChangeData(DataType.JACKPOT, reward.Amount);
                         break;
+                    case "extraenergy": Player.Data.extraEnergy += reward.Amount; break;
+                    case "repaircredits": Player.Data.repairCredits += reward.Amount; break;
+                    case "jumpcredits": Player.Data.jumpCredits += reward.Amount; break;
+                    case "bootykeys":
+                        Player.Data.bootyKeys = checked(Player.Data.bootyKeys + reward.Amount);
+                        Player.Equipment.Items.BootyKeys = Player.Data.bootyKeys;
+                        Player.SendPacket("0|A|BK|" + Player.Data.bootyKeys);
+                        break;
+                    case "logdisks":
+                        GrantLogdisks(reward.Amount);
+                        break;
                     default:
+                        if (reward.LootId.StartsWith("ammunition_", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Player.AddAmmo(reward.LootId, reward.Amount);
+                            break;
+                        }
                         Logger.Log("error_log", $"- [Quests.cs] Unsupported reward '{reward.LootId}' in quest {definition.Id}.");
                         break;
                 }
             }
+        }
+
+        private void GrantLogdisks(int amount)
+        {
+            lock (Ow.Game.Events.AuctionManager.Sync)
+                using (var client = SqlDatabaseManager.GetClient())
+                {
+                    var row = client.ExecuteQueryRow($"SELECT items FROM player_equipment WHERE userId = {Player.Id}");
+                    var items = JObject.Parse(Convert.ToString(row["items"]));
+                    var skills = items["skillTree"] as JObject ?? new JObject();
+                    skills["logdisks"] = checked(((int?)skills["logdisks"] ?? 0) + amount);
+                    items["skillTree"] = skills;
+                    client.SetParameter("@questItems", items.ToString(Newtonsoft.Json.Formatting.None));
+                    client.ExecuteNonQuery($"UPDATE player_equipment SET items = @questItems WHERE userId = {Player.Id}");
+                }
         }
 
         private string DescriptionKey(QuestDefinition q)

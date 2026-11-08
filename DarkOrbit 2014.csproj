@@ -67,6 +67,8 @@
     <Compile Include="Game\Enums.cs" />
     <Compile Include="Game\Events\Duel.cs" />
     <Compile Include="Game\Events\Achievements.cs" />
+    <Compile Include="Game\Events\AuctionManager.cs" />
+    <Compile Include="Game\Events\ScoremageddonState.cs" />
     <Compile Include="Game\Events\JackpotBattle.cs" />
     <Compile Include="Game\Events\Scoremageddon.cs" />
     <Compile Include="Game\Events\GroupMap200Manager.cs" />
@@ -87,6 +89,7 @@
     <Compile Include="Game\Objects\AI\NpcAI.cs" />
     <Compile Include="Game\Objects\AI\AIShips.cs" />
     <Compile Include="Game\Objects\Cubikon.cs" />
+    <Compile Include="Game\Objects\ClassicCubikonWave.cs" />
     <Compile Include="Game\Objects\InstanceNpc.cs" />
     <Compile Include="Game\Objects\Escort.cs" />
     <Compile Include="Game\Objects\FakePlayer.cs" />
@@ -174,9 +177,11 @@
     <Compile Include="Chat\ChatConstants.cs" />
     <Compile Include="Net\ChatServer.cs" />
     <Compile Include="Net\GameClient.cs" />
+    <Compile Include="Net\ClientPacketBuffer.cs" />
     <Compile Include="Net\netty\ClientCommands.cs" />
     <Compile Include="Net\netty\PacketDebug.cs" />
     <Compile Include="Net\GameServer.cs" />
+    <Compile Include="Net\WebSocketGateway.cs" />
     <Compile Include="Net\mysql\DatabaseException.cs" />
     <Compile Include="Net\mysql\DatabaseManager.cs" />
     <Compile Include="Net\mysql\DatabaseServer.cs" />
@@ -313,6 +318,7 @@
     <Compile Include="Net\netty\commands\RemoveMenuItemHighlightCommand.cs" />
     <Compile Include="Net\netty\commands\AddMenuItemHighlightCommand.cs" />
     <Compile Include="Net\netty\commands\AttributeHitpointUpdateCommand.cs" />
+    <Compile Include="Net\netty\commands\AttributeOreCountUpdateCommand.cs" />
     <Compile Include="Net\netty\commands\class_I1W.cs" />
     <Compile Include="Net\netty\commands\class_K18.cs" />
     <Compile Include="Net\netty\commands\class_h2P.cs" />
@@ -519,7 +525,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="tools\gateway\**\*" Exclude="tools\gateway\gateway.test.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="config\battle_stations.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config\auctions.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="config\achievements.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="config\quests.xml">

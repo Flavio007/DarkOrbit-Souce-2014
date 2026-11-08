@@ -14,6 +14,8 @@ namespace Ow.Game.Objects.Players
 
         public bool FadedToGray { get; set; }
 
+        public DateTime QuestProjectileTime { get; set; }
+
         public Attacker(Player player) { Player = player; LastRefresh = DateTime.Now; }
 
         public void Refresh()

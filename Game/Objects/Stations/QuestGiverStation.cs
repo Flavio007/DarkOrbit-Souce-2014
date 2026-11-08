@@ -12,6 +12,8 @@ namespace Ow.Game.Objects.Stations
 {
     class QuestGiverStation : Activatable
     {
+        public bool EmbeddedInHomeStation { get; set; }
+
         public QuestGiverStation(Spacemap spacemap, int factionId, Position position, Clan clan) : base(spacemap, factionId, position, clan, AssetTypeModule.QUESTGIVER) { }
 
         public override void Click(GameSession gameSession)
@@ -21,7 +23,7 @@ namespace Ow.Game.Objects.Stations
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
-            return AssetCreateCommand.write(GetAssetType(), "Morgus Petterson",
+            return AssetCreateCommand.write(GetAssetType(), EmbeddedInHomeStation ? "__home_service_quest" : "Morgus Petterson",
                                           FactionId, "", Id, 3, 0,
                                           Position.X, Position.Y, 0, true, true, true, true,
                                           new ClanRelationModule(clanRelationModule),

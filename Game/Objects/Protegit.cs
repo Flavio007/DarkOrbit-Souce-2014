@@ -18,15 +18,6 @@ namespace Ow.Game.Objects
 {
     class Protegit : Npc
     {
-        public new NpcAI NpcAI { get; set; }
-
-        public new bool Attacking = false;
-
-        public new bool Minion = false;
-
-        public new int MotherShipId = 0;
-
-        public new int minioncount = 0;
 
         public bool underAttack = false;
 
@@ -96,6 +87,7 @@ namespace Ow.Game.Objects
 
         public void FocusAttack(Character target)
         {
+            Attacking = true;
             Selected = target;
         }
 

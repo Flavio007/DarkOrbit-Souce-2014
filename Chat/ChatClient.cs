@@ -426,7 +426,7 @@ namespace Ow.Chat
                     .Replace("MSG_SEPERATOR", ChatConstants.MSG_SEPERATOR.ToString());
 
                 Out.WriteLine($"[PK_CMD] Packet lido de {gameSession.Player.Name} ({gameSession.Player.Id}): {packetToSend}", "ChatClient.cs");
-                if (gameSession.Client != null && gameSession.Client.Socket != null && gameSession.Client.Socket.IsBound && gameSession.Client.Socket.Connected)
+                if (gameSession.Client != null && gameSession.Client.Socket != null && gameSession.Client.Socket.Connected)
                 {
                     gameSession.Client.Send(LegacyModule.write(packetToSend));
                 }
@@ -966,6 +966,16 @@ namespace Ow.Chat
                 Send($"dq%Mina normal criada com ID {mineTypeId} em X={gameSession.Player.Position.X}, Y={gameSession.Player.Position.Y}.#");
             }
 
+            else if (cmd == "/tdm_intro" && Permission == Permissions.ADMINISTRATOR)
+            {
+                var args=message.Split(new[]{' '},StringSplitOptions.RemoveEmptyEntries);
+                int home,guest,seconds=10;
+                if(args.Length<3||!int.TryParse(args[1],out home)||!int.TryParse(args[2],out guest)||home<1||home>3||guest<1||guest>3||home==guest)return;
+                if(args.Length>3&&(!int.TryParse(args[3],out seconds)||seconds<1||seconds>300))return;
+                gameSession.Player.SendPacket($"0|A|tdm|evt|nfo|{home}|{guest}");
+                gameSession.Player.SendPacket($"0|A|tdm|evt|dmz|{seconds}");
+            }
+
             else if (cmd == "/start_spaceball" && Permission == Permissions.ADMINISTRATOR)
             {
                 if (message.Split(' ').Length >= 2)
@@ -1126,7 +1136,7 @@ namespace Ow.Chat
                     }
                 }
             }
-            else if (cmd == "/start_scoreevent")
+            else if (cmd == "/start_scoreevent" && Permission == Permissions.ADMINISTRATOR)
             {
                 if (message.Split(' ').Length >= 2)
                 {
@@ -1136,9 +1146,17 @@ namespace Ow.Chat
 
                 EventManager.Scoremageddon.Start();
             }
-            else if (cmd == "/start_invasiongate")
+            else if (cmd == "/stop_scoremageddon" && Permission == Permissions.ADMINISTRATOR)
+            {
+                EventManager.Scoremageddon.Stop();
+            }
+            else if (cmd == "/start_invasiongate" && Permission == Permissions.ADMINISTRATOR)
             {
                 EventManager.InvasionGate.Startup();
+            }
+            else if (cmd == "/stop_invasiongate" && Permission == Permissions.ADMINISTRATOR)
+            {
+                EventManager.InvasionGate.Stop();
             }
             /*
             else if (cmd == "/reward" && Permission == Permissions.ADMINISTRATOR)
@@ -1486,7 +1504,7 @@ namespace Ow.Chat
         {
             try
             {
-                if (Socket == null || !Socket.IsBound || !Socket.Connected) return;
+                if (Socket == null || !Socket.Connected) return;
 
                 String content = String.Empty;
 
@@ -1523,7 +1541,7 @@ namespace Ow.Chat
         {
             try
             {
-                if (Socket == null || !Socket.IsBound || !Socket.Connected) return;
+                if (Socket == null || !Socket.Connected) return;
 
                 byte[] byteData = Encoding.UTF8.GetBytes(data);
 

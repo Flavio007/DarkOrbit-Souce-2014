@@ -1,4 +1,5 @@
-using Ow.Game.Objects.Players.Managers;
+﻿using Ow.Game.Objects.Players.Managers;
+using Ow.Game.Movements;
 using Ow.Net.netty.commands;
 using System;
 using System.Collections.Generic;
@@ -18,21 +19,34 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Tick()
         {
+            Skill current;
+            if (!Player.Storage.Skills.TryGetValue(LootId, out current) || !ReferenceEquals(current, this))
+                return;
             if (Active && cooldown.AddMilliseconds(Duration) < DateTime.Now)
                 Disable();
+            if (!Active && CitadelIds.Contains(Player.Ship.Id) &&
+                (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
+                Player.AddVisualModifier(VisualModifierCommand.HEALING_POD, 0, "", 0, true);
         }
 
         public override void Send()
         {
             if (CitadelIds.Contains(Player.Ship.Id) && (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
             {
-                Player.Storage.CitadelFortify = true;
-                Player.SendCommand(SetSpeedCommand.write(Player.Speed, Player.Speed));
-                Player.AddVisualModifier(VisualModifierCommand.FORTIFY, 0, "", 0, true);
+                lock (Player)
+                {
+                    Player.Storage.CitadelFortify = true;
+                    var stoppedAt = Movement.Stop(Player);
+                    Player.RemoveVisualModifier(VisualModifierCommand.HEALING_POD);
+                    Player.SendCommand(MoveCommand.write(Player.Id, stoppedAt.X, stoppedAt.Y, 0));
+                    Player.SendCommandToInRangePlayers(MoveCommand.write(Player.Id, stoppedAt.X, stoppedAt.Y, 0));
+                    Player.SendCommand(SetSpeedCommand.write(Player.Speed, Player.Speed));
+                    Player.AddVisualModifier(VisualModifierCommand.FORTIFY, 0, "", 0, true);
 
-                Player.SendCooldown(LootId, Duration, true);
-                Active = true;
-                cooldown = DateTime.Now;
+                    Player.SendCooldown(LootId, Duration, true);
+                    Active = true;
+                    cooldown = DateTime.Now;
+                }
             }
         }
 

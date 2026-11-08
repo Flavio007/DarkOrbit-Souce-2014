@@ -530,17 +530,7 @@ namespace Ow.Game.Events
 
         private bool IsInsidePoi(POI poi, Position position)
         {
-            if (poi == null || position == null || poi.ShapeCords == null || poi.ShapeCords.Count == 0)
-                return false;
-
-            if (poi.Shape == POIShapes.CIRCLE && poi.ShapeCords.Count > 1)
-                return position.DistanceTo(poi.ShapeCords[0]) <= poi.ShapeCords[1].X;
-
-            var minX = poi.ShapeCords.Min(point => point.X);
-            var maxX = poi.ShapeCords.Max(point => point.X);
-            var minY = poi.ShapeCords.Min(point => point.Y);
-            var maxY = poi.ShapeCords.Max(point => point.Y);
-            return position.X >= minX && position.X <= maxX && position.Y >= minY && position.Y <= maxY;
+            return poi != null && poi.Active && position != null && poi.Contains(position.X, position.Y);
         }
 
         private List<POI> CreatePois()
@@ -560,11 +550,11 @@ namespace Ow.Game.Events
                 new POI("Wave1Trigger", 2, 0, 2, CreatePositions(-20000, 9500, 3500, 9500, 3500, 10500, -20000, 10500)),
                 new POI("Block6", 5, 1, 2, CreatePositions(5120, -29952, 5120, 2560, 11008, 2560, 11008, -29952)),
                 new POI("Block5", 5, 1, 2, CreatePositions(14592, 5888, 16128, 5888, 16128, 2560, 14592, 2560)),
-                new POI("Relay1VideoPOI", 2, 0, 0, CreatePositions(2750, 1750, 500)),
-                new POI("HQVideoPOI", 2, 0, 0, CreatePositions(10000, 5500, 750)),
+                new POI("Relay1VideoPOI", (POITypes)2, (POIDesigns)0, POIShapes.CIRCLE, new List<int> { 2750, 1750, 500 }),
+                new POI("HQVideoPOI", (POITypes)2, (POIDesigns)0, POIShapes.CIRCLE, new List<int> { 10000, 5500, 750 }),
                 new POI("LoW Cage Zone", 5, 6, 2, CreatePositions(0, 0, 0, 13500, 21000, 13500, 21000, 0), true, true),
-                new POI("Equippable Zone", 16, 0, 0, CreatePositions(10000, 5500, 300)),
-                new POI("mapAssetRangeZone-150000145", 7, 0, 0, CreatePositions(10000, 5500, 300))
+                new POI("Equippable Zone", (POITypes)16, (POIDesigns)0, POIShapes.CIRCLE, new List<int> { 10000, 5500, 300 }),
+                new POI("mapAssetRangeZone-150000145", (POITypes)7, (POIDesigns)0, POIShapes.CIRCLE, new List<int> { 10000, 5500, 300 })
             };
         }
 

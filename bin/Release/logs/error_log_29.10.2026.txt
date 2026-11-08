@@ -1,0 +1,29 @@
+[29.10.2026 09:29:32] - [ChatServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em Ow.Net.ChatServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\ChatServer.cs:linha 28
+[29.10.2026 09:29:32] - [SocketServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em SocketServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\SocketServer.cs:linha 45
+[29.10.2026 09:29:32] - [GameServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em Ow.Net.GameServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\GameServer.cs:linha 27
+[29.10.2026 10:52:28] - [ChatServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em Ow.Net.ChatServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\ChatServer.cs:linha 28
+[29.10.2026 10:52:28] - [GameServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em Ow.Net.GameServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\GameServer.cs:linha 27
+[29.10.2026 10:52:28] - [SocketServer.cs] StartListening void exception: System.Net.Sockets.SocketException (0x80004005): Normalmente é permitida apenas uma utilização de cada endereço de soquete (protocolo/endereço de rede/porta)
+   em System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   em System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   em SocketServer.StartListening() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\SocketServer.cs:linha 45
+[29.10.2026 11:11:16] - [GameClient.cs] SendCallback void exception: System.ObjectDisposedException: Não é possível acessar um objeto descartado.
+Nome do objeto: 'System.Net.Sockets.Socket'.
+   em System.Net.Sockets.Socket.EndSend(IAsyncResult asyncResult, SocketError& errorCode)
+   em System.Net.Sockets.Socket.EndSend(IAsyncResult asyncResult)
+   em Ow.Net.GameClient.SendCallback(IAsyncResult ar) na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Net\GameClient.cs:linha 207

@@ -90,6 +90,17 @@ class SocketServer
 
     public static void Execute(JObject json, JObject parameters, Socket handler)
     {
+        // The site asks these questions while holding inventory transactions.
+        // Do not make a read wait for an auction that is waiting for that SQL row.
+        var action=String(json?["Action"]);
+        if(new[]{"OnlineIds","OnlineCount","IsOnline","IsInEquipZone","GetPosition","AvailableToChangeShip","GetActiveEvent","GetEventStatus"}.Contains(action)){
+            ExecuteCore(json,parameters,handler);
+            return;
+        }
+        lock(Ow.Game.Events.AuctionManager.Sync) ExecuteCore(json,parameters,handler);
+    }
+    private static void ExecuteCore(JObject json, JObject parameters, Socket handler)
+    {
         var action = String(json?["Action"]);
         var syncRevision = String(parameters?["SyncRevision"]);
 
@@ -107,6 +118,18 @@ class SocketServer
 
         switch (action)
         {
+            case "Auction":
+                if(!IPAddress.IsLoopback(((IPEndPoint)handler.RemoteEndPoint).Address)) { Send(handler,"{}"); break; }
+                long lotId, bidAmount;
+                long.TryParse(String(parameters["LotId"]),out lotId);
+                long.TryParse(String(parameters["Amount"]),out bidAmount);
+                Send(handler,Ow.Game.Events.AuctionManager.Request(Int(parameters["UserId"]),lotId,bidAmount,String(parameters["RequestId"]),String(parameters["Operation"])=="buy"));
+                break;
+            case "AuctionBalance":
+                if(!IPAddress.IsLoopback(((IPEndPoint)handler.RemoteEndPoint).Address)) { Send(handler,"{}"); break; }
+                var auctionPlayer=GameManager.GetPlayerById(Int(parameters["UserId"]));
+                Send(handler,auctionPlayer==null?"{}":JsonConvert.SerializeObject(new{credits=auctionPlayer.Data.credits.ToString(),uridium=auctionPlayer.Data.uridium.ToString()}));
+                break;
             case "OnlineIds":
                 Send(handler, JsonConvert.SerializeObject(GameManager.GameSessions.Keys).ToString());
                 break;
@@ -505,6 +528,8 @@ class SocketServer
                 player.SkillTree.tractorBeam2++;
             else if (skill == "alienHunter")
                 player.SkillTree.alienHunter++;
+            player.SendPacket(player.GetSkillVisualsPacket());
+            player.UpdateStatus();
         }
     }
 
@@ -537,6 +562,8 @@ class SocketServer
             player.SkillTree.tractorBeam1 = 0;
             player.SkillTree.tractorBeam2 = 0;
             player.SkillTree.alienHunter = 0;
+            player.SendPacket(player.GetSkillVisualsPacket());
+            player.UpdateStatus();
         }
     }
 
@@ -917,7 +944,10 @@ class SocketServer
     {
         if (player?.GameSession != null)
         {
-            QueryManager.SetEquipment(player);   
+            QueryManager.SetEquipment(player);
+            player.SettingsManager.SetCurrentItems();
+            player.SettingsManager.SendSlotBarCommand();
+            player.AttackManager.RocketLauncher.SendStatus();
 
             player.DroneManager.UpdateDrones(true);
             player.UpdateStatus();

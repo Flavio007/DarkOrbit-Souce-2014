@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Ow.Game.Movements;
 using Ow.Game.Objects;
 using Ow.Managers;
@@ -47,6 +48,7 @@ namespace Ow.Game.Events
         public List<int> WavesCounter = new List<int>();
 
         private readonly object stateLock = new object();
+        private CancellationTokenSource run;
         private readonly Dictionary<int, Dictionary<int, int>> tierScores = new Dictionary<int, Dictionary<int, int>>();
         private readonly Dictionary<int, Dictionary<int, int>> tierHonorRemainders = new Dictionary<int, Dictionary<int, int>>();
         private readonly Dictionary<int, int> mapWaveQuarterProgress = new Dictionary<int, int>();
@@ -123,6 +125,7 @@ namespace Ow.Game.Events
             if (npc == null || forceMultiplier <= 0) return;
 
             var dropRatio = dropMultiplier / forceMultiplier;
+            if (npc is Npc cargoNpc) cargoNpc.CargoDropMultiplier *= dropRatio;
             npc.Credits = Convert.ToInt32(npc.Credits * dropRatio);
             npc.Experience = Convert.ToInt32(npc.Experience * dropRatio);
             npc.Honor = Convert.ToInt32(npc.Honor * dropRatio);
@@ -262,8 +265,15 @@ namespace Ow.Game.Events
 
         public void Startup()
         {
-            if (Started) return;
-            Started = true;
+            CancellationToken token;
+            lock(stateLock){if(Started)return;Started=true;run=new CancellationTokenSource();token=run.Token;}
+            Task.Run(()=>{try{StartupCore(token);}catch(Exception e){Logger.Log("error_log","[Invasion] "+e);Stop();}});
+        }
+        private void StartupCore(CancellationToken token)
+        {
+            lock(stateLock){
+            if(token.IsCancellationRequested)return;
+            Maps.Clear();Portals.Clear();waves.Clear();PointsCounter.Clear();WavesCounter.Clear();
             ResetTierState();
 
             foreach (var sesion in GameManager.GameSessions.Values)
@@ -307,7 +317,7 @@ namespace Ow.Game.Events
             foreach (Portal gates in Portals)
                 GameManager.SendCommandToMap(gates.Spacemap.Id, gates.GetAssetCreateCommand());
 
-            var sql = SqlDatabaseManager.GetClient();
+            using(var sql = SqlDatabaseManager.GetClient()){
             for (int i = 1; i <= 22; i++)
             {
                 var querySet = sql.ExecuteQueryRow($"SELECT * FROM server_instanceswaves WHERE GateID = {InvasionId} AND WaveID = {i}");
@@ -322,25 +332,28 @@ namespace Ow.Game.Events
                 wave.MinionsCount = Convert.ToInt32(querySet["MinionsCount"]);
                 wave.MinionsMultiplier = Convert.ToInt32(querySet["MinionsMultiplier"]);
             }
+            }
+            }
 
             for (int i = 5; i > 0; i--)
             {
+                if(token.IsCancellationRequested)return;
                 foreach (Spacemap map in Maps)
                     GameManager.SendPacketToMap(map.Id, $"0|A|STD|Level Invasion Gate Starting in {i} Seconds!");
 
-                Thread.Sleep(1000);
+                if(token.WaitHandle.WaitOne(1000))return;
             }
 
-            foreach (Spacemap map in Maps)
-                StartWave(map, waves[0]);
+            lock(stateLock){if(token.IsCancellationRequested)return;foreach (Spacemap map in Maps)StartWave(map,waves[0]);}
 
-            Running();
+            Running(token);
         }
 
-        public void Running()
+        private void Running(CancellationToken token)
         {
-            while (true)
+            while (!token.IsCancellationRequested)
             {
+                lock(stateLock){
                 if (Started)
                 {
                     foreach (Spacemap map in Maps)
@@ -355,7 +368,22 @@ namespace Ow.Game.Events
                         CheckWaveFinished(map, count, waves[map.Curwave]);
                     }
                 }
-                Thread.Sleep(5000);
+                }
+                if(token.WaitHandle.WaitOne(5000))return;
+            }
+        }
+        public void Stop()
+        {
+            lock(stateLock){
+                if(!Started)return;Started=false;run?.Cancel();
+                foreach(var portal in Portals)portal.Remove();Portals.Clear();
+                foreach(var map in Maps){
+                    foreach(var player in map.Characters.Values.OfType<Player>().ToList())if(!player.Storage.Jumping)player.Jump(player.GetBaseMapId(),player.GetBasePosition());
+                    foreach(var npc in map.Characters.Values.OfType<Npc>().ToList()){npc.Respawnable=false;npc.Destroyed=true;map.RemoveCharacter(npc);Program.TickManager.RemoveTick(npc);}
+                    map.InstanceNpcs.Clear();
+                }
+                foreach(var session in GameManager.GameSessions.Values)session.Player.SettingsManager.SendMenuBarsCommand();
+                GameManager.SendPacketToAll("0|A|STD|Invasion Gate event ended!");
             }
         }
 

@@ -1,4 +1,4 @@
-using Ow.Game;
+﻿using Ow.Game;
 using Ow.Game.Objects.Players.Managers;
 using Ow.Game.Movements;
 using Ow.Managers;
@@ -57,10 +57,6 @@ namespace Ow.Game.Objects
                 
                 return lvl;
             }
-            set
-            {
-                Level = value;
-            }
         }
 
         public int CurrentInRangePortalId = -1;
@@ -75,7 +71,12 @@ namespace Ow.Game.Objects
         public int EquipExpansion
         {
             get { return Expansion; }
-            set { Expansion = PlayerShipExtension.NormalizeLevel(Ship, value); }
+            set {
+                var next=PlayerShipExtension.NormalizeLevel(Ship,value);
+                if(Expansion==next)return;
+                Expansion=next;
+                if(Spacemap!=null)GameManager.SendPacketToMap(Spacemap.Id,$"0|A|SHIP_EXPANSION|{Id}|{Expansion}");
+            }
         }
 
         public DateTime UnderEmp = DateTime.Now;
@@ -518,6 +519,7 @@ namespace Ow.Game.Objects
         {
             get
             {
+                if (Storage.CitadelFortify) return 0;
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Speed : Equipment.Configs.Config2Speed;
 
                 switch (SettingsManager.Player.Settings.InGameSettings.selectedFormation)
@@ -554,9 +556,6 @@ namespace Ow.Game.Objects
                 if (Storage.Lightning)
                     value += Maths.GetPercentage(value, 30);
 
-                if (Storage.CitadelFortify)
-                    return 200;
-
                 if (Storage.CitadelTravel)
                     return TimeManager.CITADEL_TRAVEL_SPEED;
 
@@ -572,7 +571,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Hitpoints : Equipment.Configs.Config2Hitpoints;
-                value = (Ship.Id == Ship.LEONOV && FriendlyMap != true) ? value : value + 96000;
+                if (Ship.Id == Ship.LEONOV && FriendlyMap) value += 96000;
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.MAXHP));
                 value += GetSkillPercentage("Ship Hull");
 
@@ -976,7 +975,7 @@ namespace Ow.Game.Objects
                 FactionId,
                 !EventManager.JackpotBattle.InEvent(this) ? Clan.Id : 0,
                 RankId,
-                false,
+                Spacemap != null && LowMapRadar.Warning(Spacemap.VisualMapId, otherPlayer.FactionId, FactionId),
                 new ClanRelationModule(!EventManager.JackpotBattle.InEvent(this) ? relationType : ClanRelationModule.NONE),
                 GetRingsCount(),
                 false,
@@ -1124,7 +1123,7 @@ namespace Ow.Game.Objects
                 {
                     var character = InRangeCharacters.Values.Where(x => x.Id == entityId).FirstOrDefault();
 
-                    if (character != null && !character.Destroyed)
+                    if (character != null && Spacemap.CanSeeCharacter(this, character))
                     {
                         if (character is Player player && (player.AttackManager.EmpCooldown.AddMilliseconds(TimeManager.EMP_DURATION) > DateTime.Now)) return;
                         Selected = character;
@@ -1236,6 +1235,8 @@ namespace Ow.Game.Objects
             Spacemap.AddAndInitPlayer(this);
             BoosterManager.Update();
             Storage.Jumping = false;
+            Quests?.ReportProgress("jump");
+            if(mapId==(FactionId==1?2:FactionId==2?6:10))Achievements?.Report("jump");
         }
 
         public void KillScreen(Attackable killerEntity, DestructionType destructionType, bool killedLogin = false)
@@ -1308,7 +1309,10 @@ namespace Ow.Game.Objects
             Storage.IsInRadiationZone = false;
 
             if (atNearestPortal)
+            {
+                CurrentHitPoints = Math.Max(1, Maths.GetPercentage(MaxHitPoints, 10));
                 SetPosition(GetNearestPortalPosition());
+            }
             else if (deathLocation)
                 CurrentHitPoints = Maths.GetPercentage(MaxHitPoints, 10);
             else
@@ -1352,6 +1356,10 @@ namespace Ow.Game.Objects
         }
 
         public void ChangeData(DataType dataType, int amount, ChangeType changeType = ChangeType.INCREASE)
+        {
+            lock(AuctionManager.Sync) ChangeDataCore(dataType,amount,changeType);
+        }
+        private void ChangeDataCore(DataType dataType, int amount, ChangeType changeType)
         {
             if (amount == 0) return;
             amount = Convert.ToInt32(amount);
@@ -1398,6 +1406,10 @@ namespace Ow.Game.Objects
         private bool pendingExperienceLevelCheck;
 
         private void FlushPendingDataChanges()
+        {
+            lock(AuctionManager.Sync) FlushPendingDataChangesCore();
+        }
+        private void FlushPendingDataChangesCore()
         {
             if (pendingDataChanges.Count == 0)
                 return;
@@ -1507,6 +1519,7 @@ namespace Ow.Game.Objects
 
         public void SendCargoStatus()
         {
+            SendCommand(AttributeOreCountUpdateCommand.write(CargoInUse));
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.CARGO_CHANGE}|{CargoCapacity}|{1}");
         }
 
@@ -1713,9 +1726,18 @@ namespace Ow.Game.Objects
             }
         }
 
+        public bool CanTradeOre()
+        {
+            if(Destroyed || Spacemap == null)return false;
+            return Spacemap.Activatables.Values.Any(station =>
+                station is OreTradeStation trade && trade.CanTrade(this)
+                || station is BattleStation battle && battle.CanTradeOre(this)
+                || station is GroupMapOreTradeStation && Position.DistanceTo(station.Position) <= 700);
+        }
+
         public bool TrySellOre(Ores oreType, int amount)
         {
-            if (amount <= 0 || !OreBasePrices.ContainsKey(oreType))
+            if (!CanTradeOre() || amount <= 0 || !OreBasePrices.ContainsKey(oreType))
                 return false;
 
             var stock = GetOreAmount(oreType);
@@ -1727,6 +1749,8 @@ namespace Ow.Game.Objects
 
             ChangeCargo(oreType, -sellAmount, false, false, false);
             ChangeData(DataType.CREDITS, sellAmount * unitPrice);
+            Achievements?.Report("sell");
+            Quests?.ReportProgress("sellOre", sellAmount, targetOre: (int)oreType);
             SendCargoStatus();
             SendOreCount();
             SendModernOreState();
@@ -1786,6 +1810,7 @@ namespace Ow.Game.Objects
             UpdateStatus();
             QueryManager.SavePlayer.Information(this);
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SERVER_MSG}|Upgrade complete: {amount} {oreType} applied to {GetUpgradeName(refinementType)}.");
+            if(oreType==Ores.Promerium&&(refinementType==RefinementTypeModule.DRIVING||refinementType==RefinementTypeModule.SHIELD))Achievements?.Report("upgrade");
             return true;
         }
 
@@ -1850,6 +1875,8 @@ namespace Ow.Game.Objects
             SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.SET_ORE_PRICES}|{GetOreSellPrice(Ores.Prometium)}|{GetOreSellPrice(Ores.Endurium)}|{GetOreSellPrice(Ores.Terbium)}|{GetOreSellPrice(Ores.Prometid)}|{GetOreSellPrice(Ores.Duranium)}|{GetOreSellPrice(Ores.Promerium)}");
         }
 
+        private int lastNotifiedLevel=1;
+        public void InitializeLevelTracking(){lastNotifiedLevel=Level;}
         public void CheckNextLevel(long experience)
         {
             short lvl = 1;
@@ -1861,13 +1888,14 @@ namespace Ow.Game.Objects
                 lvl++;
             }
 
-            if (lvl > Level)
+            if (lvl > lastNotifiedLevel)
             {
                 SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.LEVEL_UPDATE}|{lvl}|{expNext - experience}");
                 var levelUpCommand = LevelUpCommand.write(Id, lvl);
                 SendCommand(levelUpCommand);
                 SendCommandToInRangePlayers(levelUpCommand);
-                Level = lvl;
+                lastNotifiedLevel = lvl;
+                Achievements?.Report("level",1,lvl);
                 QueryManager.SavePlayer.Information(this);
             }
         }
@@ -1939,7 +1967,7 @@ namespace Ow.Game.Objects
 
                 if (gameSession == null) return;
                 if (!Program.TickManager.Exists(this)) return;
-                if (gameSession.Client.Socket == null || !gameSession.Client.Socket.IsBound || !gameSession.Client.Socket.Connected) return;
+                if (gameSession.Client.Socket == null || !gameSession.Client.Socket.Connected) return;
 
                 PacketDebug.NotifyLegacyOutgoing(this, packet);
                 gameSession.Client.Send(LegacyModule.write(packet));
@@ -1959,7 +1987,7 @@ namespace Ow.Game.Objects
 
                 if (gameSession == null) return;
                 if (!Program.TickManager.Exists(this)) return;
-                if (gameSession.Client.Socket == null || !gameSession.Client.Socket.IsBound || !gameSession.Client.Socket.Connected) return;
+                if (gameSession.Client.Socket == null || !gameSession.Client.Socket.Connected) return;
 
                 PacketDebug.NotifyOutgoing(this, command);
                 gameSession.Client.Send(command);
@@ -1973,43 +2001,70 @@ namespace Ow.Game.Objects
 
         public bool LoggingOut = false;
         private DateTime LogoutStartTime = new DateTime();
+        private readonly object LogoutSync = new object();
+        private int LogoutMapId;
+        private int LogoutLastSeconds = -1;
+        public int LogoutDuration => (Premium || RankId == 21) ? 5 : 20;
+
+        private string LogoutBlockReason()
+        {
+            if (Destroyed) return "destroyed";
+            if (Storage.Jumping) return "jumping";
+            if (Spacemap == null || Spacemap.Options.LogoutBlocked) return "map";
+            if (AttackingOrUnderAttack()) return "combat";
+            if (Moving) return "moving";
+            if (LoggingOut && LogoutMapId != Spacemap.Id) return "map_changed";
+            return "";
+        }
 
         public void Logout(bool start = false)
         {
-            if (start)
+            lock (LogoutSync)
             {
-                LoggingOut = true;
-                LogoutStartTime = DateTime.Now;
-                return;
+                if (!start && !LoggingOut) return;
+                var blocked = LogoutBlockReason();
+                if (blocked != "") { AbortLogout(blocked); return; }
+                if (start && !LoggingOut)
+                {
+                    LoggingOut = true;
+                    LogoutStartTime = DateTime.UtcNow;
+                    LogoutMapId = Spacemap.Id;
+                    LogoutLastSeconds = -1;
+                }
+                var remaining = Math.Max(0, (int)Math.Ceiling((LogoutStartTime.AddSeconds(LogoutDuration) - DateTime.UtcNow).TotalSeconds));
+                if (remaining != LogoutLastSeconds)
+                {
+                    LogoutLastSeconds = remaining;
+                    SendPacket("0|UI|LOGOUT|COUNTDOWN|" + remaining + "|" + LogoutDuration);
+                }
+                if (remaining == 0)
+                {
+                    LoggingOut = false;
+                    GameSession.Disconnect(GameSession.DisconnectionType.NORMAL, true);
+                }
             }
-
-            if (!LoggingOut) return;
-
-            if (!Storage.IsInDemilitarizedZone && (AttackingOrUnderAttack() || Moving || Spacemap.Options.LogoutBlocked))
-            {
-                AbortLogout();
-                return;
-            }
-
-            if (LogoutStartTime.AddSeconds((Premium || RankId == 21) ? 5 : 10) < DateTime.Now)
-            {
-                SendPacket("0|l|" + Id);
-                GameSession.Disconnect(GameSession.DisconnectionType.NORMAL);
-                LoggingOut = false;
-            }
-
         }
 
-        public void AbortLogout()
+        public void AbortLogout(string reason = "user")
         {
-            LoggingOut = false;
-            SendPacket("0|t");
+            lock (LogoutSync)
+            {
+                LoggingOut = false;
+                LogoutLastSeconds = -1;
+                SendPacket("0|t");
+                SendPacket("0|UI|LOGOUT|CANCEL|" + reason);
+            }
         }
 
         public void getShieldSkill()
         {
-            if (SkillTree.shieldEngineering == 5)
-                shieldeng = true;
+            shieldeng = SkillTree != null && SkillTree.shieldEngineering >= 5;
+        }
+
+        public string GetSkillVisualsPacket()
+        {
+            getShieldSkill();
+            return "0|A|SKILL_VISUALS|" + (shieldeng ? "1" : "0") + "|" + (GetShieldMechanics() ? "1" : "0");
         }
 
         private int GetScaledSkillValue(int level, params int[] levelValues)
@@ -2136,6 +2191,45 @@ namespace Ow.Game.Objects
         public void CameraLockToHero()
         {
             SendCommand(CameraLockToHeroCommand.write());
+        }
+
+        public bool ControlsLocked { get; private set; }
+        private readonly System.Threading.SemaphoreSlim cameraVisitGate = new System.Threading.SemaphoreSlim(1, 1);
+
+        public async Task CameraVisitAsync(int x, int y, double holdSeconds = 2, double travelSeconds = 1.5, bool lockControls = true)
+        {
+            if (double.IsNaN(holdSeconds) || double.IsInfinity(holdSeconds) || holdSeconds < 0 || holdSeconds > 3600 ||
+                double.IsNaN(travelSeconds) || double.IsInfinity(travelSeconds) || travelSeconds < 0 || travelSeconds > 3600)
+                throw new ArgumentOutOfRangeException(nameof(holdSeconds));
+            await cameraVisitGate.WaitAsync();
+            var previousLock = ControlsLocked;
+            try
+            {
+                if (lockControls) SetControlsLocked(true);
+                CameraLockToCoordinates(x, y, travelSeconds);
+                await Task.Delay((int)((travelSeconds + holdSeconds) * 1000));
+                CameraLockToHero();
+                await Task.Delay(1000);
+            }
+            finally
+            {
+                try { if (lockControls) SetControlsLocked(previousLock); }
+                finally { cameraVisitGate.Release(); }
+            }
+        }
+
+        public void SetControlsLocked(bool locked)
+        {
+            ControlsLocked = locked;
+            if (locked)
+            {
+                DisableAttack(Settings.InGameSettings.selectedLaser);
+                foreach (var collectable in Spacemap.Objects.Values.OfType<Collectable>().Where(item => item.Character == this).ToList())
+                    collectable.CancelCollection();
+                var current = Ow.Game.Movements.Movement.ActualPosition(this);
+                Ow.Game.Movements.Movement.Move(this, current);
+            }
+            SendPacket("0|A|CTRL|" + (locked ? "0" : "1"));
         }
 
         public void CameraLockToShip(int shipUserId, double zoomFactor = 1, double tweenDurationInSeconds = 3)
@@ -2288,6 +2382,13 @@ namespace Ow.Game.Objects
 
         public void SubAmmo(string ammoId, int amount)
         {
+            if (amount > 0 && !string.IsNullOrEmpty(ammoId))
+            {
+                if (ammoId.StartsWith("ammunition_")) Quests?.RecordAmmo(ammoId);
+                if (ammoId.StartsWith("ammunition_laser_")) Quests?.RecordWeapon("LASER");
+                else if (ammoId.StartsWith("ammunition_rocket_")) Quests?.RecordWeapon("ROCKET");
+                else if (ammoId.StartsWith("ammunition_rocketlauncher_")) Quests?.RecordWeapon("ROCKET_LAUNCHER");
+            }
             switch (ammoId)
             {
                 case AmmunitionManager.LCB_10:

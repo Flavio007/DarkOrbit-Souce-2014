@@ -29,6 +29,7 @@ namespace Ow.Game.Objects
             ShieldAbsorption = 0.5;
 
             Respawnable = false;
+            CargoDropMultiplier = multiplier;
             Suffix = suffix;
             AllMapRange = true;
             UseMapWideChaseRange = true;

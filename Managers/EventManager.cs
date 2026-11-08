@@ -29,6 +29,7 @@ namespace Ow.Managers
             GalaxyGate = new GalaxyGateManager();
             GroupMap200 = new GroupMap200Manager();
             Tutorial = new TutorialManager();
+            AuctionManager.Start();
             GalaxyGate.Initialize();
             GroupMap200.Initialize();
         }

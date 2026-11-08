@@ -22,8 +22,17 @@ namespace Ow.Game.Objects
         public Character Character { get; set; }
         public Player ToPlayer { get; set; }
         public bool Disposed = false;
+        public bool TutorialCargo { get; set; }
+        public virtual bool CollectionComplete => true;
 
-        public int Seconds => CollectableId == AssetTypeModule.BOXTYPE_PIRATE_BOOTY ? 5 : -1;
+        // Keep SLA's duration in whole seconds for compatibility with the Flash client.
+        public int Seconds => (int)Math.Ceiling(CollectionSeconds);
+        private double CollectionSeconds => CollectableId == AssetTypeModule.BOXTYPE_PIRATE_BOOTY ? 5.0
+            : this is BonusBox || this is CargoBox ? 0.5
+            : this is Ore ore ? ore.OreType == Ores.Prometium ? 0.5
+                : ore.OreType == Ores.Terbium ? 2.0
+                : ore.OreType == Ores.Palladium ? 0.8 : 1.0
+            : 1.0;
 
         public Collectable(int collectableId, Position position, Spacemap spacemap, bool respawnable, Player toPlayer) : base(Randoms.CreateRandomID(), position, spacemap)
         {
@@ -37,6 +46,8 @@ namespace Ow.Game.Objects
                 Program.TickManager.AddTick(this);
                 disposeTime = DateTime.Now;
             }
+
+            Spacemap.Objects.TryAdd(Id, this);
         }
 
         public DateTime collectTime = new DateTime();
@@ -45,7 +56,7 @@ namespace Ow.Game.Objects
         {
             if (!Disposed)
             {
-                if (this is CargoBox && disposeTime.AddMinutes(2) < DateTime.Now)
+                if (this is CargoBox && !TutorialCargo && disposeTime.AddMinutes(2) < DateTime.Now)
                     Dispose();
 
                 if (Character != null && Character.Collecting)
@@ -54,10 +65,10 @@ namespace Ow.Game.Objects
                     {
                         if (!(this is GreenBooty) || (this is GreenBooty && Character is Player player && player.Equipment.Items.BootyKeys >= 1))
                         {
-                            if (collectTime.AddSeconds(Seconds) < DateTime.Now)
+                            if (collectTime.AddSeconds(CollectionSeconds) <= DateTime.Now)
                             {
                                 var rewardPlayer = Character is Pet pet ? pet.Owner : Character as Player;
-                                if (this is Ore && rewardPlayer != null && rewardPlayer.FreeCargo <= 0)
+                                if ((this is Ore || this is CargoBox box && box.NeedsCargoSpace) && rewardPlayer != null && rewardPlayer.FreeCargo <= 0)
                                 {
                                     rewardPlayer.SendCargoFullWarning();
                                     CancelCollection();
@@ -65,11 +76,16 @@ namespace Ow.Game.Objects
                                 }
 
                                 Reward(rewardPlayer);
+                                if (!CollectionComplete) { CancelCollection(); return; }
                                 if (rewardPlayer != null)
                                 {
                                     rewardPlayer.Quests?.ReportProgress("collect");
+                                    if (TutorialCargo) EventManager.Tutorial?.HandleCargoCollected(this, rewardPlayer);
                                     if (this is BonusBox)
+                                    {
                                         rewardPlayer.Quests?.ReportProgress("collectBonusBox");
+                                        rewardPlayer.Achievements?.Report("bonusBox");
+                                    }
                                 }
                                 Dispose();
                             }
@@ -109,7 +125,8 @@ namespace Ow.Game.Objects
 
             Character = null;
 
-            Program.TickManager.RemoveTick(this);
+            // Partially collected cargo still needs its normal expiry timer.
+            if (!(this is CargoBox)) Program.TickManager.RemoveTick(this);
         }
 
         public void Collect(Character character)

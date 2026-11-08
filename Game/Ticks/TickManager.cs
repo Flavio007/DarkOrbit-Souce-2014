@@ -18,21 +18,43 @@ namespace Ow.Game.Ticks
 
         public void AddTick(Tick tick)
         {
-            if (!Ticks.Contains(tick))
-                Ticks.Add(tick);
+            lock (Ticks) if (tick != null && !Ticks.Contains(tick)) Ticks.Add(tick);
         }
 
         public void RemoveTick(Tick tick)
         {
-            if (Ticks.Contains(tick))
-                Ticks.Remove(tick);
+            lock (Ticks) Ticks.Remove(tick);
         }
 
         public bool Exists(Tick tickable)
         {
-            if (Ticks.Count == 0) return false;
-            if (Ticks.Contains(tickable)) return true;
-            return false;
+            lock (Ticks) return Ticks.Contains(tickable);
+        }
+
+        private readonly Dictionary<System.Type, DateTime> lastFailure = new Dictionary<System.Type, DateTime>();
+        public void TickOnce()
+        {
+            CurrentTickId++;
+            Tick[] current;
+            lock (Ticks) current = Ticks.ToArray();
+            foreach (var tick in current)
+            {
+                if (tick == null) continue;
+                var started = Stopwatch.GetTimestamp();
+                try { tick.Tick(); }
+                catch (Exception e)
+                {
+                    DateTime previous;
+                    if (!lastFailure.TryGetValue(tick.GetType(), out previous) || (DateTime.UtcNow - previous).TotalSeconds >= 10)
+                    {
+                        lastFailure[tick.GetType()] = DateTime.UtcNow;
+                        Logger.Log("error_log", "[TickManager] " + tick.GetType().FullName + " failed; remaining ticks will continue: " + e);
+                    }
+                }
+                var elapsed = (Stopwatch.GetTimestamp() - started) * 1000 / Stopwatch.Frequency;
+                if (elapsed >= 1000)
+                    Logger.Log("error_log", "[TickManager] Slow tick " + tick.GetType().FullName + ": " + elapsed + "ms");
+            }
         }
 
         public async void Tick()
@@ -41,11 +63,7 @@ namespace Ow.Game.Ticks
             {
                 while (true)
                 {
-                    CurrentTickId++;
-
-                    for (var i = 0; i < Ticks.Count; i++)
-                        if (Ticks[i] != null)
-                            Ticks[i].Tick();
+                    TickOnce();
 
                     await Task.Delay(TICKS_PER_SECOND);
                 }

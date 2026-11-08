@@ -33,7 +33,9 @@ namespace Ow.Game.Objects.Stations
 
         public HomeStation(Spacemap spacemap, int factionId, Position position, Clan clan) : base(spacemap, factionId, position, clan, AssetTypeModule.BASE_COMPANY)
         {
-            if (!UseSolitaryVisual())
+            if (UseSolitaryVisual())
+                PrepareSolitaryServices();
+            else
                 PrepareStations();
 
             if (UseRingDefense())
@@ -63,6 +65,15 @@ namespace Ow.Game.Objects.Stations
         private string GetVisualAssetName()
         {
             return string.IsNullOrEmpty(VisualAssetNameOverride) ? "HQ" : VisualAssetNameOverride;
+        }
+
+        public void PrepareSolitaryServices()
+        {
+            // Interaction anchors share the single x-8 hull; no extra station buildings.
+            if (QuestGiverStation == null)
+                QuestGiverStation = new QuestGiverStation(Spacemap, FactionId, new Position(Position.X - 100, Position.Y), Clan) { EmbeddedInHomeStation = true };
+            if (OreTradeStation == null)
+                OreTradeStation = new OreTradeStation(Spacemap, FactionId, new Position(Position.X + 100, Position.Y), Clan) { EmbeddedInHomeStation = true };
         }
 
         public void PrepareStations()

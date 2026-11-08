@@ -1,4 +1,4 @@
-using Ow.Game;
+﻿using Ow.Game;
 using Ow.Game.Movements;
 using Ow.Game.Objects;
 using Ow.Managers;
@@ -63,6 +63,9 @@ namespace Ow.Game.Objects.Stations
         private int lastSectorControlCapturingFactionId = -1;
         private string lastSectorControlCapturingFactions = null;
 
+        public OreTradeStation FactionTradeStation { get; private set; }
+        public bool CanTradeOre(Player player) => IsFactionBattleStation && IsOperational && FactionId > 0 && player != null && !player.Destroyed && player.FactionId == FactionId && player.Spacemap == Spacemap && player.Position.DistanceTo(Position) <= 700;
+
         public bool IsFactionBattleStation => Definition != null;
         public bool IsClanBattleStation => !IsFactionBattleStation;
         public bool IsOwned => IsClanBattleStation ? Clan != null && Clan.Id != 0 : FactionId != 0;
@@ -87,6 +90,7 @@ namespace Ow.Game.Objects.Stations
             SectorControlHash = $"sector_control_{spacemap.Id}_{Id}";
             RegisterSectorControlPOI();
             RegisterSectorControlVisualPOI();
+            FactionTradeStation = new OreTradeStation(spacemap,FactionId,new Position(Position.X,Position.Y),Clan) { EmbeddedInHomeStation=true,FactionStation=this };
 
             Program.TickManager.AddTick(this);
         }
@@ -608,20 +612,19 @@ namespace Ow.Game.Objects.Stations
                 return;
             }
 
-            if (FactionId == 0)
-            {
-                var captureState = GetCaptureState();
-                var captureText = captureState.Contested
-                    ? $"Neutral battle station. Capture progress is paused because multiple factions are within {Definition.CaptureRadius} units. Current progress: {GetFactionName(capturingFactionId)} {captureProgressPoints}/{GetCapturePointsRequired()}."
-                    : capturingFactionId == 0 || captureProgressPoints <= 0
-                        ? $"Neutral battle station. Each player within {Definition.CaptureRadius} units adds 1 capture point per second for their company, up to {GetMaxCapturePointsPerSecond()} per second. Reach {GetCapturePointsRequired()} points to capture it."
-                        : $"Neutral battle station. {GetFactionName(capturingFactionId)} has {captureProgressPoints}/{GetCapturePointsRequired()} capture points.";
-                player.SendPacket($"0|A|STD|{captureText}");
-                return;
-            }
+            if(!CanTradeOre(player))return;
+            player.SendPacket($"0|{ServerCommands.SET_ATTRIBUTE}|{ServerCommands.TRADE_WINDOW_ACTIVATION}|1");
+            player.SendOreShopInfo();
+        }
 
-            var shieldState = DeflectorActive ? "Shield active" : "Vulnerable";
-            player.SendPacket($"0|A|STD|Battle station owner: {GetFactionName(FactionId)}. {shieldState}. Level {GetEffectiveLevel()} (upgrade {UpgradeLevel}).");
+        private void RefreshFactionTradeStation()
+        {
+            if(FactionTradeStation==null)return;
+            FactionTradeStation.FactionId=FactionId;
+            GameManager.SendCommandToMap(Spacemap.Id,AssetRemoveCommand.write(FactionTradeStation.GetAssetType(),FactionTradeStation.Id));
+            GameManager.SendCommandToMap(Spacemap.Id,FactionTradeStation.GetAssetCreateCommand());
+            foreach(var player in Spacemap.Characters.Values.OfType<Player>())
+                player.Storage.InRangeAssets.TryRemove(FactionTradeStation.Id,out var removed);
         }
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
@@ -631,7 +634,7 @@ namespace Ow.Game.Objects.Stations
 
             return AssetCreateCommand.write(GetAssetType(), Name,
                 GetAffiliatedFactionId(), ownerClanTag, Id, GetVisualDesignId(), GetVisualExpansionStage(),
-                Position.X, Position.Y, ownerClanId, true, true, true, true,
+                Position.X, Position.Y, ownerClanId, true, true, true, !IsFactionBattleStation,
                 new ClanRelationModule(clanRelationModule),
                 VisualModifiers.Values.ToList());
         }
@@ -853,6 +856,7 @@ namespace Ow.Game.Objects.Stations
             SetUpgradeLevel(1, true);
 
             SpawnDefenseTowers();
+            RefreshFactionTradeStation();
             ResetCaptureProgress();
             previousVulnerabilityState = IsCurrentlyVulnerable();
             UpdateShieldState(true);
@@ -889,6 +893,7 @@ namespace Ow.Game.Objects.Stations
 
             GameManager.SendCommandToMap(Spacemap.Id, AssetRemoveCommand.write(new AssetTypeModule(previousAssetType), Id));
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            RefreshFactionTradeStation();
             EnsureSectorControlBeaconPOI();
             UpdateSectorControlPOI();
             RefreshBoosterInterface();

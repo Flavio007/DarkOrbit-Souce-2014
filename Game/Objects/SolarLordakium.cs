@@ -16,8 +16,6 @@ namespace Ow.Game.Objects
 {
     class SolarLordakium : Npc
     {
-        public new NpcAI NpcAI { get; set; }
-        public new bool Attacking = false;
         public bool Alive = true;
 
         public DateTime respawntime;
@@ -64,7 +62,6 @@ namespace Ow.Game.Objects
         }
 
 
-        public new DateTime lastAttackTime = new DateTime();
         public new void Attack()
         {
             var damage = AttackManager.RandomizeDamage(Damage, (Storage.underPLD8 ? 0.5 : 0.1));
@@ -117,7 +114,7 @@ namespace Ow.Game.Objects
                 if (target is Player && (target as Player).Storage.Sentinel)
                     damageShd -= Maths.GetPercentage(damageShd, 30);
 
-                var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
+                var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, target.ShieldMechanics(), false);
                 SendCommandToInRangePlayers(laserRunCommand);
 
                 if (damage == 0)
@@ -140,15 +137,19 @@ namespace Ow.Game.Objects
                         playerTarget.AttackManager.QueueIncomingDamageHit(Id, DamageType.LASER, attackHitDamage);
                 }
 
-                if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
+                (target as Player)?.Quests?.RecordDamage(Math.Max(0, Math.Min(damageHp, target.CurrentHitPoints)));
+            if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
                 {
                     if (target is Player playerTarget)
                         playerTarget.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);
 
                     target.Destroy(this, DestructionType.NPC);
+                    lastAttackTime = DateTime.Now;
+                    return;
                 }
                 else
                     target.CurrentHitPoints -= damageHp;
+
 
                 target.CurrentShieldPoints -= damageShd;
                 target.LastCombatTime = DateTime.Now;
@@ -159,7 +160,6 @@ namespace Ow.Game.Objects
             }
         }
 
-        public new DateTime lastShieldRepairTime = new DateTime();
         private void CheckShieldPointsRepair()
         {
             if (LastCombatTime.AddSeconds(100) >= DateTime.Now || lastShieldRepairTime.AddSeconds(1) >= DateTime.Now || CurrentShieldPoints == MaxShieldPoints) return;

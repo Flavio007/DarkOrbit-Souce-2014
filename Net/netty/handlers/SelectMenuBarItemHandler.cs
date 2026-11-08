@@ -29,6 +29,12 @@ namespace Ow.Net.netty.handlers
                 read.varat != SelectMenuBarItemRequest.ACTIVATE)
                 return;
 
+            if(read.itemId.StartsWith("quickbuy_",StringComparison.Ordinal)){
+                if(!player.ControlsLocked && (read.varat==SelectMenuBarItemRequest.ACTIVATE || read.varH4g==SelectMenuBarItemRequest.const_2225))
+                    player.Achievements?.QuickBuy(read.itemId.Substring(9));
+                return;
+            }
+
             if (read.varat == SelectMenuBarItemRequest.SELECT &&
                 read.varH4g == SelectMenuBarItemRequest.const_2391)
             {

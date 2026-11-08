@@ -24,6 +24,22 @@ namespace Ow
     {
         public static TickManager TickManager = new TickManager();
         public static bool DebugEquippedItems = false;
+        private static Timer saveTimer;
+        private static readonly object saveSync = new object();
+        public static void SavePlayers()
+        {
+            lock (saveSync)
+                foreach (var session in GameManager.GameSessions.Values)
+                    session?.SaveProgress();
+        }
+        private static void PeriodicSave(object state)
+        {
+            // A single worker: slow database requests never accumulate timer jobs.
+            if (!Monitor.TryEnter(saveSync)) return;
+            try { SavePlayers(); }
+            catch (Exception e) { Logger.Log("error_log", "[Autosave] " + e); }
+            finally { Monitor.Exit(saveSync); }
+        }
 
         public static void Main(string[] args)
         {
@@ -32,7 +48,10 @@ namespace Ow
                 Console.OutputEncoding = Encoding.UTF8;
                 CheckMySQLConnection();
                 LoadDatabase();
+                AppDomain.CurrentDomain.ProcessExit += (sender, e) => SavePlayers();
+                Console.CancelKeyPress += (sender, e) => { e.Cancel = true; SavePlayers(); Environment.Exit(0); };
                 InitiateServer();
+                saveTimer = new Timer(PeriodicSave, null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15));
                 KeepAlive();
             } 
             catch(Exception e)
@@ -47,6 +66,7 @@ namespace Ow
             while (true)
             {
                 var l = Console.ReadLine();
+                if (l == null) { Thread.Sleep(1000); continue; }
                 if (l != "" && l.StartsWith("/"))
                     ExecuteCommand(l);
             }
@@ -106,6 +126,7 @@ namespace Ow
             Task.Factory.StartNew(SocketServer.StartListening);
             Out.WriteLine("Listening on port " + SocketServer.Port + ".", "SocketServer");
 
+            WebSocketGateway.Start();
             Task.Factory.StartNew(TickManager.Tick);
         }
 
@@ -116,6 +137,13 @@ namespace Ow
         
             switch (splitted[0])
             {
+                case "save":
+                    SavePlayers();
+                    break;
+                case "stop":
+                    SavePlayers();
+                    Environment.Exit(0);
+                    break;
                 case "restart":
                     GameManager.Restart(Convert.ToInt32(splitted[1]));
                     break;

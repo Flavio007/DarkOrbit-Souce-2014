@@ -111,6 +111,7 @@ namespace Ow.Game.Objects
 
         public void SendInitToAll()
         {
+            if(Members.Count>=2)foreach(var member in Members.Values)member.Achievements?.Report("group");
             foreach (var player in Members)
                 InitializeGroup(player.Value);
         }

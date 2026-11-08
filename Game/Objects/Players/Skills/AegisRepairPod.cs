@@ -36,6 +36,9 @@ namespace Ow.Game.Objects.Players.Skills
 
         public override void Tick()
         {
+            Skill current;
+            if (!Player.Storage.Skills.TryGetValue(LootId, out current) || !ReferenceEquals(current, this))
+                return;
             if (Active)
             {
                 if (cooldown.AddMilliseconds(Duration) < DateTime.Now)
@@ -43,7 +46,9 @@ namespace Ow.Game.Objects.Players.Skills
                 else
                     ExecuteHeal();
             }
-            else if (!Player.VisualModifiers.ContainsKey(VisualModifierCommand.HEALING_POD) && cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now)
+            else if ((Player.Ship.Id == Ship.AEGIS || Player.Ship.Id == Ship.AEGIS_VETERAN || Player.Ship.Id == Ship.AEGIS_ELITE) &&
+                !Player.VisualModifiers.ContainsKey(VisualModifierCommand.HEALING_POD) &&
+                (cooldown.AddMilliseconds(Duration + EffectiveCooldown) < DateTime.Now || Player.Storage.GodMode))
                 Player.AddVisualModifier(VisualModifierCommand.HEALING_POD, 0, "", 0, true);
         }
 

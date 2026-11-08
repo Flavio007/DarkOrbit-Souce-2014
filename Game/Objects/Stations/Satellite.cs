@@ -360,7 +360,7 @@ namespace Ow.Game.Objects.Stations
                             if ((target as Player).Storage.UnderDiminisherEntity == this)
                                 damageShd += Maths.GetPercentage(damage, 30);
 
-                        var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
+                        var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, target.ShieldMechanics(), false);
                         SendCommandToInRangeCharacters(laserRunCommand);
                     }
                     else if (damageType == DamageType.ROCKET)
@@ -391,6 +391,7 @@ namespace Ow.Game.Objects.Stations
                             playerTarget.AttackManager.QueueIncomingDamageHit(Id, damageType, attackHitDamage, false);
                     }
 
+                    (target as Player)?.Quests?.RecordDamage(Math.Max(0, Math.Min(damageHp, target.CurrentHitPoints + target.CurrentNanoHull)));
                     if (damageHp >= target.CurrentHitPoints || target.CurrentHitPoints <= 0)
                     {
                         if (target is Player playerTarget)

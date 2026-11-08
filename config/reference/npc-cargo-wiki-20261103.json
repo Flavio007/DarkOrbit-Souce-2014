@@ -1,0 +1,715 @@
+{
+  "checkedAt": "2026-11-03",
+  "scope": "Ore cargo only; no kill rewards, assembly materials, booty probabilities or player-ship definitions.",
+  "fields": [
+    "Prometium",
+    "Endurium",
+    "Terbium",
+    "Prometid",
+    "Duranium",
+    "Promerium",
+    "Xenomit",
+    "Seprom",
+    "Palladium"
+  ],
+  "rows": [
+    {
+      "shipIds": [
+        84
+      ],
+      "name": "Streuner",
+      "ores": {
+        "Prometium": 10,
+        "Endurium": 10,
+        "Terbium": 0,
+        "Prometid": 0,
+        "Duranium": 0,
+        "Promerium": 0,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Streuner",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        71
+      ],
+      "name": "Lordakia",
+      "ores": {
+        "Prometium": 20,
+        "Endurium": 20,
+        "Terbium": 20,
+        "Prometid": 0,
+        "Duranium": 0,
+        "Promerium": 0,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Lordakia",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        75
+      ],
+      "name": "Saimon",
+      "ores": {
+        "Prometium": 40,
+        "Endurium": 40,
+        "Terbium": 40,
+        "Prometid": 2,
+        "Duranium": 2,
+        "Promerium": 0,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Saimon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        73
+      ],
+      "name": "Mordon",
+      "ores": {
+        "Prometium": 80,
+        "Endurium": 80,
+        "Terbium": 80,
+        "Prometid": 8,
+        "Duranium": 8,
+        "Promerium": 1,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Mordon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        72
+      ],
+      "name": "Devolarium",
+      "ores": {
+        "Prometium": 100,
+        "Endurium": 100,
+        "Terbium": 100,
+        "Prometid": 16,
+        "Duranium": 16,
+        "Promerium": 2,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Devolarium",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        74
+      ],
+      "name": "Sibelon",
+      "ores": {
+        "Prometium": 200,
+        "Endurium": 200,
+        "Terbium": 200,
+        "Prometid": 32,
+        "Duranium": 32,
+        "Promerium": 4,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Sibelon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        76
+      ],
+      "name": "Sibelonit",
+      "ores": {
+        "Prometium": 100,
+        "Endurium": 100,
+        "Terbium": 100,
+        "Prometid": 8,
+        "Duranium": 8,
+        "Promerium": 1,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Sibelonit",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        77
+      ],
+      "name": "Lordakium",
+      "ores": {
+        "Prometium": 300,
+        "Endurium": 300,
+        "Terbium": 300,
+        "Prometid": 64,
+        "Duranium": 64,
+        "Promerium": 8,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Lordakium",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        78
+      ],
+      "name": "Kristallin",
+      "ores": {
+        "Prometium": 100,
+        "Endurium": 100,
+        "Terbium": 100,
+        "Prometid": 16,
+        "Duranium": 16,
+        "Promerium": 1,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Kristallin",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        79
+      ],
+      "name": "Kristallon",
+      "ores": {
+        "Prometium": 300,
+        "Endurium": 300,
+        "Terbium": 300,
+        "Prometid": 128,
+        "Duranium": 128,
+        "Promerium": 16,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Kristallon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        80
+      ],
+      "name": "Cubikon",
+      "ores": {
+        "Prometium": 1200,
+        "Endurium": 1200,
+        "Terbium": 1200,
+        "Prometid": 512,
+        "Duranium": 512,
+        "Promerium": 128,
+        "Xenomit": 120,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Cubikon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        81
+      ],
+      "name": "Protegit",
+      "ores": {
+        "Prometium": 100,
+        "Endurium": 100,
+        "Terbium": 100,
+        "Prometid": 16,
+        "Duranium": 16,
+        "Promerium": 2,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Protegit",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        85
+      ],
+      "name": "StreuneR",
+      "ores": {
+        "Prometium": 80,
+        "Endurium": 80,
+        "Terbium": 80,
+        "Prometid": 8,
+        "Duranium": 8,
+        "Promerium": 0,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/StreuneR",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        23
+      ],
+      "name": "Boss Streuner",
+      "ores": {
+        "Prometium": 40,
+        "Endurium": 40,
+        "Terbium": 10,
+        "Prometid": 0,
+        "Duranium": 0,
+        "Promerium": 0,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Streuner",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        24
+      ],
+      "name": "Boss Lordakia",
+      "ores": {
+        "Prometium": 80,
+        "Endurium": 80,
+        "Terbium": 80,
+        "Prometid": 10,
+        "Duranium": 0,
+        "Promerium": 0,
+        "Xenomit": 1,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Lordakia",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        25
+      ],
+      "name": "Boss Saimon",
+      "ores": {
+        "Prometium": 160,
+        "Endurium": 160,
+        "Terbium": 160,
+        "Prometid": 8,
+        "Duranium": 8,
+        "Promerium": 1,
+        "Xenomit": 2,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Saimon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        31
+      ],
+      "name": "Boss Mordon",
+      "ores": {
+        "Prometium": 320,
+        "Endurium": 320,
+        "Terbium": 320,
+        "Prometid": 32,
+        "Duranium": 32,
+        "Promerium": 8,
+        "Xenomit": 4,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Mordon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        26
+      ],
+      "name": "Boss Devolarium",
+      "ores": {
+        "Prometium": 400,
+        "Endurium": 400,
+        "Terbium": 400,
+        "Prometid": 64,
+        "Duranium": 64,
+        "Promerium": 8,
+        "Xenomit": 8,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Devolarium",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        46
+      ],
+      "name": "Boss Sibelon",
+      "ores": {
+        "Prometium": 800,
+        "Endurium": 800,
+        "Terbium": 800,
+        "Prometid": 128,
+        "Duranium": 128,
+        "Promerium": 16,
+        "Xenomit": 32,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Sibelon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        27
+      ],
+      "name": "Boss Sibelonit",
+      "ores": {
+        "Prometium": 400,
+        "Endurium": 400,
+        "Terbium": 400,
+        "Prometid": 32,
+        "Duranium": 32,
+        "Promerium": 4,
+        "Xenomit": 8,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Sibelonit",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        28
+      ],
+      "name": "Boss Lordakium",
+      "ores": {
+        "Prometium": 1200,
+        "Endurium": 1200,
+        "Terbium": 1200,
+        "Prometid": 256,
+        "Duranium": 256,
+        "Promerium": 32,
+        "Xenomit": 32,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Lordakium",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        29,
+        478
+      ],
+      "name": "Boss Kristallin",
+      "ores": {
+        "Prometium": 400,
+        "Endurium": 400,
+        "Terbium": 400,
+        "Prometid": 64,
+        "Duranium": 64,
+        "Promerium": 4,
+        "Xenomit": 8,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Kristallin",
+      "note": "Both database aliases use the same wiki drop."
+    },
+    {
+      "shipIds": [
+        35,
+        479
+      ],
+      "name": "Boss Kristallon",
+      "ores": {
+        "Prometium": 1200,
+        "Endurium": 1200,
+        "Terbium": 1200,
+        "Prometid": 512,
+        "Duranium": 512,
+        "Promerium": 64,
+        "Xenomit": 64,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Kristallon",
+      "note": "Both database aliases use the same wiki drop."
+    },
+    {
+      "shipIds": [
+        34
+      ],
+      "name": "Boss StreuneR",
+      "ores": {
+        "Prometium": 320,
+        "Endurium": 320,
+        "Terbium": 320,
+        "Prometid": 32,
+        "Duranium": 32,
+        "Promerium": 0,
+        "Xenomit": 4,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_StreuneR",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        82
+      ],
+      "name": "Kucurbium",
+      "ores": {
+        "Prometium": 1200,
+        "Endurium": 1200,
+        "Terbium": 1200,
+        "Prometid": 512,
+        "Duranium": 512,
+        "Promerium": 64,
+        "Xenomit": 256,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Kucurbium",
+      "note": "Base table: X-1 level invasion tier; wiki lists distinct X-3/X-5 amounts. Current server events apply their configured instance multiplier."
+    },
+    {
+      "shipIds": [
+        83
+      ],
+      "name": "Boss Kucurbium",
+      "ores": {
+        "Prometium": 4800,
+        "Endurium": 4800,
+        "Terbium": 4800,
+        "Prometid": 2048,
+        "Duranium": 2048,
+        "Promerium": 256,
+        "Xenomit": 1024,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Boss_Kucurbium",
+      "note": "Base table: X-1 level invasion tier; wiki lists distinct X-3/X-5 amounts. Current server events apply their configured instance multiplier."
+    },
+    {
+      "shipIds": [
+        94
+      ],
+      "name": "Vagrant",
+      "ores": {
+        "Prometium": 50,
+        "Endurium": 50,
+        "Terbium": 50,
+        "Prometid": 4,
+        "Duranium": 4,
+        "Promerium": 0,
+        "Xenomit": 1,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Vagrant",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        93
+      ],
+      "name": "Marauder",
+      "ores": {
+        "Prometium": 75,
+        "Endurium": 75,
+        "Terbium": 75,
+        "Prometid": 8,
+        "Duranium": 8,
+        "Promerium": 0,
+        "Xenomit": 2,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Marauder",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        92
+      ],
+      "name": "Outcast",
+      "ores": {
+        "Prometium": 100,
+        "Endurium": 100,
+        "Terbium": 100,
+        "Prometid": 16,
+        "Duranium": 16,
+        "Promerium": 1,
+        "Xenomit": 4,
+        "Seprom": 1,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Outcast",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        91
+      ],
+      "name": "Corsair",
+      "ores": {
+        "Prometium": 150,
+        "Endurium": 150,
+        "Terbium": 150,
+        "Prometid": 25,
+        "Duranium": 25,
+        "Promerium": 2,
+        "Xenomit": 8,
+        "Seprom": 2,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Corsair_%28Epsilon%29",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        96
+      ],
+      "name": "Hooligan",
+      "ores": {
+        "Prometium": 200,
+        "Endurium": 200,
+        "Terbium": 200,
+        "Prometid": 32,
+        "Duranium": 32,
+        "Promerium": 4,
+        "Xenomit": 12,
+        "Seprom": 4,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Hooligan",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        97
+      ],
+      "name": "Ravager",
+      "ores": {
+        "Prometium": 300,
+        "Endurium": 300,
+        "Terbium": 300,
+        "Prometid": 50,
+        "Duranium": 50,
+        "Promerium": 8,
+        "Xenomit": 16,
+        "Seprom": 8,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Ravager",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        95
+      ],
+      "name": "Convict",
+      "ores": {
+        "Prometium": 400,
+        "Endurium": 400,
+        "Terbium": 400,
+        "Prometid": 64,
+        "Duranium": 64,
+        "Promerium": 16,
+        "Xenomit": 24,
+        "Seprom": 16,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Convict",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        90
+      ],
+      "name": "Century Falcon",
+      "ores": {
+        "Prometium": 1,
+        "Endurium": 1,
+        "Terbium": 1,
+        "Prometid": 1,
+        "Duranium": 1,
+        "Promerium": 1,
+        "Xenomit": 1,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Century_Falcon",
+      "note": ""
+    },
+    {
+      "shipIds": [
+        881
+      ],
+      "name": "Uber Protegit",
+      "ores": {
+        "Prometium": 100,
+        "Endurium": 100,
+        "Terbium": 100,
+        "Prometid": 16,
+        "Duranium": 16,
+        "Promerium": 2,
+        "Xenomit": 0,
+        "Seprom": 0,
+        "Palladium": 0
+      },
+      "source": "https://darkorbit.fandom.com/wiki/Uber_Protegit",
+      "note": "Canonical wiki cargo despite local combat stats differing from the current wiki."
+    }
+  ],
+  "unverified": [
+    {
+      "shipIds": [
+        11
+      ],
+      "reason": "Special SaNeJiEwZ: no verified ore cargo table found."
+    },
+    {
+      "shipIds": [
+        200,
+        201,
+        202,
+        203,
+        204,
+        205
+      ],
+      "reason": "Local Aberration variants: no unambiguous canonical cargo table."
+    },
+    {
+      "shipIds": [
+        480,
+        481,
+        880
+      ],
+      "reason": "Local Boss/Uber Cubikon and Boss Protegit variants: no canonical wiki cargo table; existing values preserved."
+    }
+  ],
+  "rulesSources": [
+    "https://darkorbit.fandom.com/wiki/Cargo",
+    "https://darkorbit.fandom.com/wiki/Tractor_Beam"
+  ]
+}

@@ -28,7 +28,7 @@ namespace Ow.Net.netty.commands
             param1.writeInt(shapeCoordinates.Count);
             foreach(var coordinat in shapeCoordinates)
             {
-                param1.writeInt(coordinat >> 7 | coordinat << 25);
+                param1.writeInt(unchecked((int)(((uint)coordinat >> 7) | ((uint)coordinat << 25))));
             }
             param1.write(design.write());
             return param1.ToByteArray();

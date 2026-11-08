@@ -23,6 +23,10 @@ namespace Ow.Net.netty.handlers
 
         public LoginRequestHandler(GameClient client, int userId)
         {
+            lock(AuctionManager.Sync) Initialize(client,userId);
+        }
+        private void Initialize(GameClient client, int userId)
+        {
             try
             {
                 client.UserId = userId;
@@ -99,6 +103,9 @@ namespace Ow.Net.netty.handlers
                 }
 
                 EventManager.Tutorial?.PreparePlayerForLogin(Player);
+                // Clamp persisted HP from older calculations to the current equipment maximum.
+                Player.CurrentHitPoints = Math.Min(Player.CurrentHitPoints, Player.MaxHitPoints);
+                Player.InitializeLevelTracking();
                 EventManager.GroupMap200?.PreparePlayerForLogin(Player);
 
                 Program.TickManager.AddTick(Player);
@@ -118,6 +125,7 @@ namespace Ow.Net.netty.handlers
             try
             {
                 player.SendCommand(player.GetShipInitializationCommand());
+                player.SendPacket(player.GetSkillVisualsPacket());
 
                 if (player.Title != "")
                     player.SendPacket($"0|n|t|{player.Id}|1|{player.Title}");
@@ -136,12 +144,13 @@ namespace Ow.Net.netty.handlers
                 
                 var spaceball = EventManager.Spaceball.Character;
                 if (EventManager.Spaceball.Active && spaceball != null)
-                    player.SendPacket($"0|n|ssi|{spaceball.Mmo}|{spaceball.Eic}|{spaceball.Vru}");
+                    spaceball.SendState(player);
                 else
                     player.SendPacket($"0|n|ssi|0|0|0");
 
                 if (EventManager.InvasionGate.Started)
                     EventManager.InvasionGate.SendWindowState(player);
+                EventManager.Scoremageddon.SendState(player);
                 /*
                 var priceList = new List<JumpCPUPriceMappingModule>();
                 var price = new List<int>();
@@ -172,8 +181,10 @@ namespace Ow.Net.netty.handlers
                 }
                 
                 player.UpdateStatus();
+                QueryManager.WriteLogbook(player,"game","Entrada no mapa espacial.");
                 player.Achievements?.SendAll();
                 player.Quests?.Sync();
+                EventManager.Tutorial?.OnPlayerReady(player);
 
                 //player.SendCommand(UbaWindowInitializationCommand.write(new Ubas3wModule(new UbaG3FModule(0, 0, 0, 0), new Uba64iModule("", 0, new //List<UbaHtModule>()), new UbahsModule(new List<Ubal4bModule>())), 0));
 

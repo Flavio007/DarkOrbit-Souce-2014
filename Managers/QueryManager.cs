@@ -26,15 +26,36 @@ namespace Ow.Managers
         private static readonly object QuestSchemaLock = new object();
         private static bool QuestSchemaReady;
 
+        private static readonly object LogbookSchemaLock=new object();
+        private static bool LogbookSchemaReady;
+        public static void WriteLogbook(Player player,string category,string message)
+        {
+            if(player==null)return;
+            try{using(var db=SqlDatabaseManager.GetClient()){
+                lock(LogbookSchemaLock){if(!LogbookSchemaReady){
+                db.ExecuteNonQuery("CREATE TABLE IF NOT EXISTS player_logbook (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,user_id INT NOT NULL,category VARCHAR(32) NOT NULL,message TEXT NOT NULL,created_at DATETIME NOT NULL,INDEX player_time(user_id,created_at,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                    LogbookSchemaReady=true;}}
+                var safeCategory=category.Replace("'","''");var safeMessage=message.Replace("\\","\\\\").Replace("'","''");
+                db.ExecuteNonQuery($"INSERT INTO player_logbook(user_id,category,message,created_at) VALUES ({player.Id},'{safeCategory}','{safeMessage}',UTC_TIMESTAMP())");
+            }}catch(Exception e){Logger.Log("error_log","[Logbook] "+e.Message);}
+        }
+
         public class SavePlayer
         {
             public static void Settings(Player player, string target, object settings)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
-                    mySqlClient.ExecuteNonQuery($"UPDATE player_settings SET {target} = '{JsonConvert.SerializeObject(settings)}' WHERE userId = {player.Id}");
+                    {
+                    mySqlClient.SetParameter("@settings", JsonConvert.SerializeObject(settings));
+                    mySqlClient.ExecuteNonQuery($"UPDATE player_settings SET {target} = @settings WHERE userId = {player.Id}");
+                }
             }
 
             public static void Information(Player player)
+            {
+                lock(Ow.Game.Events.AuctionManager.Sync) InformationCore(player);
+            }
+            private static void InformationCore(Player player)
             {
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
                 {
@@ -259,6 +280,7 @@ namespace Ow.Managers
             Player player = null;
             try
             {
+                Ow.Game.Events.AchievementManager.EnsureSchema();
                 using (var mySqlClient = SqlDatabaseManager.GetClient())
                 {
                     var data = mySqlClient.ExecuteQueryTable($"SELECT * FROM player_accounts WHERE userId = {playerId}");
@@ -354,6 +376,19 @@ namespace Ow.Managers
                             player.Pet = new Pet(player);
                     }
 
+                    if (player.LastPosition?.map == Ow.Game.Events.TutorialManager.TutorialMapId)
+                    {
+                        EnsureTutorialStarterLoadout(mySqlClient, player.Id);
+                        EnsureStarterRepairBot(mySqlClient, player.Id);
+                        if (ConfigureTutorialStarterSupplies(player))
+                        {
+                            var slots = JsonConvert.SerializeObject(player.Settings.SlotBarItems).Replace("'", "''");
+                            var inGame = JsonConvert.SerializeObject(player.Settings.InGameSettings).Replace("'", "''");
+                            var ammo = JsonConvert.SerializeObject(player.Ammo).Replace("'", "''");
+                            mySqlClient.ExecuteNonQuery($"UPDATE player_settings SET slotbarItems = '{slots}', inGameSettings = '{inGame}' WHERE userId = {player.Id}");
+                            mySqlClient.ExecuteNonQuery($"UPDATE player_accounts SET ammo = '{ammo}' WHERE userId = {player.Id}");
+                        }
+                    }
                     player.SettingsManager.SetCurrentItems();
                 }
 
@@ -365,6 +400,87 @@ namespace Ow.Managers
             {
                 Logger.Log("error_log", $"- [QueryManager.cs] GetPlayer({playerId}) exception: {e}");
                 return null;
+            }
+        }
+
+        private static bool ConfigureTutorialStarterSupplies(Player player)
+        {
+            var changed = false;
+            var slots = player.Settings.SlotBarItems;
+            if (slots.Count == 1 && slots.ContainsKey(1) && slots[1] == AmmunitionManager.UCB_100)
+            {
+                slots[1] = AmmunitionManager.LCB_10;
+                changed = true;
+            }
+            foreach (var slot in slots.Where(x => x.Value == AmmunitionManager.PLT_3030).Select(x => x.Key).ToList())
+            {
+                slots[slot] = AmmunitionManager.R_310;
+                changed = true;
+            }
+            if (!slots.ContainsValue(AmmunitionManager.R_310))
+                for (short slot = 2; slot <= 10; slot++)
+                    if (!slots.ContainsKey(slot))
+                    {
+                        slots[slot] = AmmunitionManager.R_310;
+                        changed = true;
+                        break;
+                    }
+            // Convert the old starter stock once; spending the basic rockets
+            // must never refill them on subsequent logins.
+            if (player.Ammo.r310 == 0 && player.Ammo.plt3030 > 0)
+            {
+                player.Ammo.r310 = player.Ammo.plt3030;
+                player.Ammo.plt3030 = 0;
+                changed = true;
+            }
+            if (player.Settings.InGameSettings.selectedRocket == AmmunitionManager.PLT_3030)
+            {
+                player.Settings.InGameSettings.selectedRocket = AmmunitionManager.R_310;
+                changed = true;
+            }
+            return changed;
+        }
+
+        private static void EnsureStarterRepairBot(SqlDatabaseClient client,int playerId)
+        {
+            client.ExecuteNonQuery("START TRANSACTION");
+            try {
+                client.ExecuteQueryRow($"SELECT userId FROM player_accounts WHERE userId={playerId} FOR UPDATE");
+                var owned=client.ExecuteQueryRow($"SELECT item_id FROM player_inventory_items WHERE userId={playerId} AND item_id IN (43,44,45,46,47) ORDER BY item_id DESC LIMIT 1");
+                var item=owned==null?43:Convert.ToInt32(owned["item_id"]);
+                if(owned==null)client.ExecuteNonQuery($"INSERT INTO player_inventory_items (userId,item_id) VALUES ({playerId},43)");
+                for(int config=1;config<=2;config++) {
+                    var equipped=client.ExecuteQueryRow($"SELECT id FROM player_inventory_loadout WHERE userId={playerId} AND config_id={config} AND mode='ship' AND item_id IN (43,44,45,46,47) LIMIT 1");
+                    if(equipped!=null)continue;
+                    var slot=client.ExecuteQueryRow($"SELECT COALESCE(MAX(slot_index),-1)+1 AS next_slot FROM player_inventory_loadout WHERE userId={playerId} AND config_id={config} AND mode='ship' AND slot_group='cpus'");
+                    client.ExecuteNonQuery($"INSERT INTO player_inventory_loadout (userId,config_id,mode,slot_group,slot_index,item_id) VALUES ({playerId},{config},'ship','cpus',{Convert.ToInt32(slot["next_slot"])},{item})");
+                }
+                client.ExecuteNonQuery("COMMIT");
+            } catch {client.ExecuteNonQuery("ROLLBACK");throw;}
+        }
+
+        private static void EnsureTutorialStarterLoadout(SqlDatabaseClient client, int playerId)
+        {
+            client.ExecuteNonQuery("START TRANSACTION");
+            try
+            {
+                client.ExecuteQueryRow($"SELECT userId FROM player_accounts WHERE userId = {playerId} FOR UPDATE");
+                for (var config = 1; config <= 2; config++)
+                {
+                    var equipped = client.ExecuteQueryRow($"SELECT id FROM player_inventory_loadout WHERE userId = {playerId} AND config_id = {config} AND mode = 'ship' AND slot_group = 'lasers' LIMIT 1");
+                    if (equipped != null) continue;
+                    var owned = client.ExecuteQueryRow($"SELECT i.item_id FROM player_inventory_items i JOIN inventory_item_definitions d ON d.item_id = i.item_id WHERE i.userId = {playerId} AND d.category = 'lasers' ORDER BY i.id LIMIT 1");
+                    var itemId = owned == null ? 124 : Convert.ToInt32(owned["item_id"]);
+                    if (owned == null)
+                        client.ExecuteNonQuery($"INSERT INTO player_inventory_items (userId, item_id) VALUES ({playerId}, {itemId})");
+                    client.ExecuteNonQuery($"INSERT INTO player_inventory_loadout (userId, config_id, mode, slot_group, slot_index, item_id) VALUES ({playerId}, {config}, 'ship', 'lasers', 0, {itemId})");
+                }
+                client.ExecuteNonQuery("COMMIT");
+            }
+            catch
+            {
+                client.ExecuteNonQuery("ROLLBACK");
+                throw;
             }
         }
 
@@ -411,8 +527,9 @@ namespace Ow.Managers
             {
                 if (!TrySetEquipmentFromInventoryLoadout(player))
                 {
-                    var hp = player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull");
+                    var hp = player.Ship.BaseHitpoints;
                     var baseSpeed = player.Ship.BaseSpeed + Maths.GetPercentage(player.Ship.BaseSpeed, 20);
+                    player.EquipExpansion=PlayerShipExtension.GetDefaultLevel(player.Ship);
                     player.equipedlasercount = 0;
                     player.fulllf3 = true;
                     player.AttackManager.RocketLauncher.MaxLoad = 0;
@@ -588,7 +705,7 @@ namespace Ow.Managers
             const int g3n2010Speed = 3;
             const int g3n1010Speed = 2;
 
-            var hitpoints = new int[] { player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull"), player.Ship.BaseHitpoints + player.GetSkillPercentage("Ship Hull") };
+            var hitpoints = new int[] { player.Ship.BaseHitpoints, player.Ship.BaseHitpoints };
             var speed = new int[] { player.Ship.BaseSpeed, player.Ship.BaseSpeed };
             var damage = new int[] { 0, 0 };
             var shield = new int[] { 0, 0 };
@@ -598,6 +715,10 @@ namespace Ow.Managers
             var leonovshield = new int[] { 0, 0 };
             var rocketLauncherLoad = new int[] { 0, 0 };
             var rocketLauncherLoads = new[] { new List<int>(), new List<int>() };
+
+            var visualLasers=equippedItems.Where(x=>x.Config==player.CurrentConfig&&x.Origin==LoadoutOrigin.Ship).ToList();
+            var visualCount=visualLasers.Count(x=>x.Kind==LoadoutItemKind.Lf1||x.Kind==LoadoutItemKind.Mp1||x.Kind==LoadoutItemKind.Lf2||x.Kind==LoadoutItemKind.Lf3||x.Kind==LoadoutItemKind.Lf4);
+            player.EquipExpansion=PlayerShipExtension.ResolveLevel(player.Ship,visualCount,visualLasers.Any(x=>x.Kind==LoadoutItemKind.Lf2),visualLasers.Any(x=>x.Kind==LoadoutItemKind.Lf3||x.Kind==LoadoutItemKind.Lf4));
 
             player.equipedlasercount = 0;
             player.fulllf3 = true;
@@ -722,7 +843,7 @@ namespace Ow.Managers
             player.AttackManager.RocketLauncher.SetLauncherLoads(rocketLauncherLoads[player.CurrentConfig == 2 ? 1 : 0]);
 
             var configsBase = new ConfigsBase(hitpoints[0], damage[0], shield[0], speed[0], hitpoints[1], damage[1], shield[1], speed[1], leonovlaser[0], leonovlaser[1], leonovshield[0], leonovshield[1]);
-            var itemsBase = new ItemsBase(0);
+            var itemsBase = new ItemsBase(Math.Max(0, player.Data.bootyKeys));
             player.Equipment = new EquipmentBase(configsBase, itemsBase);
 
             if (player.AttackManager.RocketLauncher.CurrentLoad > player.AttackManager.RocketLauncher.MaxLoad)
@@ -843,6 +964,7 @@ namespace Ow.Managers
                     var equippedPerItem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                     var orderedRows = selectedSlots.Values
                         .OrderBy(x => ParseLoadoutOrigin(x) == LoadoutOrigin.Ship ? 0 : 1)
+                        .ThenBy(x => ParseInt(x, 0, "slot_index", "slotIndex", "slot", "position"))
                         .ToList();
 
                     foreach (DataRow slotRow in orderedRows)
@@ -1730,6 +1852,7 @@ namespace Ow.Managers
                     var ores = JsonConvert.DeserializeObject<Cargo>(row["ores"].ToString());
 
                     var ship = new Ship(name, shipID, hitpoints, shields, speed, cargo, lootID, damage, aggressive, respawnable, rewards, waves, type, ores, displayId);
+                    ship.LaserSlots = row["lasers"]==DBNull.Value?0:Convert.ToInt32(row["lasers"]);
                     GameManager.Ships.TryAdd(ship.Id, ship);
                 }
             }

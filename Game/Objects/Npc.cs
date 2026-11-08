@@ -29,6 +29,7 @@ namespace Ow.Game.Objects
         public bool Attacking = false;
         public bool Aggressive = false;
         public bool Respawnable = true;
+        public double CargoDropMultiplier { get; set; } = 1;
         public bool UseMapWideChaseRange = false;
         //public bool Minion = false;
         public int MotherShipId = 0;
@@ -37,8 +38,6 @@ namespace Ow.Game.Objects
 
         public Npc(int id, Ship ship, Spacemap spacemap, Position position, int Owner) : base(id, ship.Name, 0, ship, position, spacemap, GameManager.GetClan(0), 0)
         {
-            Spacemap.AddCharacter(this);
-
             ShieldAbsorption = 0.5;
 
             Damage = ship.Damage;
@@ -54,6 +53,7 @@ namespace Ow.Game.Objects
             NpcAI.RespawnY = Position.Y;
             MotherShipId = Owner;
 
+            Spacemap.AddCharacter(this);
             Program.TickManager.AddTick(this);
         }
 
@@ -96,7 +96,7 @@ namespace Ow.Game.Objects
                     var laserDamage = AttackManager.RandomizeDamage(Damage * CenturyFalconLaserMultiplier, (Storage.underPLD8 ? 0.5 : 0.1));
                     ApplyAttack(target, laserDamage, DamageType.LASER, false, () =>
                     {
-                        var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, CenturyFalconLaserId, false, false);
+                        var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, CenturyFalconLaserId, target.ShieldMechanics(), false);
                         SendCommandToInRangePlayers(laserRunCommand);
                     });
                 }
@@ -112,7 +112,7 @@ namespace Ow.Game.Objects
                 var damage = AttackManager.RandomizeDamage(Damage, (Storage.underPLD8 ? 0.5 : 0.1));
                 ApplyAttack(target, damage, DamageType.LASER, false, () =>
                 {
-                    var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, false, false);
+                    var laserRunCommand = AttackLaserRunCommand.write(Id, target.Id, 0, target.ShieldMechanics(), false);
                     SendCommandToInRangePlayers(laserRunCommand);
                 });
             }
@@ -197,15 +197,19 @@ namespace Ow.Game.Objects
                     attackedPlayer.AttackManager.QueueIncomingDamageHit(Id, damageType, attackHitDamage);
             }
 
+            (target as Player)?.Quests?.RecordDamage(Math.Max(0, Math.Min(damageHp, target.CurrentHitPoints)));
             if (damageHp >= target.CurrentHitPoints || (target.CurrentHitPoints <= 0 && target.MinimumHitpoints <= 0))
             {
                 if (target is Player attackedPlayer)
                     attackedPlayer.AttackManager.FlushPendingIncomingDamageHitsFromAttacker(Id);
 
                 target.Destroy(this, DestructionType.NPC);
+                lastAttackTime = DateTime.Now;
+                return;
             }
             else
                 target.CurrentHitPoints -= damageHp;
+
 
             target.CurrentShieldPoints -= damageShd;
             target.LastCombatTime = DateTime.Now;
@@ -305,16 +309,33 @@ namespace Ow.Game.Objects
 
         public void Respawn()
         {
+            RespawnAt(Position.Random(Spacemap, 0, Spacemap.Id == 29 ? 41600 : 20800, 0, Spacemap.Id == 29 ? 25600 : 12800));
+        }
+
+        protected void RespawnAt(Position position)
+        {
+            Spacemap.RemoveCharacter(this);
+            Deselection();
+            InRangeCharacters.Clear();
+            Attackers.Clear();
+            MainAttacker = null;
             LastCombatTime = DateTime.Now.AddSeconds(-999);
             CurrentHitPoints = MaxHitPoints;
             CurrentShieldPoints = MaxShieldPoints;
-            SetPosition(Position.Random(Spacemap, 0, Spacemap.Id == 29 ? 41600 : 20800, 0, Spacemap.Id == 29 ? 25600 : 12800));
-            Spacemap.AddCharacter(this);
-            Attackers.Clear();
-            MainAttacker = null;
-            Destroyed = false;
+            // Teleport silently: old observers must never receive a move for the new life.
+            Position = Destination = OldPosition = Direction = position;
+            Moving = false;
+            MovementTime = 0;
+            MovementStartTime = DateTime.Now;
+            NpcAI.Reset(position);
+            lastAttackTime = DateTime.Now;
+            lastRocketLauncherAttackTime = DateTime.Now;
+            lastShieldRepairTime = DateTime.Now;
             centuryFalconMinions.Clear();
             minioncount = 0;
+            BeginNewLife();
+            Destroyed = false;
+            Spacemap.AddCharacter(this);
         }
 
         public void ProtegitCheck()

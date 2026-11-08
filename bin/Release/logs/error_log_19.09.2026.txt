@@ -1,0 +1,4 @@
+[19.09.2026 19: 04:22] - [TickManager.cs] Tick void exception: System.NullReferenceException: Referência de objeto não definida para uma instância de um objeto.
+   em Ow.Game.Objects.Players.Skills.Skill.get_EffectiveCooldown() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Skills\Skill.cs:linha 24
+   em Ow.Game.Objects.Players.Skills.AegisRepairPod.Tick() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Objects\Players\Skills\AegisRepairPod.cs:linha 46
+   em Ow.Game.Ticks.TickManager.<Tick>d__9.MoveNext() na D:\Users\Pichau\Desktop\darkorbit\DarkOrbit - 2014\Game\Ticks\TickManager.cs:linha 48

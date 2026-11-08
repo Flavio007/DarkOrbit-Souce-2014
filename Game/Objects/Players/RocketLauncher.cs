@@ -1,4 +1,4 @@
-using Ow.Game.Objects.Players.Managers;
+﻿using Ow.Game.Objects.Players.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +15,7 @@ namespace Ow.Game.Objects.Players
         private int? lastSentLauncherType;
         private int? lastSentLauncherId;
         private int? lastSentStatusLoad;
+        private string lastSentRows;
 
         public Player Player { get; set; }
 
@@ -47,7 +48,7 @@ namespace Ow.Game.Objects.Players
             if (loads == null)
                 return;
 
-            launcherLoads.AddRange(loads.Where(load => load > 0).OrderByDescending(load => load));
+            launcherLoads.AddRange(loads.Where(load => load > 0));
         }
 
         private int GetStatusMaxLoad()
@@ -56,7 +57,7 @@ namespace Ow.Game.Objects.Players
                 return 0;
 
             if (launcherLoads.Count > 0)
-                return launcherLoads[0];
+                return launcherLoads.Max();
 
             return MaxLoad <= HST1_MAX_LOAD ? HST1_MAX_LOAD : HST2_MAX_LOAD;
         }
@@ -74,6 +75,14 @@ namespace Ow.Game.Objects.Players
             var launcherType = GetLauncherTypeForStatus();
             var launcherId = Player.AttackManager.GetSelectedLauncherId();
             var statusLoad = Math.Min(CurrentLoad, GetStatusMaxLoad());
+            var capacities = launcherLoads.Count > 0 ? launcherLoads : new List<int> { Math.Max(MaxLoad, 0) };
+            var loads = GetCurrentLauncherLoads(CurrentLoad);
+            var rows = string.Join("|", capacities.Select((capacity, index) => capacity + "," + (index < loads.Count ? loads[index] : 0)));
+            if (force || rows != lastSentRows)
+            {
+                Player.SendPacket("0|RL|ROWS|" + rows);
+                lastSentRows = rows;
+            }
 
             if (!force &&
                 lastSentLauncherType == launcherType &&
@@ -90,34 +99,7 @@ namespace Ow.Game.Objects.Players
 
         public List<int> GetVolleyLoads(int loadedRockets)
         {
-            var remaining = Math.Max(loadedRockets, 0);
-            var volleyLoads = new List<int>();
-
-            foreach (var launcherLoad in launcherLoads)
-            {
-                if (remaining <= 0)
-                    break;
-
-                var volleyLoad = Math.Min(remaining, launcherLoad);
-                if (volleyLoad <= 0)
-                    continue;
-
-                volleyLoads.Add(volleyLoad);
-                remaining -= volleyLoad;
-            }
-
-            var fallbackLoad = GetStatusMaxLoad();
-            if (fallbackLoad <= 0)
-                fallbackLoad = MaxLoad;
-
-            while (remaining > 0 && fallbackLoad > 0)
-            {
-                var volleyLoad = Math.Min(remaining, fallbackLoad);
-                volleyLoads.Add(volleyLoad);
-                remaining -= volleyLoad;
-            }
-
-            return volleyLoads;
+            return GetCurrentLauncherLoads(loadedRockets);
         }
 
         private List<int> GetCurrentLauncherLoads(int loadedRockets)

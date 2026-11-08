@@ -32,6 +32,7 @@ namespace Ow.Game.Objects.Players.Managers
 
         public void InitiateSkills(bool updateSlotbar = false)
         {
+            Player.RemoveVisualModifier(Ow.Net.netty.commands.VisualModifierCommand.HEALING_POD);
             Player.Storage.Skills.Clear();
 
             if (Ship.SENTINELS.Contains(Player.Ship.Id))
