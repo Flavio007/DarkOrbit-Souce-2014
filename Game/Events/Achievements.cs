@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+Ôªøusing Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Ow.Managers;
 using Ow.Managers.MySQLManager;
@@ -93,7 +93,7 @@ namespace Ow.Game.Events
                     entry.rewarded=true;
                     db.ExecuteNonQuery($"UPDATE player_accounts SET achievements='{Sql(Serialize())}',data='{Sql(JsonConvert.SerializeObject(data))}',ammo='{Sql(JsonConvert.SerializeObject(ammo))}',cargo='{Sql(cargo.ToString(Formatting.None))}',repairCredits={data.repairCredits} WHERE userId={player.Id}");
                     db.ExecuteNonQuery("COMMIT");committed=true;player.Data=data;player.Ammo=ammo;player.LoadCargo(cargo.ToString(Formatting.None));
-                    QueryManager.WriteLogbook(player,"achievement","Conquista concluÌda: "+d.Title+". Recompensa: "+(shipCredits>0?"64.000 crÈditos":d.Reward)+".");
+                    QueryManager.WriteLogbook(player,"achievement","Conquista conclu√≠da: "+d.Title+". Recompensa: "+(shipCredits>0?"64.000 cr√©ditos":d.Reward)+".");
                     if(drones!=null)player.DroneManager.DronesList=drones;
                     if(player.GameSession==null)return;
                     if(equipShip)player.ChangeShip(d.Value);

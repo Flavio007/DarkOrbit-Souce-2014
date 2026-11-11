@@ -16,6 +16,25 @@ namespace Ow.Game.Objects
 {
     class Npc : Character
     {
+        internal static Npc CreateForShip(Ship ship, Spacemap map, Position position)
+        {
+            if (ship == null) throw new ArgumentNullException(nameof(ship));
+            switch (ship.Id)
+            {
+                case 80:
+                case 480:
+                case 880:
+                    return new Cubikon(Randoms.CreateRandomID(), ship, map, position,
+                        ship.Waves != null && ship.Waves.NpcId > 0 ? ship.Waves.NpcId : ship.Id + 1,
+                        ship.Waves != null && ship.Waves.Count > 0 ? ship.Waves.Count : 20);
+                case 107:
+                    return new SolarLordakium(Randoms.CreateRandomID(), ship, map, position, 0);
+                default:
+                    // Includes the per-ID Century Falcon and Devourer Carrier behavior.
+                    return new Npc(Randoms.CreateRandomID(), ship, map, position, 0);
+            }
+        }
+
         private const int CenturyFalconWaveSize = 20;
         private const int CenturyFalconLaserId = 3;
         private const int CenturyFalconLaserMultiplier = 1;
@@ -26,6 +45,10 @@ namespace Ow.Game.Objects
         private readonly List<Protegit> centuryFalconMinions = new List<Protegit>();
 
         public NpcAI NpcAI { get; set; }
+        internal DevourerCarrier Carrier { get; private set; }
+        internal Npc CarrierMother;
+        internal DateTime CarrierOrderTime;
+        internal int CarrierEscortSlot;
         public bool Attacking = false;
         public bool Aggressive = false;
         public bool Respawnable = true;
@@ -53,6 +76,8 @@ namespace Ow.Game.Objects
             NpcAI.RespawnY = Position.Y;
             MotherShipId = Owner;
 
+            if (ship.Id == DevourerCarrier.ShipId) Carrier = new DevourerCarrier(this);
+
             Spacemap.AddCharacter(this);
             Program.TickManager.AddTick(this);
         }
@@ -63,6 +88,7 @@ namespace Ow.Game.Objects
             {
                 Movement.ActualPosition(this);
                 NpcAI.TickAI();
+                Carrier?.Tick();
                 CheckShieldPointsRepair();
                 Storage.Tick();
                 RefreshAttackers();
@@ -79,6 +105,7 @@ namespace Ow.Game.Objects
         public DateTime lastRocketLauncherAttackTime = new DateTime();
         public void Attack()
         {
+            if (Ship.Id == DevourerCarrier.ShipId) return;
             var target = SelectedCharacter;
 
             if (!TargetDefinition(target, false)) return;
@@ -219,6 +246,21 @@ namespace Ow.Game.Objects
             target.UpdateStatus();
         }
 
+        internal void ApplyCarrierDamage(Player target, int damage)
+        {
+            // Reuse shield absorption, invincibility, incoming damage and destruction rules.
+            ApplyAttack(target, damage, DamageType.LASER, false, null);
+        }
+
+        internal void FireCarrierLaser(Character target, int damage)
+        {
+            if (!TargetDefinition(target, false)) return;
+            ApplyAttack(target, damage, DamageType.LASER, false,
+                () => SendPacketToInRangePlayers($"0|n|carrierShot|{Id}|{target.Id}"));
+        }
+
+        internal void ClearCarrier() { Carrier?.Clear(); Carrier = null; }
+
         private void SendMissedAttack(Character target, DamageType damageType)
         {
             var missedAttackForTarget = AttackMissedCommand.write(new AttackTypeModule((short)damageType), target.Id, 0);
@@ -333,6 +375,8 @@ namespace Ow.Game.Objects
             lastShieldRepairTime = DateTime.Now;
             centuryFalconMinions.Clear();
             minioncount = 0;
+            ClearCarrier();
+            if (Ship.Id == DevourerCarrier.ShipId) Carrier = new DevourerCarrier(this);
             BeginNewLife();
             Destroyed = false;
             Spacemap.AddCharacter(this);

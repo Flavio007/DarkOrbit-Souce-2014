@@ -170,8 +170,11 @@ namespace Ow.Game.Objects
                         }
                         else player.SendCommand(character.GetShipCreateCommand());
 
+                        if (character is Npc carrierNpc && carrierNpc.Carrier != null)
+                            player.SendPacket(carrierNpc.Carrier.Snapshot());
+
                         var timeElapsed = (DateTime.Now - character.MovementStartTime).TotalMilliseconds;
-                        player.SendCommand(MoveCommand.write(character.Id, character.Destination.X, character.Destination.Y, character.Moving ? Math.Max(0, (int)(character.MovementTime - timeElapsed)) : 0));
+                        player.SendCommand(MoveCommand.write(character.Id, character.Destination.X, character.Destination.Y, character.Moving ? (int)Math.Max(0, Math.Min(int.MaxValue, character.MovementTime - timeElapsed)) : 0));
                     }
                 }
 

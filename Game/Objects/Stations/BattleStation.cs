@@ -603,7 +603,7 @@ namespace Ow.Game.Objects.Stations
         public override void Click(GameSession gameSession)
         {
             var player = gameSession.Player;
-            if (player == null)
+            if (player == null || !IsOperational)
                 return;
 
             if (IsClanBattleStation)
@@ -632,7 +632,8 @@ namespace Ow.Game.Objects.Stations
             var ownerClanTag = IsClanBattleStation && Clan != null && Clan.Id != 0 ? Clan.Tag : "";
             var ownerClanId = IsClanBattleStation && Clan != null ? Clan.Id : 0;
 
-            return AssetCreateCommand.write(GetAssetType(), Name,
+            var visualName = IsFactionBattleStation ? "__faction_station__" + Name : Name;
+            return AssetCreateCommand.write(GetAssetType(), visualName,
                 GetAffiliatedFactionId(), ownerClanTag, Id, GetVisualDesignId(), GetVisualExpansionStage(),
                 Position.X, Position.Y, ownerClanId, true, true, true, !IsFactionBattleStation,
                 new ClanRelationModule(clanRelationModule),
@@ -854,6 +855,11 @@ namespace Ow.Game.Objects.Stations
             Clan = GameManager.GetClan(0);
             AssetTypeId = Definition.StationAssetTypeId;
             SetUpgradeLevel(1, true);
+
+            foreach (var pilot in Spacemap.Characters.Values.OfType<Player>()
+                         .Where(p => !p.Destroyed && p.FactionId == factionId &&
+                                     p.Position.DistanceTo(Position) <= Definition.CaptureRadius))
+                pilot.ChangeData(DataType.RECOGNITION, 1000 * 100);
 
             SpawnDefenseTowers();
             RefreshFactionTradeStation();
@@ -1794,7 +1800,7 @@ namespace Ow.Game.Objects.Stations
             if (!InBuildingState || buildTime == DateTime.MinValue)
                 return 0;
 
-            return Math.Max(0, (int)Math.Ceiling((buildTime - DateTime.Now).TotalSeconds));
+            return (int)Math.Max(0, Math.Min(int.MaxValue, Math.Ceiling((buildTime - DateTime.Now).TotalSeconds)));
         }
 
         private static int ResolveClanFactionId(Clan clan, int fallbackFactionId)

@@ -30,6 +30,7 @@ namespace Ow.Game.Objects.Players.Managers
         public long honor = 0;
         public long experience = 0;
         public long jackpot = 0;
+        public long recognition = 0;
         public long extraEnergy = 0;
         public long repairCredits = 0;
         public long jumpCredits = 0;
@@ -392,7 +393,7 @@ namespace Ow.Game.Objects.Players.Managers
         public string selectedLaser = AmmunitionManager.LCB_10;
         public string selectedRocket = AmmunitionManager.R_310;
         public string selectedRocketLauncher = AmmunitionManager.ROCKET_LAUNCHER_ECO_10;
-        public string selectedFormation = DroneManager.WAVE_FORMATION; //DroneManager.DEFAULT_FORMATION;
+        public string selectedFormation = DroneManager.DEFAULT_FORMATION;
         public int currentConfig = 1;
         public List<string> selectedCpus = new List<string> { }; //{ CpuManager.AUTO_ROCKET_CPU, CpuManager.AUTO_HELLSTROM_CPU };
     }
@@ -589,6 +590,30 @@ namespace Ow.Game.Objects.Players.Managers
             }
         }
 
+        private static bool IsActionableCpu(string itemId)
+        {
+            switch (itemId)
+            {
+                case CpuManager.CLK_XL:
+                case CpuManager.AUTO_ROCKET_CPU:
+                case CpuManager.AUTO_HELLSTROM_CPU:
+                case CpuManager.AIM_01_CPU:
+                case CpuManager.AIM_02_CPU:
+                case CpuManager.NC_RRB_CPU:
+                case CpuManager.REPBOT_REP_S:
+                case CpuManager.REPBOT_REP_1:
+                case CpuManager.REPBOT_REP_2:
+                case CpuManager.REPBOT_REP_3:
+                case CpuManager.REPBOT_REP_4:
+                case CpuManager.JP_01_CPU:
+                case CpuManager.JP_02_CPU:
+                case CpuManager.AJP_01_CPU:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private bool IsSpecialItemUnlocked(string itemId)
         {
             switch (itemId)
@@ -758,6 +783,8 @@ namespace Ow.Game.Objects.Players.Managers
 
         public void SendSlotBarCommand()
         {
+            Player.DroneManager.EnsureValidFormation();
+            Player.DroneManager.MarkFormationMenuState();
             Player.SetCurrentCooldowns();
 
             var windowSettings = Player.Settings.Window;
@@ -778,7 +805,8 @@ namespace Ow.Game.Objects.Players.Managers
             categories.Add(GetBuyCategory());
             categories.Add(GetTechCategory());
             categories.Add(GetAbilityCategory());
-            categories.Add(GetFormationCategory());
+            if (Player.DroneManager.FormationsAvailable)
+                categories.Add(GetFormationCategory());
 
             Player.SendCommand(ClientUISlotBarsCommand.write(windowSettings.categoryBarPosition, slotBars, categories));
         }
@@ -835,7 +863,8 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var pair in Player.Settings.SlotBarItems)
             {
-                if (CpusCategory.Contains(pair.Value) && !Player.CpuManager.IsCpuEquipped(pair.Value)) continue;
+                if (CpusCategory.Contains(pair.Value) && (!IsActionableCpu(pair.Value) || !Player.CpuManager.IsCpuEquipped(pair.Value))) continue;
+                if (FormationsCategory.Contains(pair.Value) && !Player.DroneManager.FormationsAvailable) continue;
                 if (SpecialItemsCategory.Contains(pair.Value) && !IsSpecialItemUnlocked(pair.Value)) continue;
                 if (pair.Value == "") continue;
                 ClientUISlotBarItemModule item = new ClientUISlotBarItemModule(pair.Value, pair.Key);
@@ -852,7 +881,8 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var pair in Player.Settings.PremiumSlotBarItems)
             {
-                if (CpusCategory.Contains(pair.Value) && !Player.CpuManager.IsCpuEquipped(pair.Value)) continue;
+                if (CpusCategory.Contains(pair.Value) && (!IsActionableCpu(pair.Value) || !Player.CpuManager.IsCpuEquipped(pair.Value))) continue;
+                if (FormationsCategory.Contains(pair.Value) && !Player.DroneManager.FormationsAvailable) continue;
                 if (SpecialItemsCategory.Contains(pair.Value) && !IsSpecialItemUnlocked(pair.Value)) continue;
                 if (pair.Value == "") continue;
                 ClientUISlotBarItemModule item = new ClientUISlotBarItemModule(pair.Value, pair.Key);
@@ -869,7 +899,8 @@ namespace Ow.Game.Objects.Players.Managers
 
             foreach (var pair in Player.Settings.ProActionBarItems)
             {
-                if (CpusCategory.Contains(pair.Value) && !Player.CpuManager.IsCpuEquipped(pair.Value)) continue;
+                if (CpusCategory.Contains(pair.Value) && (!IsActionableCpu(pair.Value) || !Player.CpuManager.IsCpuEquipped(pair.Value))) continue;
+                if (FormationsCategory.Contains(pair.Value) && !Player.DroneManager.FormationsAvailable) continue;
                 if (SpecialItemsCategory.Contains(pair.Value) && !IsSpecialItemUnlocked(pair.Value)) continue;
                 if (pair.Value == "") continue;
                 ClientUISlotBarItemModule item = new ClientUISlotBarItemModule(pair.Value, pair.Key);
@@ -1054,7 +1085,7 @@ namespace Ow.Game.Objects.Players.Managers
             var cpuItems = new List<ClientUISlotBarCategoryItemModule>();
             foreach (string itemLootId in CpusCategory)
             {
-                if (!Player.CpuManager.IsCpuEquipped(itemLootId))
+                if (!IsActionableCpu(itemLootId) || !Player.CpuManager.IsCpuEquipped(itemLootId))
                     continue;
 
                 var maxTime = 0;
@@ -1301,6 +1332,8 @@ namespace Ow.Game.Objects.Players.Managers
         public ClientUISlotBarCategoryModule GetFormationCategory()
         {
             var formationItems = new List<ClientUISlotBarCategoryItemModule>();
+            if (!Player.DroneManager.FormationsAvailable)
+                return new ClientUISlotBarCategoryModule("drone_formations", formationItems);
             foreach (string itemLootId in FormationsCategory)
             {
                 /*
@@ -1494,6 +1527,7 @@ namespace Ow.Game.Objects.Players.Managers
             }
         }
 
+        // Clamp before converting: dates default to MinValue and overflow Int32 on Mono.
         private long GetCooldownTime(string pItemId)
         {
             switch (pItemId)
@@ -1505,19 +1539,19 @@ namespace Ow.Game.Objects.Players.Managers
                 case AmmunitionManager.PLT_2021:
                 case AmmunitionManager.PLT_3030:
                     var rocketCooldown = (DateTime.Now - Player.AttackManager.lastRocketAttack).TotalMilliseconds;
-                    return (int)(((Player.Premium ? 1000 : 3000) * (Player.CpuManager?.GetRocketCooldownMultiplier() ?? 1.0)) - rocketCooldown);
+                    return (long)Math.Max(0.0, ((Player.Premium ? 1000 : 3000) * (Player.CpuManager?.GetRocketCooldownMultiplier() ?? 1.0)) - rocketCooldown);
                 case AmmunitionManager.DCR_250:
                     var dcrCooldown = (DateTime.Now - Player.AttackManager.dcr_250Cooldown).TotalMilliseconds;
-                    return (int)(TimeManager.DCR_250_COOLDOWN - dcrCooldown);
+                    return (long)Math.Max(0.0, TimeManager.DCR_250_COOLDOWN - dcrCooldown);
                 case AmmunitionManager.R_IC3:
                     var r_ic3Cooldown = (DateTime.Now - Player.AttackManager.r_ic3Cooldown).TotalMilliseconds;
-                    return (int)(TimeManager.R_IC3_COOLDOWN - r_ic3Cooldown);
+                    return (long)Math.Max(0.0, TimeManager.R_IC3_COOLDOWN - r_ic3Cooldown);
                 case AmmunitionManager.WIZ_X:
                     var wiz_xCooldown = (DateTime.Now - Player.AttackManager.wiz_xCooldown).TotalMilliseconds;
-                    return (int)(TimeManager.WIZARD_COOLDOWN - wiz_xCooldown);
+                    return (long)Math.Max(0.0, TimeManager.WIZARD_COOLDOWN - wiz_xCooldown);
                 case AmmunitionManager.PLD_8:
                     var pldCooldown = (DateTime.Now - Player.AttackManager.pld8Cooldown).TotalMilliseconds;
-                    return (int)(TimeManager.PLD8_COOLDOWN - pldCooldown);
+                    return (long)Math.Max(0.0, TimeManager.PLD8_COOLDOWN - pldCooldown);
                 case AmmunitionManager.LCB_10:
                 case AmmunitionManager.MCB_25:
                 case AmmunitionManager.MCB_50:
@@ -1526,19 +1560,19 @@ namespace Ow.Game.Objects.Players.Managers
                 case AmmunitionManager.CBO_100:
                 case AmmunitionManager.JOB_100:
                     var laserCooldown = (DateTime.Now - Player.AttackManager.lastAttackTime).TotalMilliseconds;
-                    return (int)(1000 - laserCooldown);
+                    return (long)Math.Max(0.0, 1000 - laserCooldown);
                 case AmmunitionManager.RSB_75:
                     var rsbCooldown = (DateTime.Now - Player.AttackManager.lastRSBAttackTime).TotalMilliseconds;
-                    return (int)(3000 - rsbCooldown);
+                    return (long)Math.Max(0.0, 3000 - rsbCooldown);
                 case AmmunitionManager.SMB_01:
                     var smbCooldown = (DateTime.Now - Player.AttackManager.SmbCooldown).TotalMilliseconds;
-                    return (int)(TimeManager.SMB_COOLDOWN - smbCooldown);
+                    return (long)Math.Max(0.0, TimeManager.SMB_COOLDOWN - smbCooldown);
                 case AmmunitionManager.ISH_01:
                     var ishCooldown = (DateTime.Now - Player.AttackManager.IshCooldown).TotalMilliseconds;
-                    return (int)(TimeManager.ISH_COOLDOWN - ishCooldown);
+                    return (long)Math.Max(0.0, TimeManager.ISH_COOLDOWN - ishCooldown);
                 case AmmunitionManager.EMP_01:
                     var empCooldown = (DateTime.Now - Player.AttackManager.EmpCooldown).TotalMilliseconds;
-                    return (int)(TimeManager.EMP_COOLDOWN - empCooldown);
+                    return (long)Math.Max(0.0, TimeManager.EMP_COOLDOWN - empCooldown);
                 case AmmunitionManager.ACM_01:
                 case AmmunitionManager.DDM_01:
                 case AmmunitionManager.EMPM_01:
@@ -1546,22 +1580,22 @@ namespace Ow.Game.Objects.Players.Managers
                 case AmmunitionManager.SABM_01:
                 case AmmunitionManager.SLM_01:
                     var mineCooldown = (DateTime.Now - Player.AttackManager.mineCooldown).TotalMilliseconds;
-                    return (int)(TimeManager.MINE_COOLDOWN - mineCooldown);
+                    return (long)Math.Max(0.0, TimeManager.MINE_COOLDOWN - mineCooldown);
                 case TechManager.TECH_ENERGY_LEECH:
                     var energyLeechCooldown = (DateTime.Now - Player.TechManager.EnergyLeech.cooldown).TotalMilliseconds;
-                    return (int)((Player.TechManager.EnergyLeech.Active ? TimeManager.ENERGY_LEECH_DURATION : (TimeManager.ENERGY_LEECH_DURATION + TimeManager.ENERGY_LEECH_COOLDOWN)) - energyLeechCooldown);
+                    return (long)Math.Max(0.0, (Player.TechManager.EnergyLeech.Active ? TimeManager.ENERGY_LEECH_DURATION : (TimeManager.ENERGY_LEECH_DURATION + TimeManager.ENERGY_LEECH_COOLDOWN)) - energyLeechCooldown);
                 case TechManager.TECH_CHAIN_IMPULSE:
                     var chainImpulseCooldown = (DateTime.Now - Player.TechManager.ChainImpulse.cooldown).TotalMilliseconds;
-                    return (int)(TimeManager.CHAIN_IMPULSE_COOLDOWN - chainImpulseCooldown);
+                    return (long)Math.Max(0.0, TimeManager.CHAIN_IMPULSE_COOLDOWN - chainImpulseCooldown);
                 case TechManager.TECH_PRECISION_TARGETER:
                     var precisionTargeterCooldown = (DateTime.Now - Player.TechManager.PrecisionTargeter.cooldown).TotalMilliseconds;
-                    return (int)((Player.TechManager.PrecisionTargeter.Active ? TimeManager.PRECISION_TARGETER_DURATION : (TimeManager.PRECISION_TARGETER_DURATION + TimeManager.PRECISION_TARGETER_COOLDOWN)) - precisionTargeterCooldown);
+                    return (long)Math.Max(0.0, (Player.TechManager.PrecisionTargeter.Active ? TimeManager.PRECISION_TARGETER_DURATION : (TimeManager.PRECISION_TARGETER_DURATION + TimeManager.PRECISION_TARGETER_COOLDOWN)) - precisionTargeterCooldown);
                 case TechManager.TECH_BACKUP_SHIELDS:
                     var backupShieldsCooldown = (DateTime.Now - Player.TechManager.BackupShields.cooldown).TotalMilliseconds;
-                    return (int)(TimeManager.BACKUP_SHIELD_COOLDOWN - backupShieldsCooldown);
+                    return (long)Math.Max(0.0, TimeManager.BACKUP_SHIELD_COOLDOWN - backupShieldsCooldown);
                 case TechManager.TECH_BATTLE_REPAIR_BOT:
                     var battleRepairBotCooldown = (DateTime.Now - Player.TechManager.BattleRepairBot.cooldown).TotalMilliseconds;
-                    return (int)((Player.TechManager.BattleRepairBot.Active ? TimeManager.BATTLE_REPAIR_BOT_DURATION : (TimeManager.BATTLE_REPAIR_BOT_DURATION + TimeManager.BATTLE_REPAIR_BOT_COOLDOWN)) - battleRepairBotCooldown);
+                    return (long)Math.Max(0.0, (Player.TechManager.BattleRepairBot.Active ? TimeManager.BATTLE_REPAIR_BOT_DURATION : (TimeManager.BATTLE_REPAIR_BOT_DURATION + TimeManager.BATTLE_REPAIR_BOT_COOLDOWN)) - battleRepairBotCooldown);
                 case SkillManager.SENTINEL:
                 case SkillManager.SPECTRUM:
                 case SkillManager.VENOM:
@@ -1582,7 +1616,7 @@ namespace Ow.Game.Objects.Players.Managers
                     if (Player.Storage.Skills.ContainsKey(pItemId))
                     {
                         var cooldown = (DateTime.Now - Player.Storage.Skills[pItemId].cooldown).TotalMilliseconds;
-                        return (int)((Player.Storage.Skills[pItemId].Active ? Player.Storage.Skills[pItemId].Duration : (Player.Storage.Skills[pItemId].Duration + Player.Storage.Skills[pItemId].Cooldown)) - cooldown);
+                        return (long)Math.Max(0.0, (Player.Storage.Skills[pItemId].Active ? Player.Storage.Skills[pItemId].Duration : (Player.Storage.Skills[pItemId].Duration + Player.Storage.Skills[pItemId].Cooldown)) - cooldown);
                     }
                     else return 0;
                 case DroneManager.DEFAULT_FORMATION:
@@ -1607,7 +1641,7 @@ namespace Ow.Game.Objects.Players.Managers
                 case DroneManager.WAVE_FORMATION:
                 case DroneManager.X_FORMATION:
                     var formationCooldown = (DateTime.Now - Player.DroneManager.formationCooldown).TotalMilliseconds;
-                    return (int)(TimeManager.FORMATION_COOLDOWN - formationCooldown);
+                    return (long)Math.Max(0.0, TimeManager.FORMATION_COOLDOWN - formationCooldown);
                 default:
                     return 0;
             }

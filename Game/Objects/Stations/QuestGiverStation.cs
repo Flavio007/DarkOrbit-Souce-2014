@@ -23,8 +23,10 @@ namespace Ow.Game.Objects.Stations
 
         public override byte[] GetAssetCreateCommand(short clanRelationModule = ClanRelationModule.NONE)
         {
-            return AssetCreateCommand.write(GetAssetType(), EmbeddedInHomeStation ? "__home_service_quest" : "Morgus Petterson",
-                                          FactionId, "", Id, 3, 0,
+            var design = FactionId == 2 ? 6 : FactionId == 3 ? 9 : 3;
+            var name = FactionId == 2 ? "Reginald Crowley" : FactionId == 3 ? "Vanessa Arkadium" : "Morgus Petterson";
+            return AssetCreateCommand.write(GetAssetType(), EmbeddedInHomeStation ? "__home_service_quest" : name,
+                                          FactionId, "", Id, design, 0,
                                           Position.X, Position.Y, 0, true, true, true, true,
                                           new ClanRelationModule(clanRelationModule),
                                           new List<VisualModifierCommand>());

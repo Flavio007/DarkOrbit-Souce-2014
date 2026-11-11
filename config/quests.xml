@@ -70,6 +70,7 @@
       <reward lootId="credits" amount="2000" />
       <reward lootId="experience" amount="400" />
       <reward lootId="uridium" amount="5" />
+      <reward lootId="recognition" amount="100" />
     </rewards>
   </quest>
   <quest id="201" title="Primeira patrulha" titleKey="quest_title_starter_201" description="Destrua 3 Streuners para reduzir a presenca alienigena nos mapas iniciais." descriptionKey="quest_description_starter_201" sortOrder="11" minLevel="1" priority="0" factionId="2" icon="0">
@@ -80,6 +81,7 @@
       <reward lootId="credits" amount="2000" />
       <reward lootId="experience" amount="400" />
       <reward lootId="uridium" amount="5" />
+      <reward lootId="recognition" amount="100" />
     </rewards>
   </quest>
   <quest id="301" title="Primeira patrulha" titleKey="quest_title_starter_301" description="Destrua 3 Streuners para reduzir a presenca alienigena nos mapas iniciais." descriptionKey="quest_description_starter_301" sortOrder="11" minLevel="1" priority="0" factionId="3" icon="0">
@@ -90,6 +92,7 @@
       <reward lootId="credits" amount="2000" />
       <reward lootId="experience" amount="400" />
       <reward lootId="uridium" amount="5" />
+      <reward lootId="recognition" amount="100" />
     </rewards>
   </quest>
   <quest id="102" title="Suprimentos de emergencia" titleKey="quest_title_starter_102" description="Procure caixas bonus pelo mapa e colete 3 delas para abastecer suas primeiras viagens." descriptionKey="quest_description_starter_102" sortOrder="12" minLevel="1" priority="0" factionId="1" icon="1">
@@ -774,6 +777,126 @@
       <reward lootId="ammunition_laser_ucb-100" amount="100" />
     </rewards>
   </quest>
+  <quest id="24510" title="Company Wars I: The VRU has crossed the line! (Goliath)" titleKey="quest_title_93" description="killPlayers: 5" sortOrder="46" minLevel="6" priority="0" factionId="1" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Goliath)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas goliath (5) / alvo VRU" type="killPlayers" target="5" enemyTarget="1" shipFamily="goliath" targetFactionId="3" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="300000" />
+      <reward lootId="uridium" amount="600" />
+      <reward lootId="experience" amount="300000" />
+    </rewards>
+  </quest>
+  <quest id="24520" title="Company Wars I: The VRU has crossed the line! (Goliath)" titleKey="quest_title_93" description="killPlayers: 5" sortOrder="46" minLevel="6" priority="0" factionId="2" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Goliath)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas goliath (5) / alvo VRU" type="killPlayers" target="5" enemyTarget="1" shipFamily="goliath" targetFactionId="3" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="300000" />
+      <reward lootId="uridium" amount="600" />
+      <reward lootId="experience" amount="300000" />
+    </rewards>
+  </quest>
+  <quest id="24620" title="Company Wars I: The MMO has crossed the line! (Goliath)" titleKey="quest_title_91" description="killPlayers: 5" sortOrder="47" minLevel="6" priority="0" factionId="2" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Goliath)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas goliath (5) / alvo MMO" type="killPlayers" target="5" enemyTarget="1" shipFamily="goliath" targetFactionId="1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="300000" />
+      <reward lootId="uridium" amount="600" />
+      <reward lootId="experience" amount="300000" />
+    </rewards>
+  </quest>
+  <quest id="24630" title="Company Wars I: The MMO has crossed the line! (Goliath)" titleKey="quest_title_91" description="killPlayers: 5" sortOrder="47" minLevel="6" priority="0" factionId="3" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Goliath)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas goliath (5) / alvo MMO" type="killPlayers" target="5" enemyTarget="1" shipFamily="goliath" targetFactionId="1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="300000" />
+      <reward lootId="uridium" amount="600" />
+      <reward lootId="experience" amount="300000" />
+    </rewards>
+  </quest>
+  <quest id="24710" title="Company Wars I: The VRU has crossed the line! (BigBoy)" titleKey="quest_title_90" description="killPlayers: 10" sortOrder="48" minLevel="6" priority="0" factionId="1" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(BigBoy)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas bigboy (10) / alvo VRU" type="killPlayers" target="10" enemyTarget="1" shipFamily="bigboy" targetFactionId="3" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="200000" />
+      <reward lootId="uridium" amount="400" />
+      <reward lootId="experience" amount="200000" />
+    </rewards>
+  </quest>
+  <quest id="24720" title="Company Wars I: The VRU has crossed the line! (BigBoy)" titleKey="quest_title_90" description="killPlayers: 10" sortOrder="48" minLevel="6" priority="0" factionId="2" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(BigBoy)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas bigboy (10) / alvo VRU" type="killPlayers" target="10" enemyTarget="1" shipFamily="bigboy" targetFactionId="3" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="200000" />
+      <reward lootId="uridium" amount="400" />
+      <reward lootId="experience" amount="200000" />
+    </rewards>
+  </quest>
+  <quest id="24820" title="Company Wars I: The MMO has crossed the line! (BigBoy)" titleKey="quest_title_88" description="killPlayers: 10" sortOrder="49" minLevel="6" priority="0" factionId="2" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(BigBoy)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas bigboy (10) / alvo MMO" type="killPlayers" target="10" enemyTarget="1" shipFamily="bigboy" targetFactionId="1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="200000" />
+      <reward lootId="uridium" amount="400" />
+      <reward lootId="experience" amount="200000" />
+    </rewards>
+  </quest>
+  <quest id="24830" title="Company Wars I: The MMO has crossed the line! (BigBoy)" titleKey="quest_title_88" description="killPlayers: 10" sortOrder="49" minLevel="6" priority="0" factionId="3" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(BigBoy)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas bigboy (10) / alvo MMO" type="killPlayers" target="10" enemyTarget="1" shipFamily="bigboy" targetFactionId="1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="200000" />
+      <reward lootId="uridium" amount="400" />
+      <reward lootId="experience" amount="200000" />
+    </rewards>
+  </quest>
+  <quest id="24910" title="Company Wars I: The VRU has crossed the line! (Vengeance)" titleKey="quest_title_87" description="killPlayers: 15" sortOrder="50" minLevel="6" priority="0" factionId="1" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Vengeance)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas vengeance (15) / alvo VRU" type="killPlayers" target="15" enemyTarget="1" shipFamily="vengeance" targetFactionId="3" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="100000" />
+      <reward lootId="uridium" amount="200" />
+      <reward lootId="experience" amount="100000" />
+    </rewards>
+  </quest>
+  <quest id="24920" title="Company Wars I: The VRU has crossed the line! (Vengeance)" titleKey="quest_title_87" description="killPlayers: 15" sortOrder="50" minLevel="6" priority="0" factionId="2" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Vengeance)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas vengeance (15) / alvo VRU" type="killPlayers" target="15" enemyTarget="1" shipFamily="vengeance" targetFactionId="3" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="100000" />
+      <reward lootId="uridium" amount="200" />
+      <reward lootId="experience" amount="100000" />
+    </rewards>
+  </quest>
+  <quest id="25020" title="Company Wars I: The MMO has crossed the line! (Vengeance)" titleKey="quest_title_85" description="killPlayers: 15" sortOrder="51" minLevel="6" priority="0" factionId="2" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Vengeance)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas vengeance (15) / alvo MMO" type="killPlayers" target="15" enemyTarget="1" shipFamily="vengeance" targetFactionId="1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="100000" />
+      <reward lootId="uridium" amount="200" />
+      <reward lootId="experience" amount="100000" />
+    </rewards>
+  </quest>
+  <quest id="25030" title="Company Wars I: The MMO has crossed the line! (Vengeance)" titleKey="quest_title_85" description="killPlayers: 15" sortOrder="51" minLevel="6" priority="0" factionId="3" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Vengeance)">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas vengeance (15) / alvo MMO" type="killPlayers" target="15" enemyTarget="1" shipFamily="vengeance" targetFactionId="1" />
+    </conditions>
+    <rewards>
+      <reward lootId="credits" amount="100000" />
+      <reward lootId="uridium" amount="200" />
+      <reward lootId="experience" amount="100000" />
+    </rewards>
+  </quest>
   <quest id="1028" title="Sibelons strike back! (3)" titleKey="quest_title_70" description="Destroy 8 Sibelons." descriptionKey="Sibelons strike back! (3)" sortOrder="1" minLevel="7" priority="0" factionId="0">
     <conditions>
       <condition id="kill_sibelon" type="killNpc" wireId="1" target="8" descriptionKey="Destroy Sibelons" targetShipId="74" iconKey="questTarget/npc_74_icon.png" />
@@ -803,6 +926,18 @@
       <reward lootId="credits" amount="14000000" />
       <reward lootId="uridium" amount="10000" />
       <reward lootId="ammunition_laser_ucb-100" amount="4000" />
+    </rewards>
+  </quest>
+  <quest id="25500" title="David vs. Goliath" titleKey="quest_title_171" description="killPlayers: 5" sortOrder="56" minLevel="8" priority="0" factionId="0" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/David_vs._Goliath" requiredAmmo="ammunition_laser_lcb-10">
+    <conditions>
+      <condition id="objective_1" wireId="1" descriptionKey="Destrua naves inimigas goliath (5) / munição obrigatória: lcb-10" type="killPlayers" target="5" enemyTarget="1" shipFamily="goliath" />
+    </conditions>
+    <rewards>
+      <reward lootId="experience" amount="512000" />
+      <reward lootId="honor" amount="5120" />
+      <reward lootId="credits" amount="512000" />
+      <reward lootId="uridium" amount="300" />
+      <reward lootId="ammunition_laser_mcb-50" amount="5000" />
     </rewards>
   </quest>
   <quest id="25600" title="Get a move on (3)" titleKey="quest_title_144" description="killNpc: 150" sortOrder="57" minLevel="8" priority="0" factionId="0" sourceRevision="63014" managedBy="classicQuestSync" source="https://darkorbit.fandom.com/wiki/Quest/Get_a_move_on_(3)" timeLimitSeconds="2700">

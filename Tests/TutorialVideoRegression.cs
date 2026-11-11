@@ -21,9 +21,11 @@ class TutorialVideoRegression
         var npcType=a.GetType("Ow.Game.Objects.Npc");var cargoType=a.GetType("Ow.Game.Objects.Collectables.CargoBox");
         var npcs=(IList)Get(instance,"Streuners");var cargos=new object[3];
         for(int i=0;i<3;i++){var npc=Empty(npcType);Set(npc,"Spacemap",map);a.GetType("Ow.Game.Objects.Attackable").GetField("<Id>k__BackingField",F).SetValue(npc,100+i);npcs.Add(npc);}
+        var rockets=managerType.GetMethod("ShouldTeachRockets",BindingFlags.Static|BindingFlags.NonPublic);
+        Check(!(bool)rockets.Invoke(null,new[]{instance}),"first Streuner uses laser lesson");
         var destroyed=managerType.GetMethod("HandleNpcDestroyed",F);var collected=managerType.GetMethod("HandleCargoCollected",F);
-        for(int i=0;i<3;i++){var npc=npcs[0];var cargo=Empty(cargoType);Set(cargo,"Spacemap",map);Set(cargo,"Hash","tutorial-"+i);cargos[i]=cargo;destroyed.Invoke(manager,new[]{npc,player,cargo});Check((bool)Get(cargo,"TutorialCargo"),"cargo does not expire during tutorial");}
-        Check(!(bool)Get(instance,"RewardsSpawned")&&((IDictionary)Get(instance,"Cargo")).Count==3,"three kills do not skip cargo collection");
+        for(int i=0;i<3;i++){var npc=npcs[0];var cargo=Empty(cargoType);Set(cargo,"Spacemap",map);Set(cargo,"Hash","tutorial-"+i);cargos[i]=cargo;destroyed.Invoke(manager,new[]{npc,player,cargo});Check((bool)Get(cargo,"TutorialCargo"),"cargo does not expire during tutorial");Check((bool)rockets.Invoke(null,new[]{instance})==(i==0),"rocket lesson after first kill, collection retained for later");if(i==0){collected.Invoke(manager,new[]{cargo,player});Check((bool)rockets.Invoke(null,new[]{instance}),"collecting first cargo early preserves second Streuner rocket hint");}}
+        Check(!(bool)Get(instance,"RewardsSpawned")&&((IDictionary)Get(instance,"Cargo")).Count==2 && (int)Get(instance,"CollectedCargo")==1,"three kills do not skip cargo collection");
         collected.Invoke(manager,new[]{cargos[0],player});collected.Invoke(manager,new[]{cargos[0],player});
         Check((int)Get(instance,"CollectedCargo")==1,"duplicate collection cannot advance tutorial twice");
         collected.Invoke(manager,new[]{cargos[1],player});

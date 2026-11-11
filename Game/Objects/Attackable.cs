@@ -350,7 +350,12 @@ namespace Ow.Game.Objects
             }
 
             var questRecipients = Quests.KillRecipients(destroyer as Player, this);
+            // Faction stations reset their owner as part of destruction.
+            var defeatedFaction = FactionId;
+            var defeatedFactionStation = this is BattleStation factionStation && factionStation.IsFactionBattleStation;
+            var defeatedFactionModule = this is Satellite factionModule && factionModule.BattleStation != null && factionModule.BattleStation.IsFactionBattleStation;
             Destroyed = true;
+            if (this is Npc carrierNpc) carrierNpc.ClearCarrier();
 
             var destroyCommand = ShipDestroyedCommand.write(Id, 0);
 
@@ -460,6 +465,23 @@ namespace Ow.Game.Objects
 
                 if (reward)
                 {
+                    if (destroyerPlayer.FactionId > 0 && defeatedFaction > 0 &&
+                        destroyerPlayer.FactionId != defeatedFaction && destroyerPlayer.Id != Id)
+                    {
+                        int recognition = 0;
+                        if (this is Player defeatedPlayer && !Duel.InDuel(defeatedPlayer))
+                        {
+                            // Rank and hull both contribute; no reward for allied ships or duels.
+                            var hull = defeatedPlayer.Ship?.Id ?? 1;
+                            var shipPoints = hull == 49 || hull == 69 || hull == 70 ? 250 :
+                                             hull == 10 || hull == 8 ? 150 : hull >= 5 ? 75 : 20;
+                            recognition = 50 + Math.Max(0, Math.Min(20, defeatedPlayer.RankId)) * 20 + shipPoints;
+                        }
+                        else if (defeatedFactionStation) recognition = 1500;
+                        else if (defeatedFactionModule) recognition = 250;
+                        if (recognition > 0)
+                            destroyerPlayer.ChangeData(DataType.RECOGNITION, recognition * 100);
+                    }
                     if (this is Npc)
                         destroyerPlayer.DroneManager?.AddNpcKillExperience(100);
                     /*

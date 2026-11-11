@@ -34,11 +34,18 @@ namespace Ow.Game.Objects.AI
         public DateTime lastMovement = new DateTime();
         private DateTime nextDecisionTime = DateTime.MinValue;
         private int decisionIntervalMs = 0;
+        private bool carrierReturning;
+        private bool carrierEngaged;
+        private DateTime carrierIdleUntil;
+        private DateTime carrierNextWander;
+        private double carrierOffsetX, carrierOffsetY;
+        private bool carrierOffsetReady;
 
         public void TickAI()
         {
             var now = DateTime.Now;
             if (Npc.Destroyed || !Npc.Spacemap.ContainsCharacter(Npc)) return;
+            if (TickCarrierEscort(now)) return;
             if ((Npc.Attacking && Npc.Selected == null) || (Npc.Selected != null && (!(Npc.Selected is Player selectedPlayer) || !CanChasePlayer(selectedPlayer, HasUnlimitedChaseRange()))))
                 Npc.Deselection();
             var ignoreDistanceForNpc = HasUnlimitedChaseRange();
@@ -62,7 +69,7 @@ namespace Ow.Game.Objects.AI
                     Npc.Attacking = false;
                 }
 
-            if (TryFleeToGalaxyGateCorner())
+            if (TryFleeToCorner())
             {
                 lastMovement = now;
                 decisionIntervalMs = GetNextDecisionIntervalMs();
@@ -151,6 +158,61 @@ namespace Ow.Game.Objects.AI
             }
         }
 
+        private bool TickCarrierEscort(DateTime now)
+        {
+            var mother = Npc.CarrierMother;
+            if (mother == null) return false;
+            if (mother.Destroyed || mother.Spacemap != Npc.Spacemap) { Npc.Deselection(); return true; }
+            var settings = CarrierSettings.Current;
+            var distance = Npc.Position.DistanceTo(mother.Position);
+            var recent = Npc.LastCombatTime > Npc.CarrierOrderTime ? Npc.LastCombatTime : Npc.CarrierOrderTime;
+            if (Npc.lastAttackTime > recent) recent = Npc.lastAttackTime;
+            if (!carrierReturning && Npc.Attacking && Npc.Selected is Player player && CanChasePlayer(player, true) &&
+                recent.AddMilliseconds(settings.MinionReturnMs) > now && distance < settings.MinionLeashRadius)
+            {
+                carrierEngaged = true;
+                return false;
+            }
+            if (carrierEngaged) {
+                carrierIdleUntil = recent.AddMilliseconds(settings.MinionReturnMs); carrierEngaged = false;
+                Npc.Deselection();
+            }
+            if (!carrierReturning && carrierIdleUntil > now && distance < settings.MinionLeashRadius && !Npc.Attacking)
+                return true;
+            if (Npc.Attacking) carrierReturning = true;
+            if (distance <= settings.MinionOrbitRadius) carrierReturning = false;
+            Npc.Deselection();
+            AIOption = NpcAIOption.MINION;
+            // Only join fights close to the carrier, rather than chase a remote player forever.
+            if (!carrierReturning && distance < settings.MinionOrbitRadius * 2 && mother.Attacking && mother.SelectedCharacter is Player target &&
+                CanChasePlayer(target, true) && target.Position.DistanceTo(mother.Position) < settings.MinionLeashRadius * .6)
+            {
+                Npc.Selected = target; Npc.Attacking = true; Npc.CarrierOrderTime = now;
+                AIOption = NpcAIOption.FLY_TO_ENEMY;
+                return false;
+            }
+            if (!carrierOffsetReady || (!Npc.Moving && now >= carrierNextWander))
+            {
+                // Entity IDs are sequential: ID % 360 put an entire wave in the
+                // same sector. Golden-angle sectors distribute even small waves.
+                var angle = Npc.CarrierEscortSlot * 2.399963229728653 + (Randoms.random.NextDouble() - .5) * .6;
+                var radius = settings.MinionOrbitRadius * (.7 + Randoms.random.NextDouble() * .3);
+                carrierOffsetX = Math.Cos(angle) * radius;
+                carrierOffsetY = Math.Sin(angle) * radius;
+                carrierOffsetReady = true;
+                carrierNextWander = now.AddMilliseconds(Randoms.random.Next(1200, 3000));
+            }
+            var destination = new Position(mother.Position.X + (int)carrierOffsetX, mother.Position.Y + (int)carrierOffsetY);
+            if (lastMovement.AddMilliseconds(400) <= now &&
+                (Npc.Destination == null || Npc.Destination.DistanceTo(destination) > 70 ||
+                 (!Npc.Moving && Npc.Position.DistanceTo(destination) > 40)))
+            {
+                Movement.Move(Npc, destination);
+                lastMovement = now;
+            }
+            return true;
+        }
+
         private int GetNextDecisionIntervalMs()
         {
             return IsActivelyChasingTarget()
@@ -175,9 +237,12 @@ namespace Ow.Game.Objects.AI
             return Math.PI * angle / 180.0;
         }
 
-        private bool TryFleeToGalaxyGateCorner()
+        private bool TryFleeToCorner()
         {
-            if (!IsGalaxyGateNpc() || Npc.Spacemap == null)
+            if (Npc.CarrierMother != null || Npc.Carrier != null) return false;
+            if (Npc.Spacemap == null || (!IsGalaxyGateNpc() &&
+                (Npc.Ship.Id == 80 || Npc.Ship.Id == 480 || Npc.Ship.Id == 880 ||
+                 AIOption == NpcAIOption.MINION || AIOption == NpcAIOption.ESCORT)))
                 return false;
 
             if (Npc.MaxHitPoints <= 0)

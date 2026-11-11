@@ -1,0 +1,22 @@
+{
+  "WaveCount": 6,
+  "MaxMinions": 18,
+  "SpawnIntervalMs": 500,
+  "WaveCooldownMs": 25000,
+  "AuraCooldownMs": 18000,
+  "AuraDurationMs": 5000,
+  "AuraRadius": 700,
+  "AuraDamagePerSecond": 6000,
+  "SpawnOffsetX": 0,
+  "SpawnOffsetY": -240,
+  "LaserCooldownMs": 12000,
+  "LaserDamage": 24000,
+  "LaserFadeMs": 1500,
+  "HpLossPerWave": 200000,
+  "ReplacementCooldownMs": 3000,
+  "HealDelayMs": 60000,
+  "HealPercentPerSecond": 2,
+  "MinionReturnMs": 30000,
+  "MinionOrbitRadius": 400,
+  "MinionLeashRadius": 1800
+}

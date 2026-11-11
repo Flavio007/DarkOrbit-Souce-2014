@@ -125,10 +125,15 @@ class SocketServer
                 long.TryParse(String(parameters["Amount"]),out bidAmount);
                 Send(handler,Ow.Game.Events.AuctionManager.Request(Int(parameters["UserId"]),lotId,bidAmount,String(parameters["RequestId"]),String(parameters["Operation"])=="buy"));
                 break;
+            case "RecognitionPurchase":
+                if (!IPAddress.IsLoopback(((IPEndPoint)handler.RemoteEndPoint).Address)) { Send(handler, "{}"); break; }
+                Send(handler, Ow.Game.Events.AuctionManager.PurchaseRecognitionShip(
+                    Int(parameters["UserId"]), Int(parameters["ShipId"]), String(parameters["RequestId"])));
+                break;
             case "AuctionBalance":
                 if(!IPAddress.IsLoopback(((IPEndPoint)handler.RemoteEndPoint).Address)) { Send(handler,"{}"); break; }
                 var auctionPlayer=GameManager.GetPlayerById(Int(parameters["UserId"]));
-                Send(handler,auctionPlayer==null?"{}":JsonConvert.SerializeObject(new{credits=auctionPlayer.Data.credits.ToString(),uridium=auctionPlayer.Data.uridium.ToString()}));
+                Send(handler,auctionPlayer==null?"{}":JsonConvert.SerializeObject(new{credits=auctionPlayer.Data.credits.ToString(),uridium=auctionPlayer.Data.uridium.ToString(),recognition=(auctionPlayer.Data.recognition / 100.0).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}));
                 break;
             case "OnlineIds":
                 Send(handler, JsonConvert.SerializeObject(GameManager.GameSessions.Keys).ToString());

@@ -571,7 +571,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Hitpoints : Equipment.Configs.Config2Hitpoints;
-                if (Ship.Id == Ship.LEONOV && FriendlyMap) value += 96000;
+                if (LeonovHomeBonus) value += 96000;
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.MAXHP));
                 value += GetSkillPercentage("Ship Hull");
 
@@ -658,7 +658,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Shield : Equipment.Configs.Config2Shield;
-                if (Ship.Id == Ship.LEONOV && FriendlyMap == true)
+                if (LeonovHomeBonus)
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Shield : Equipment.Configs.LeonovConfig2Shield;
                 value += Maths.GetPercentage(value, GetTimedOreUpgradePercentage(RefinementTypeModule.SHIELD));
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.SHIELD));
@@ -733,7 +733,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = CurrentConfig == 1 ? Equipment.Configs.Config1Damage : Equipment.Configs.Config2Damage;
-                if (Ship.Id == Ship.LEONOV && GetLeonovEffect(Spacemap.Id,FactionId) == true)
+                if (LeonovHomeBonus)
                     value += CurrentConfig == 1 ? Equipment.Configs.LeonovConfig1Damage : Equipment.Configs.LeonovConfig2Damage;
                 value += Maths.GetPercentage(value, GetShotOreUpgradePercentage(RefinementTypeModule.LASER));
                 value += Maths.GetPercentage(value, BoosterManager.GetPercentage(BoostedAttributeType.DAMAGE));
@@ -801,6 +801,7 @@ namespace Ow.Game.Objects
             get
             {
                 var value = AttackManager.GetRocketDamage();
+                if (LeonovHomeBonus) value *= 2;
                 value += Maths.GetPercentage(value, GetShotOreUpgradePercentage(RefinementTypeModule.ROCKET));
                 value += Maths.GetPercentage(value, GetSkillPercentage("Rocket Fusion"));
 
@@ -1058,58 +1059,28 @@ namespace Ow.Game.Objects
                 Settings.Cooldowns[skill.LootId] = Storage.Skills[skill.LootId].cooldown.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
+        private static DateTime RestoreCooldown(string saved)
+        {
+            if (string.IsNullOrEmpty(saved)) return DateTime.MinValue;
+            var value = DateTime.Parse(saved);
+            // Persisted cooldowns are activation times, never future deadlines.
+            // Older ARM builds could overflow while reconstructing these values.
+            return value > DateTime.Now ? DateTime.MinValue : value;
+        }
+
         public void SetCurrentCooldowns()
         {
-            if (Settings.Cooldowns[AmmunitionManager.SMB_01] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[AmmunitionManager.SMB_01]))).TotalSeconds;
-                AttackManager.SmbCooldown = DateTime.Now.AddSeconds(-seconds);
-            }
-
-            if (Settings.Cooldowns[AmmunitionManager.ISH_01] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[AmmunitionManager.ISH_01]))).TotalSeconds;
-                AttackManager.IshCooldown = DateTime.Now.AddSeconds(-seconds);
-            }
-
-            if (Settings.Cooldowns[AmmunitionManager.EMP_01] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[AmmunitionManager.EMP_01]))).TotalSeconds;
-                AttackManager.EmpCooldown = DateTime.Now.AddSeconds(-seconds);
-            }
-
-            if (Settings.Cooldowns["ammunition_mine"] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns["ammunition_mine"]))).TotalSeconds;
-                AttackManager.mineCooldown = DateTime.Now.AddSeconds(-seconds);
-            }
-
-            if (Settings.Cooldowns[AmmunitionManager.DCR_250] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[AmmunitionManager.DCR_250]))).TotalSeconds;
-                AttackManager.dcr_250Cooldown = DateTime.Now.AddSeconds(-seconds);
-            }
-
-            if (Settings.Cooldowns[AmmunitionManager.PLD_8] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[AmmunitionManager.PLD_8]))).TotalSeconds;
-                AttackManager.pld8Cooldown = DateTime.Now.AddSeconds(-seconds);
-            }
-
-            if (Settings.Cooldowns[AmmunitionManager.R_IC3] != "")
-            {
-                var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[AmmunitionManager.R_IC3]))).TotalSeconds;
-                AttackManager.r_ic3Cooldown = DateTime.Now.AddSeconds(-seconds);
-            }
+            AttackManager.SmbCooldown = RestoreCooldown(Settings.Cooldowns[AmmunitionManager.SMB_01]);
+            AttackManager.IshCooldown = RestoreCooldown(Settings.Cooldowns[AmmunitionManager.ISH_01]);
+            AttackManager.EmpCooldown = RestoreCooldown(Settings.Cooldowns[AmmunitionManager.EMP_01]);
+            AttackManager.mineCooldown = RestoreCooldown(Settings.Cooldowns["ammunition_mine"]);
+            AttackManager.dcr_250Cooldown = RestoreCooldown(Settings.Cooldowns[AmmunitionManager.DCR_250]);
+            AttackManager.pld8Cooldown = RestoreCooldown(Settings.Cooldowns[AmmunitionManager.PLD_8]);
+            AttackManager.r_ic3Cooldown = RestoreCooldown(Settings.Cooldowns[AmmunitionManager.R_IC3]);
 
             foreach (var skill in Storage.Skills.Values)
-            {
                 if (Settings.Cooldowns.ContainsKey(skill.LootId))
-                {
-                    var seconds = (int)(DateTime.Now.Subtract(DateTime.Parse(Settings.Cooldowns[skill.LootId]))).TotalSeconds;
-                    skill.cooldown = DateTime.Now.AddSeconds(-seconds);
-                }
-            }
+                    skill.cooldown = RestoreCooldown(Settings.Cooldowns[skill.LootId]);
         }
 
         public void SelectEntity(int entityId)
@@ -1144,7 +1115,7 @@ namespace Ow.Game.Objects
                 {
                     var asset = Storage.InRangeAssets.Values.Where(x => x.Id == entityId).FirstOrDefault();
 
-                    if (asset != null && (asset is BattleStation || asset is Satellite || asset is GroupMapRelayStation) && !asset.Destroyed)
+                    if (asset != null && (asset is BattleStation || asset is Satellite || asset is GroupMapRelayStation) && !(asset is BattleStation station && !station.IsOperational) && !asset.Destroyed)
                     {
                         Selected = asset;
 
@@ -1250,7 +1221,7 @@ namespace Ow.Game.Objects
                                               new MessageLocalizedWildcardCommand("btn_killscreen_repair_for_free", new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), new List<MessageWildcardReplacementModule>()),
                                               new MessageLocalizedWildcardCommand("btn_killscreen_repair_for_free", new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), new List<MessageWildcardReplacementModule>()));
 
-            var portalRepairTime = (int)(15 - ((DateTime.Now - Storage.KillscreenPortalRepairTime).TotalSeconds));
+            var portalRepairTime = (int)Math.Max(0, Math.Min(15, 15 - (DateTime.Now - Storage.KillscreenPortalRepairTime).TotalSeconds));
             var portalRepairPrice = 200;
             var portalRepair =
                   new KillScreenOptionModule(new KillScreenOptionTypeModule(KillScreenOptionTypeModule.AT_JUMPGATE_REPAIR),
@@ -1260,7 +1231,7 @@ namespace Ow.Game.Objects
                                              new MessageLocalizedWildcardCommand("btn_killscreen_repair_for_free", new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), new List<MessageWildcardReplacementModule>()),
                                              new MessageLocalizedWildcardCommand(Data.uridium >= portalRepairPrice ? "btn_killscreen_repair_for_uri" : "btn_killscreen_payment", new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED), new List<MessageWildcardReplacementModule> { new MessageWildcardReplacementModule("%COUNT%", portalRepairPrice.ToString(), new ClientUITooltipTextFormatModule(ClientUITooltipTextFormatModule.LOCALIZED)) }));
 
-            var deathLocationRepairTime = (int)(30 - ((DateTime.Now - Storage.KillscreenDeathLocationRepairTime).TotalSeconds));
+            var deathLocationRepairTime = (int)Math.Max(0, Math.Min(30, 30 - (DateTime.Now - Storage.KillscreenDeathLocationRepairTime).TotalSeconds));
             var deathLocationRepairPrice = 300;
             var deathLocationRepair =
                   new KillScreenOptionModule(new KillScreenOptionTypeModule(KillScreenOptionTypeModule.AT_DEATHLOCATION_REPAIR),
@@ -1398,6 +1369,10 @@ namespace Ow.Game.Objects
                     Data.jackpot += signedAmount;
                     if (Data.jackpot < 0) Data.jackpot = 0;
                     break;
+                case DataType.RECOGNITION:
+                    Data.recognition += signedAmount;
+                    if (Data.recognition < 0) Data.recognition = 0;
+                    break;
             }
         }
 
@@ -1440,6 +1415,11 @@ namespace Ow.Game.Objects
                         var jackpotDelta = (amount / 100.0).ToString("0.##", CultureInfo.InvariantCulture);
                         var jackpotTotal = (Data.jackpot / 100.0).ToString("0.##", CultureInfo.InvariantCulture);
                         SendPacket($"0|LM|ST|JPE|{prefix}{jackpotDelta}|{jackpotTotal}");
+                        break;
+                    case DataType.RECOGNITION:
+                        var recognitionDelta = (amount / 100.0).ToString("0.##", CultureInfo.InvariantCulture);
+                        var recognitionTotal = (Data.recognition / 100.0).ToString("0.##", CultureInfo.InvariantCulture);
+                        SendPacket($"0|LM|ST|REN|{prefix}{recognitionDelta}|{recognitionTotal}");
                         break;
                 }
             }
@@ -2167,9 +2147,18 @@ namespace Ow.Game.Objects
             else return;
         }
 
+        internal static bool LeonovBonusApplies(int shipId, int mapId, int mapFaction, int faction)
+        {
+            return shipId == Ship.LEONOV && mapId >= 1 && mapId <= 12 &&
+                   faction >= 1 && faction <= 3 && mapFaction == faction;
+        }
+
+        private bool LeonovHomeBonus => Ship != null && Spacemap != null &&
+            LeonovBonusApplies(Ship.Id, Spacemap.VisualMapId, Spacemap.FactionId, FactionId);
+
         public Boolean GetLeonovEffect(int map, int faction)
         {
-            if (Spacemap.FactionId == faction && Ship.Id == Ship.LEONOV && Spacemap.Id < 12)
+            if (LeonovHomeBonus)
             {
                 AddVisualModifier(VisualModifierCommand.LEONOV_EFFECT, 0, "", 0, true);
                 FriendlyMap = true;
@@ -2209,7 +2198,6 @@ namespace Ow.Game.Objects
                 CameraLockToCoordinates(x, y, travelSeconds);
                 await Task.Delay((int)((travelSeconds + holdSeconds) * 1000));
                 CameraLockToHero();
-                await Task.Delay(1000);
             }
             finally
             {

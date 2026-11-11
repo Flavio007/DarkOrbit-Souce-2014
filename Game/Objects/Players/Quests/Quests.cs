@@ -374,10 +374,16 @@ namespace Ow.Game.Objects.Players
         }
 
         private DateTime lastObjectiveTick = DateTime.UtcNow;
+        private int lastDailyDate = DailyDate;
 
         public void Tick()
         {
             ResetDailyQuests();
+            if (lastDailyDate != DailyDate)
+            {
+                lastDailyDate = DailyDate;
+                SendModernQuestList(false);
+            }
             if (OpenQuestGiverId != 0 && !CanUseQuestGiver(OpenQuestGiverId))
                 OpenQuestGiverId = 0;
             var now = DateTime.UtcNow;
@@ -1043,6 +1049,9 @@ namespace Ow.Game.Objects.Players
                     continue;
                 quests.Add(QuestNettyModule.FromWire(QuestListItemModule.write(definition.Id, definition.MinLevel * 1000 + definition.SortOrder, definition.MinLevel, definition.Priority, ModernStatus(definition, state), definition.Title, QuestTitleKey(definition))));
             }
+            // Explicit metadata for WASM; translation keys are numeric and cannot identify dailies.
+            var resetSeconds = (int)Math.Ceiling((DateTime.UtcNow.Date.AddDays(1) - DateTime.UtcNow).TotalSeconds);
+            Player.SendPacket("0|A|QUEST_DAILY|" + resetSeconds + "|" + string.Join(",", QuestCatalog.All().Where(q => q.Daily).Select(q => q.Id)));
             // The wire order is daily slots first, normal slots second.
             Player.SendCommand(new QuestListUpdateCommand(0, GetQuestSlotsRemaining(), false, quests).write());
         }
@@ -1082,6 +1091,25 @@ namespace Ow.Game.Objects.Players
             }
         }
 
+        // Resolve company-relative locations for this pilot, without changing quest rules.
+        private static string ObjectiveDescription(QuestConditionDefinition condition, int faction)
+        {
+            var value = condition.DescriptionKey ?? "";
+            if (condition.MapRelation == "home" && faction >= 1 && faction <= 3)
+            {
+                value = System.Text.RegularExpressions.Regex.Replace(value, @"\b[Xx]-(\d+)", faction + "-$1");
+                value = value.Replace(" / território da sua companhia", "")
+                    .Replace(" / território da sua facção", "");
+            }
+            if (condition.Type == "visitPosition")
+            {
+                // The XML's (1) is a visit count, not part of the coordinates.
+                value = value.Replace("coordenadas  (1)", "coordenadas")
+                    .Replace("coordenadas (1)", "coordenadas");
+            }
+            return value;
+        }
+
         private QuestNettyModule BuildModernDefinition(QuestDefinition definition)
         {
             var playerState = GetState(definition.Id);
@@ -1104,7 +1132,7 @@ namespace Ow.Game.Objects.Players
                     current, ConditionActive(definition, playerState, condition), completed));
                 var entries = string.IsNullOrWhiteSpace(condition.DescriptionKey)
                     ? new List<string>()
-                    : new List<string> { condition.DescriptionKey };
+                    : new List<string> { ObjectiveDescription(condition, Player.FactionId) };
                 if (!string.IsNullOrWhiteSpace(condition.IconKey)) entries.Add("icon:" + condition.IconKey);
                 var conditionModule = QuestNettyModule.FromWire(QuestConditionModule.write(
                     condition.WireId, entries, condition.WireType, 0, condition.Target, false,
@@ -1194,6 +1222,9 @@ namespace Ow.Game.Objects.Players
                     case "experience":
                     case "ep":
                         Player.ChangeData(DataType.EXPERIENCE, reward.Amount);
+                        break;
+                    case "recognition":
+                        Player.ChangeData(DataType.RECOGNITION, checked(reward.Amount * 100));
                         break;
                     case "jackpot":
                         Player.ChangeData(DataType.JACKPOT, reward.Amount);

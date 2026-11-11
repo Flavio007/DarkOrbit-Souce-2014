@@ -767,6 +767,7 @@ namespace Ow.Game.Events
                     return 0;
 
                 var chargeAmount = relay.Charge(amount);
+                if (chargeAmount > 0) relay.BroadcastCharge();
                 if (relay.CurrentHitPoints >= relay.MaxHitPoints)
                 {
                     instance.CurrentRelayIndex++;
@@ -940,6 +941,17 @@ namespace Ow.Game.Events
             return CurrentHitPoints - previous;
         }
 
+        public void SendCharge(Player player)
+        {
+            player?.SendPacket($"0|UI|LOW_RELAY|{Id}|{CurrentHitPoints}|{MaxHitPoints}");
+        }
+
+        public void BroadcastCharge()
+        {
+            if (Spacemap != null)
+                GameManager.SendPacketToMap(Spacemap.Id, $"0|UI|LOW_RELAY|{Id}|{CurrentHitPoints}|{MaxHitPoints}");
+        }
+
         public int TryCharge(Player player, int amount)
         {
             return manager?.TryChargeRelay(this, player, amount) ?? 0;
@@ -953,6 +965,7 @@ namespace Ow.Game.Events
             Spacemap.Activatables[Id] = this;
             VisibleOnMap = true;
             GameManager.SendCommandToMap(Spacemap.Id, GetAssetCreateCommand());
+            BroadcastCharge();
         }
 
         public void Hide()

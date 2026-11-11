@@ -120,6 +120,8 @@ namespace Ow.Game.Events
         private const int SupportShipApproachDelayMs = 700;
         private const int PhoenixPortalApproachPauseMs = 850;
         private const int PhoenixPortalJumpDelayMs = 900;
+        private const int CameraTravelMs = 1250;
+        private const int CameraHoldMs = 750;
 
         private static readonly Position TutorialCenter = new Position(5225, 3250);
         private static readonly Position[] StreunerPositions =
@@ -207,7 +209,9 @@ namespace Ow.Game.Events
                 {
                     cargo.TutorialCargo = true;
                     cargo.ToPlayer = destroyer;
-                    instance.Cargo[cargo.Hash] = cargo;
+                    // Collection can finish before its instructional step is presented.
+                    if (cargo.Disposed) instance.CollectedCargo++;
+                    else instance.Cargo[cargo.Hash] = cargo;
                 }
                 PresentProgress(instance, destroyer, instance.DestroyedNpcs == 1 || instance.Streuners.Count == 0);
 
@@ -230,12 +234,22 @@ namespace Ow.Game.Events
             player.SendCommand(VideoWindowCreateCommand.write(9001, "sw", true, new List<string> { text }, 0, 0));
         }
 
+        private static bool ShouldTeachRockets(TutorialInstance instance)
+        {
+            return instance.DestroyedNpcs == 1 && instance.Streuners.Count > 0;
+        }
+
         private void PresentProgress(TutorialInstance instance, Player player, bool message)
         {
             if (instance.RewardsSpawned && instance.ExitPortal != null)
             {
                 player.SendPacket("0|UI|TUT|PORTAL|" + instance.ExitPortal.Id + "|Aproxime-se do portal e pressione J para concluir o tutorial.");
                 if (message) Video(player, "Siga a seta ate o portal. Aproxime-se dele e clique em Pular ou pressione J para viajar ate sua base.");
+            }
+            else if (ShouldTeachRockets(instance))
+            {
+                player.SendPacket("0|UI|TUT|ROCKET|" + instance.Streuners[0].Id + "|Selecione o segundo Streuner e use os misseis R-310 na barra de atalhos.");
+                if (message) Video(player, "Agora experimente seus misseis! Selecione o segundo Streuner e clique no R-310 na barra de atalhos (slot 2 por padrao). Voce tambem pode disparar com a tecla Espaco. Depois recolha as cargas deixadas pelos inimigos.");
             }
             else if (instance.Cargo.Count > 0)
             {
@@ -282,7 +296,7 @@ namespace Ow.Game.Events
             }
             try
             {
-                await Task.Delay(600);
+                if (!exit) await Task.Delay(250);
                 if (!CanPresent(instance, player, revision)) return;
                 player.SetControlsLocked(true);
                 if (exit)
@@ -291,19 +305,21 @@ namespace Ow.Game.Events
                     player.SendPacket("0|A|STD|Siga ate este portal para concluir o tutorial.");
                     player.SendPacket("0|UI|TUT|PORTAL|" + instance.ExitPortal.Id + "|Aproxime-se do portal e clique em Pular ou pressione J.");
                     Video(player, "Siga a seta ate o portal. Aproxime-se dele e clique em Pular ou pressione J para viajar ate sua base.");
-                    player.CameraLockToCoordinates(instance.ExitPortal.Position.X, instance.ExitPortal.Position.Y, 1.25);
+                    player.CameraLockToCoordinates(instance.ExitPortal.Position.X, instance.ExitPortal.Position.Y, CameraTravelMs / 1000.0);
                 }
                 else
                 {
                     if (instance.Phoenix == null || instance.Phoenix.Destroyed) return;
-                    player.SendPacket("0|A|STD|Ajude a Phoenix: destrua os tres Streuners que estao atacando a nave.");
-                    player.CameraLockToShip(instance.Phoenix.Id, 1, 1.25);
+                    if (instance.DestroyedNpcs == 0 && instance.CollectedCargo == 0)
+                        player.SendPacket("0|A|STD|Ajude a Phoenix: destrua os tres Streuners que estao atacando a nave.");
+                    if (instance.DestroyedNpcs > 0 || instance.CollectedCargo > 0)
+                        PresentProgress(instance, player, false);
+                    player.CameraLockToShip(instance.Phoenix.Id, 1, CameraTravelMs / 1000.0);
                 }
-                await Task.Delay(2750);
+                await Task.Delay(CameraTravelMs + CameraHoldMs);
                 if (!CanPresent(instance, player, revision)) return;
                 player.CameraLockToHero();
                 returnedToHero = true;
-                await Task.Delay(1000);
             }
             catch (Exception e)
             {
@@ -316,10 +332,13 @@ namespace Ow.Game.Events
                     if (revision == instance.CameraRevision)
                     {
                         instance.CameraActive = false;
-                        player.SetControlsLocked(instance.CameraPreviousLock);
                         if (!returnedToHero && player.Spacemap == instance.Spacemap) player.CameraLockToHero();
+                        player.SetControlsLocked(instance.CameraPreviousLock);
                     }
                 }
+                // Never restore an obsolete collect/attack hint after an early collection.
+                if (CanPresent(instance, player, revision))
+                    lock (tutorialLock) PresentProgress(instance, player, false);
             }
         }
 

@@ -125,6 +125,7 @@ namespace Ow.Net.netty.handlers
             try
             {
                 player.SendCommand(player.GetShipInitializationCommand());
+                player.SendPacket("0|LM|ST|REN|0|" + (player.Data.recognition / 100.0).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture));
                 player.SendPacket(player.GetSkillVisualsPacket());
 
                 if (player.Title != "")

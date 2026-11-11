@@ -40,3 +40,11 @@ Filtros adicionais: targetShipIds (IDs separados por vírgula), targetNpcName (n
 stealCargoBox usa a companhia e nave do proprietário da carga, não do alienígena que a soltou. Uma caixa conta apenas uma vez, mesmo quando recolhida em partes. Objetivos de permanência contínua já terminados não são apagados ao viajar para cumprir o próximo mapa.
 
 As recompensas especiais de diárias incluem extraEnergy, repairCredits, jumpCredits, bootyKeys e logdisks. Chaves e créditos ficam no estado persistente do jogador; logdisks usa o inventário skillTree já existente. O catálogo não adiciona novos modelos de NPC, mapas ou mecânicas de viagem à galáxia.
+
+## Complemento da lista clássica (11/11/2026)
+
+A revisão 63014 está completa: 184/184 linhas da lista, com 253 definições incluindo variantes e missões locais. Foram acrescentadas as seis linhas Company Wars I e David vs. Goliath, totalizando 13 definições jogáveis por conta dos filtros de companhia.
+
+As fontes não fornecem as quantidades exatas desses sete objetivos. Com autorização do usuário, usamos contagens adaptadas: 5 Goliaths, 10 BigBoys ou 15 Vengeances para Company Wars I; 5 Goliaths com LCB-10 para David vs. Goliath. Alvos e recompensas seguem o fórum oficial https://board-en.darkorbit.com/threads/quest-line.849/ . A adaptação consta em `derivation` nas especificações; não é apresentada como contagem oficial.
+
+O bloqueio por facção e a família da nave incluem os designs correspondentes. David vs. Goliath exige LCB-10, sendo abortada pelo uso de outra munição pelas regras existentes. As traduções complementares estão em `H:/Darkorbit-Cpp/assets-src/locales/quest-additions.json`.

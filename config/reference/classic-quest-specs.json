@@ -5864,6 +5864,251 @@
       "attributes": {
         "daily": 1
       }
+    },
+    {
+      "title": "Company Wars I: The VRU has crossed the line! (Goliath)",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Goliath)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 300000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 600
+        },
+        {
+          "lootId": "experience",
+          "amount": 300000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_93"
+    },
+    {
+      "title": "Company Wars I: The MMO has crossed the line! (Goliath)",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Goliath)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "shipFamily": "goliath",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 300000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 600
+        },
+        {
+          "lootId": "experience",
+          "amount": 300000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_91"
+    },
+    {
+      "title": "Company Wars I: The VRU has crossed the line! (BigBoy)",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(BigBoy)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 10,
+          "enemyTarget": 1,
+          "shipFamily": "bigboy",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 200000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 400
+        },
+        {
+          "lootId": "experience",
+          "amount": 200000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_90"
+    },
+    {
+      "title": "Company Wars I: The MMO has crossed the line! (BigBoy)",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(BigBoy)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 10,
+          "enemyTarget": 1,
+          "shipFamily": "bigboy",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 200000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 400
+        },
+        {
+          "lootId": "experience",
+          "amount": 200000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_88"
+    },
+    {
+      "title": "Company Wars I: The VRU has crossed the line! (Vengeance)",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Vengeance)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 15,
+          "enemyTarget": 1,
+          "shipFamily": "vengeance",
+          "targetFactionId": 3
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 100000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 3
+      },
+      "titleKey": "quest_title_87"
+    },
+    {
+      "title": "Company Wars I: The MMO has crossed the line! (Vengeance)",
+      "level": 6,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Vengeance)",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 15,
+          "enemyTarget": 1,
+          "shipFamily": "vengeance",
+          "targetFactionId": 1
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "credits",
+          "amount": 100000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 200
+        },
+        {
+          "lootId": "experience",
+          "amount": 100000
+        }
+      ],
+      "attributes": {
+        "excludedFaction": 1
+      },
+      "titleKey": "quest_title_85"
+    },
+    {
+      "title": "David vs. Goliath",
+      "level": 8,
+      "source": "https://darkorbit.fandom.com/wiki/Quest/David_vs._Goliath",
+      "rewardSource": "https://board-en.darkorbit.com/threads/quest-line.849/",
+      "derivation": "Adapted kill count for this server. The saved mission list and official forum confirm the target and rewards but do not state the kill count. This count is not claimed to be the official original.",
+      "conditions": [
+        {
+          "type": "killPlayers",
+          "target": 5,
+          "enemyTarget": 1,
+          "shipFamily": "goliath"
+        }
+      ],
+      "rewards": [
+        {
+          "lootId": "experience",
+          "amount": 512000
+        },
+        {
+          "lootId": "honor",
+          "amount": 5120
+        },
+        {
+          "lootId": "credits",
+          "amount": 512000
+        },
+        {
+          "lootId": "uridium",
+          "amount": 300
+        },
+        {
+          "lootId": "ammunition_laser_mcb-50",
+          "amount": 5000
+        }
+      ],
+      "attributes": {
+        "requiredAmmo": "ammunition_laser_lcb-10"
+      },
+      "titleKey": "quest_title_171"
     }
   ]
 }

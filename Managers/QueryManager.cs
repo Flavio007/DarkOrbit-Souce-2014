@@ -737,30 +737,30 @@ namespace Ow.Managers
                 {
                     case LoadoutItemKind.Lf3:
                         damage[configIndex] += lf3Damage;
-                        leonovlaser[configIndex] += lf3Damage;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovlaser[configIndex] += lf3Damage;
                         player.equipedlasercount++;
                         break;
                     case LoadoutItemKind.Lf4:
                         damage[configIndex] += lf4Damage;
-                        leonovlaser[configIndex] += lf4Damage;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovlaser[configIndex] += lf4Damage;
                         player.fulllf3 = false;
                         player.equipedlasercount++;
                         break;
                     case LoadoutItemKind.Lf1:
                         damage[configIndex] += lf1Damage;
-                        leonovlaser[configIndex] += lf1Damage;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovlaser[configIndex] += lf1Damage;
                         player.fulllf3 = false;
                         player.equipedlasercount++;
                         break;
                     case LoadoutItemKind.Mp1:
                         damage[configIndex] += mp1Damage;
-                        leonovlaser[configIndex] += mp1Damage;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovlaser[configIndex] += mp1Damage;
                         player.fulllf3 = false;
                         player.equipedlasercount++;
                         break;
                     case LoadoutItemKind.Lf2:
                         damage[configIndex] += lf2Damage;
-                        leonovlaser[configIndex] += lf2Damage;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovlaser[configIndex] += lf2Damage;
                         player.fulllf3 = false;
                         player.equipedlasercount++;
                         break;
@@ -776,7 +776,7 @@ namespace Ow.Managers
                         shield[configIndex] += bo2Shield;
                         shieldabsorption[configIndex] += bo2Shieldabs;
                         equipedshieldcount[configIndex]++;
-                        leonovshield[configIndex] += bo2Shield;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovshield[configIndex] += bo2Shield;
                         break;
                     case LoadoutItemKind.G3n7900:
                         speed[configIndex] += g3n7900Speed;
@@ -798,21 +798,25 @@ namespace Ow.Managers
                         break;
                     case LoadoutItemKind.Ao1:
                         shield[configIndex] += ao1Shield;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovshield[configIndex] += ao1Shield;
                         shieldabsorption[configIndex] += ao1Shieldabs;
                         equipedshieldcount[configIndex]++;
                         break;
                     case LoadoutItemKind.Ao2:
                         shield[configIndex] += ao2Shield;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovshield[configIndex] += ao2Shield;
                         shieldabsorption[configIndex] += ao2Shieldabs;
                         equipedshieldcount[configIndex]++;
                         break;
                     case LoadoutItemKind.Ao3:
                         shield[configIndex] += ao3Shield;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovshield[configIndex] += ao3Shield;
                         shieldabsorption[configIndex] += ao3Shieldabs;
                         equipedshieldcount[configIndex]++;
                         break;
                     case LoadoutItemKind.Bo1:
                         shield[configIndex] += bo1Shield;
+                        if (item.Origin == LoadoutOrigin.Ship) leonovshield[configIndex] += bo1Shield;
                         shieldabsorption[configIndex] += bo1Shieldabs;
                         equipedshieldcount[configIndex]++;
                         break;

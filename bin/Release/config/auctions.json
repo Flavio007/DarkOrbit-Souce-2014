@@ -420,6 +420,21 @@
         "baseShipId": 0
     },
     {
+        "key": "shop_57",
+        "name": "AROL-X",
+        "displayName": "AROL-X",
+        "description": "Automatically fires selected rockets during laser attacks when activated.",
+        "category": "extras",
+        "kind": "item",
+        "value": "137",
+        "amount": 1,
+        "cycle": "hourly",
+        "price": 25000,
+        "currency": "credits",
+        "image": "do_img/global/items/cpu_arol-x_100x100.png",
+        "baseShipId": 0
+    },
+    {
         "key": "shop_58",
         "name": "RL-LB1-CPU",
         "displayName": "RL-LB1-CPU",

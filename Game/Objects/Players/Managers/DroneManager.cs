@@ -23,6 +23,18 @@ namespace Ow.Game.Objects.Players.Managers
         private bool DroneStateDirty = false;
         private DateTime lastDroneStateSave = DateTime.Now;
         private const int DRONE_AUTOSAVE_SECONDS = 60;
+        private bool? formationMenuAvailable;
+        public bool FormationsAvailable => DronesList != null && DronesList.Count(d => d != null && d.Damage < 100) >= 6;
+
+        public bool EnsureValidFormation()
+        {
+            if (FormationsAvailable || Player.Settings.InGameSettings.selectedFormation == DEFAULT_FORMATION)
+                return false;
+            Player.Settings.InGameSettings.selectedFormation = DEFAULT_FORMATION;
+            return true;
+        }
+
+        public void MarkFormationMenuState() => formationMenuAvailable = FormationsAvailable;
 
         public DroneManager(Player player) : base(player)
         {
@@ -159,6 +171,8 @@ namespace Ow.Game.Objects.Players.Managers
                 SetDroneDesigns();
             }
 
+            var resetFormation = EnsureValidFormation();
+
             string drones = GetDronesPacket(0);
             Player.SendPacket(drones);
             Player.SendPacketToInRangePlayers(drones);
@@ -166,6 +180,10 @@ namespace Ow.Game.Objects.Players.Managers
             var droneFormationChangeCommand = DroneFormationChangeCommand.write(Player.Id, GetSelectedFormationId(Player.Settings.InGameSettings.selectedFormation));
             Player.SendCommand(droneFormationChangeCommand);
             Player.SendCommandToInRangePlayers(droneFormationChangeCommand);
+            if (resetFormation)
+                Player.UpdateStatus();
+            if (formationMenuAvailable.HasValue && formationMenuAvailable.Value != FormationsAvailable)
+                Player.SettingsManager.SendSlotBarCommand();
         }
 
         public string GetDronesPacket(int exp)
@@ -233,6 +251,7 @@ namespace Ow.Game.Objects.Players.Managers
         public DateTime formationCooldown = new DateTime();
         public void ChangeDroneFormation(string NewFormationID)
         {
+            if (!FormationsAvailable && NewFormationID != DEFAULT_FORMATION) return;
             if (NewFormationID == Player.Settings.InGameSettings.selectedFormation) return;
 
             if (formationCooldown.AddMilliseconds(TimeManager.FORMATION_COOLDOWN) < DateTime.Now || Player.Storage.GodMode)

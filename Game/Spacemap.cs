@@ -618,6 +618,9 @@ namespace Ow.Game
                 short relationType = player.Clan.Id != 0 && activatable.Clan.Id != 0 ? activatable.Clan.GetRelation(player.Clan) : (short)0;
                 player.SendCommand(activatable.GetAssetCreateCommand(relationType));
 
+                if (activatable is GroupMapRelayStation relay)
+                    relay.SendCharge(player);
+
                 if (activatable is BattleStation battleStation)
                     battleStation.SendStatusCommand(player);
             }

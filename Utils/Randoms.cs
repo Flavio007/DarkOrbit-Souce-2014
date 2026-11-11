@@ -8,40 +8,52 @@ namespace Ow.Utils
 {
     class Randoms
     {
-        public static Random random = new Random();
-        private static List<int> CreatedIDs = new List<int>();
-        private static List<string> GeneratedHashes = new List<string>();
+        // Tick, network and async tutorial jobs share this generator. System.Random
+        // is not thread safe on the .NET Framework/Mono used by the server.
+        private sealed class SynchronizedRandom : Random
+        {
+            private readonly object gate = new object();
+            public override int Next() { lock (gate) return base.Next(); }
+            public override int Next(int maxValue) { lock (gate) return base.Next(maxValue); }
+            public override int Next(int minValue, int maxValue) { lock (gate) return base.Next(minValue, maxValue); }
+            public override double NextDouble() { lock (gate) return base.NextDouble(); }
+            public override void NextBytes(byte[] buffer) { lock (gate) base.NextBytes(buffer); }
+        }
+        public static readonly Random random = new SynchronizedRandom();
+        private static int nextObjectId = 1000000;
+        private static readonly System.Security.Cryptography.RandomNumberGenerator hashRandom = System.Security.Cryptography.RandomNumberGenerator.Create();
+        private static readonly object hashGate = new object();
 
         public static int CreateRandomID()
         {
-            int randomed = random.Next(1, 99999);
-
-            if (!CreatedIDs.Contains(randomed))
-            {
-                CreatedIDs.Add(randomed);
-                return randomed;
-            }
-            else
-            {
-                return CreateRandomID();
-            }
+            // Never reuse an old entity id during this server's lifetime. The old
+            // recursive 99,998-id pool eventually exhausted and retained every id.
+            int id = System.Threading.Interlocked.Increment(ref nextObjectId);
+            if (id <= 0) throw new InvalidOperationException("Entity id space exhausted; restart the server.");
+            return id;
         }
 
         public static string GenerateHash(int length)
         {
+            if (length < 1) throw new ArgumentOutOfRangeException(nameof(length));
             const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-            var hash = new string(Enumerable.Repeat(chars, length)
-              .Select(s => s[random.Next(s.Length)]).ToArray());
-
-            if (!GeneratedHashes.Contains(hash))
+            var result = new char[length];
+            var bytes = new byte[32];
+            int written = 0;
+            lock (hashGate)
             {
-                GeneratedHashes.Add(hash);
-                return hash;
+                while (written < length)
+                {
+                    hashRandom.GetBytes(bytes);
+                    foreach (byte value in bytes)
+                    {
+                        if (value >= 248) continue; // Unbiased base-62 characters.
+                        result[written++] = chars[value % chars.Length];
+                        if (written == length) break;
+                    }
+                }
             }
-            else
-            {
-                return GenerateHash(length);
-            }
+            return new string(result);
         }
 
         public static int GetRandomMap(int minid, int maxid, bool enablesecretmap) //manulaiko

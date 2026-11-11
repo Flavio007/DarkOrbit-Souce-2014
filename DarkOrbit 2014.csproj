@@ -119,6 +119,7 @@
     <Compile Include="Game\Objects\Players\Skills\Skill.cs" />
     <Compile Include="Game\Objects\Storage.cs" />
     <Compile Include="Game\Objects\Npc.cs" />
+    <Compile Include="Game\Objects\DevourerCarrier.cs" />
     <Compile Include="Game\Objects\Spaceball.cs" />
     <Compile Include="Game\Objects\Activatable.cs" />
     <Compile Include="Game\Objects\Collectables\SilverBooty.cs" />
@@ -538,6 +539,7 @@
     <Content Include="config\quests.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="config\devourer-carrier.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <None Include="Database\quests.sql" />
     <None Include="packages.config" />
   </ItemGroup>

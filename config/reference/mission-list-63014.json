@@ -504,8 +504,11 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Goliath)"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        24510,
+        24520
+      ]
     },
     {
       "level": 6,
@@ -513,8 +516,11 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Goliath)"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        24620,
+        24630
+      ]
     },
     {
       "level": 6,
@@ -522,8 +528,11 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(BigBoy)"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        24710,
+        24720
+      ]
     },
     {
       "level": 6,
@@ -531,8 +540,11 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(BigBoy)"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        24820,
+        24830
+      ]
     },
     {
       "level": 6,
@@ -540,8 +552,11 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_VRU_has_crossed_the_line!_(Vengeance)"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        24910,
+        24920
+      ]
     },
     {
       "level": 6,
@@ -549,8 +564,11 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/Company_Wars_I:_The_MMO_has_crossed_the_line!_(Vengeance)"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        25020,
+        25030
+      ]
     },
     {
       "level": 6,
@@ -602,8 +620,10 @@
       "links": [
         "https://darkorbit.fandom.com/wiki/Quest/David_vs._Goliath"
       ],
-      "inCatalog": false,
-      "questIds": []
+      "inCatalog": true,
+      "questIds": [
+        25500
+      ]
     },
     {
       "level": 8,

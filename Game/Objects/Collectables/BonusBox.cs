@@ -17,14 +17,12 @@ namespace Ow.Game.Objects.Collectables
         private static readonly int[] NormalX1Ammo = { 50, 20, 10 };
         private static readonly int[] NormalX2Ammo = { 20, 10, 5 };
         private static readonly int[] NormalX3Ammo = { 20, 10, 5 };
-        private static readonly int[] NormalJackpotCents = { 25, 50, 100 };
         private static readonly int[] NormalCredits = { 200, 500, 1000 };
         private static readonly int[] NormalUridium = { 20, 50, 100 };
 
         private static readonly int[] SpecialX1Ammo = { 75, 30, 15 };
         private static readonly int[] SpecialX2Ammo = { 8, 15, 30 };
         private static readonly int[] SpecialX3Ammo = { 8, 15, 30 };
-        private static readonly int[] SpecialJackpotCents = { 38, 75, 150 };
         private static readonly int[] SpecialCredits = { 300, 750, 1500 };
         private static readonly int[] SpecialXenomit = { 25, 50, 75, 100, 150 };
         private static readonly int[] SpecialUridium = { 30, 75, 150 };
@@ -119,7 +117,7 @@ namespace Ow.Game.Objects.Collectables
                     GiveAmmo(player, AmmunitionManager.MCB_50, Pick(NormalX3Ammo));
                     break;
                 case 3:
-                    GiveJackpot(player, Pick(NormalJackpotCents));
+                    GiveCredits(player, Pick(NormalCredits));
                     break;
                 case 4:
                     GiveCredits(player, Pick(NormalCredits));
@@ -150,7 +148,7 @@ namespace Ow.Game.Objects.Collectables
                     GiveAmmo(player, AmmunitionManager.MCB_50, Pick(SpecialX3Ammo));
                     break;
                 case 3:
-                    GiveJackpot(player, Pick(SpecialJackpotCents));
+                    GiveCredits(player, Pick(SpecialCredits));
                     break;
                 case 4:
                     GiveCredits(player, Pick(SpecialCredits));
@@ -206,14 +204,6 @@ namespace Ow.Game.Objects.Collectables
         {
             amount = ApplyBonusBoxScaling(player, amount);
             player.ChangeCargo(Ores.Xenomit, amount);
-        }
-
-        private void GiveJackpot(Player player, int jackpotCents)
-        {
-            jackpotCents = ApplyBonusBoxScaling(player, jackpotCents);
-            if (jackpotCents < 1) jackpotCents = 1;
-            player.ChangeData(DataType.JACKPOT, jackpotCents);
-            //player.SendPacket($"0|A|STD| You received {jackpotCents / 100.0:0.##} jackpot dollars");
         }
 
         private void GiveExtraEnergy(Player player, int baseAmount)

@@ -42,7 +42,8 @@ namespace Ow.Game
         HONOR,
         EXPERIENCE,
         JACKPOT,
-        CARGO
+        CARGO,
+        RECOGNITION
     }
 
     public enum Ores

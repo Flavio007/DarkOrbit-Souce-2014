@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FakeShips>
+  <FakeShip>
+    <Name>Sentinel MMO</Name>
+    <Clan name="Guardians" tag="GDN" />
+    <Faction>1</Faction>
+    <ShipId>10</ShipId>
+    <Rank>5</Rank>
+    <Level>16</Level>
+    <Ability>none</Ability>
+    <Objective>hunt_npcs</Objective>
+    <AvailableAmmo>
+      <Ammo id="lcb-10" amount="500000" />
+      <Ammo id="mcb-25" amount="250000" />
+      <Ammo id="mcb-50" amount="250000" />
+      <Ammo id="ucb-100" amount="100000" />
+      <Ammo id="r-310" amount="50000" />
+    </AvailableAmmo>
+    <SpecialAmmo emp="10" ist="10" smb="10" />
+    <Drones>
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+      <Drone type="2" level="6" damage="0" />
+    </Drones>
+  </FakeShip>
+</FakeShips>

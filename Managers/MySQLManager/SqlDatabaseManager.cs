@@ -32,6 +32,36 @@ namespace Ow.Managers.MySQLManager
             {
                 client.ExecuteNonQuery("SELECT 1");
             }
+            MigrateRecognition();
+        }
+
+        // Preserve existing balances once while keeping jackpot independent afterwards.
+        public static void MigrateRecognition()
+        {
+            using (var connection = new MySqlConnection(GenerateConnectionString()))
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "CREATE TABLE IF NOT EXISTS server_data_migrations (name VARCHAR(100) NOT NULL PRIMARY KEY) ENGINE=InnoDB";
+                    command.ExecuteNonQuery();
+                }
+                using (var transaction = connection.BeginTransaction())
+                using (var command = connection.CreateCommand())
+                {
+                    command.Transaction = transaction;
+                    command.CommandText = "SELECT COUNT(*) FROM server_data_migrations WHERE name='recognition_separate_v1'";
+                    if (Convert.ToInt64(command.ExecuteScalar()) != 0) { transaction.Commit(); return; }
+                    command.CommandText = "SELECT COUNT(*) FROM player_accounts WHERE data IS NOT NULL AND JSON_VALID(data)=0";
+                    if (Convert.ToInt64(command.ExecuteScalar()) != 0)
+                        throw new InvalidOperationException("Recognition migration: invalid player data JSON.");
+                    command.CommandText = "UPDATE player_accounts SET data=JSON_SET(COALESCE(data, '{}'), '$.recognition', CAST(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(data, '$.jackpot')), '0') AS SIGNED)) WHERE data IS NULL OR JSON_CONTAINS_PATH(data, 'one', '$.recognition')=0";
+                    command.ExecuteNonQuery();
+                    command.CommandText = "INSERT INTO server_data_migrations(name) VALUES('recognition_separate_v1')";
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+            }
         }
 
         public static SqlDatabaseClient GetClient()

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<achievements>
+  <achievement id="1" key="FIRST_FLY" event="fly" target="1" title="Primeiro voo" objective="Explore sua base movimentando a nave." reward="Nave Liberator" kind="ship" value="5" amount="1" />
+  <achievement id="2" key="FIRST_STREUNER" event="killNpc" subject="84" target="1" title="Primeiro Streuner" objective="Destrua um Streuner." reward="Canhao laser LF-2" kind="item" value="125" amount="1" />
+  <achievement id="3" key="BONUS_BOXES" event="bonusBox" target="5" title="Coletor de caixas" objective="Colete 5 caixas bonus." reward="CPU de reparo automatico NC-RRB" kind="item" value="77" amount="1" />
+  <achievement id="4" key="LEVEL_UP" event="level" subject="2" target="1" title="Subindo de nivel" objective="Alcance o nivel 2." reward="Gerador de escudo SG3N-B01" kind="item" value="134" amount="1" />
+  <achievement id="5" key="COLLECT_ORE" event="ore" subject="1" target="10" title="Coletor de minerios" objective="Colete 10 unidades de Prometium." reward="1.000 Uridium" kind="uridium" amount="1000" />
+  <achievement id="6" key="MERCHANT" event="sell" target="1" title="Comerciante" objective="Venda minerios em uma estacao." reward="2.500 tiros de MCB-50" kind="mcb50" amount="2500" />
+  <achievement id="7" key="FIRST_JUMP" event="jump" target="1" title="Primeiro salto" objective="Salte para o segundo mapa da sua companhia." reward="Gerador de velocidade G3N-7900" kind="item" value="1" amount="1" />
+  <achievement id="8" key="FIRST_LORDAKIA" event="killNpc" subject="71" target="1" title="Primeiro Lordakia" objective="Destrua um Lordakia." reward="100 Promerium" kind="promerium" amount="100" />
+  <achievement id="9" key="UPGRADE" event="upgrade" target="1" title="Geradores melhorados" objective="Melhore o motor ou escudo com Promerium." reward="Canhao laser LF-3" kind="item" value="7" amount="1" />
+  <achievement id="10" key="QUICK_BUY" event="quickBuy" target="1" title="Compra rapida" objective="Compre municao pelo menu Comprar agora." reward="500 foguetes PLT-2021" kind="plt21" amount="500" />
+  <achievement id="11" key="QUEST" event="quest" target="1" title="Primeira missao" objective="Conclua uma missao." reward="5 creditos de reparo" kind="repairCredits" amount="5" />
+  <achievement id="12" key="GROUP" event="group" target="1" title="Trabalho em equipe" objective="Entre em um grupo com outro jogador." reward="Drone Flax" kind="drone" amount="1" />
+</achievements>

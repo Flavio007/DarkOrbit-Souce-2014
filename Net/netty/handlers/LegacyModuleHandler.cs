@@ -1,6 +1,7 @@
 ﻿using Ow.Game;
 using Ow.Managers;
 using Ow.Game.Movements;
+using Ow.Game.Objects;
 using Ow.Net.netty.commands;
 using Ow.Net.netty.requests;
 using System;
@@ -13,6 +14,25 @@ namespace Ow.Net.netty.handlers
 {
     class LegacyModuleHandler : IHandler
     {
+        internal static string SpawnNpcs(Player player, string idToken, string countToken)
+        {
+            if (player == null || player.RankId != 21) return "Comando reservado a admins";
+            if (!int.TryParse(idToken, out var id) || id <= 0 ||
+                !int.TryParse(countToken, out var count) || count < 1 || count > 1000)
+                return "Uso: spawn|ID|Quantidade (1 a 1000)";
+            var ship = GameManager.GetShip(id);
+            if (ship == null) return "ID de NPC inexistente";
+            var map = player.Spacemap;
+            if (map == null || player.Destroyed || player.Storage.Jumping || !map.ContainsCharacter(player))
+                return "Nao e possivel criar NPCs neste momento";
+            var point = Movement.ActualPosition(player);
+            var x = point.X;
+            var y = point.Y;
+            for (var i = 0; i < count; i++)
+                Npc.CreateForShip(ship, map, new Position(x, y));
+            return $"Criados {count} NPCs: {ship.Name} ({id}) em {x}, {y}";
+        }
+
         private static bool TryParseOre(string token, out Ores oreType)
         {
             oreType = Ores.DUMMY;
@@ -113,9 +133,14 @@ namespace Ow.Net.netty.handlers
                 case "CLI":
                     // The client is untrusted: authorize each command on the authenticated player.
                     if (player.RankId != 21) return;
+                    if (packet.Length == 4 && packet[1].Trim().Equals("SPAWN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        player.SendPacket("0|CLI|" + SpawnNpcs(player, packet[2], packet[3]));
+                        break;
+                    }
                     if (packet.Length != 4 || packet[1].ToUpperInvariant() != "SET" || !int.TryParse(packet[3], out var value) || value < 0)
                     {
-                        player.SendPacket("0|CLI|Uso: SET MAP/HP/SHD/SHIP valor");
+                        player.SendPacket("0|CLI|Uso: SET MAP/HP/SHD/SHIP valor ou spawn ID Quantidade");
                         break;
                     }
                     switch (packet[2].ToUpperInvariant())

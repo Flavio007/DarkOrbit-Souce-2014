@@ -168,6 +168,53 @@ namespace Ow.Game.Events
         }
         private static string AmmoCode(string key){return new Dictionary<string,string>{{"mcb25",AmmunitionManager.MCB_25},{"mcb50",AmmunitionManager.MCB_50},{"sab50",AmmunitionManager.SAB_50},{"plt21",AmmunitionManager.PLT_2021},{"plt3030",AmmunitionManager.PLT_3030}}[key];}
         private static void Complete(List<Action> actions){foreach(var a in actions)try{a();}catch(Exception e){Logger.Log("error_log","[Auction] Post-commit notification: "+e);}}
+        public static string PurchaseRecognitionShip(int user, int shipId, string requestId)
+        {
+            if (user <= 0 || !new[] {49, 69, 70}.Contains(shipId) ||
+                !System.Text.RegularExpressions.Regex.IsMatch(requestId ?? "", "^[a-zA-Z0-9-]{16,48}$"))
+                return Fail("Requisicao invalida.");
+            var uriPrice = shipId == 70 ? 50000L : 100000L;
+            const long recognitionCents = 50000L * 100;
+            var item = new AuctionItem { kind = "ship", value = shipId.ToString(), name = shipId == 49 ? "Aegis" : shipId == 69 ? "Citadel" : "Spearhead" };
+            var key = "recognition-" + requestId;
+            lock (Sync) { EnsureSchema(); using (var db = SqlDatabaseManager.GetClient()) {
+                db.ExecuteNonQuery("START TRANSACTION");
+                var after = new List<Action>();
+                try {
+                    var previous = db.ExecuteQueryRow($"SELECT response FROM auction_requests WHERE user_id={user} AND request_id='{S(key)}' FOR UPDATE");
+                    if (previous != null) { db.ExecuteNonQuery("COMMIT"); return Convert.ToString(previous["response"]); }
+                    var row = db.ExecuteQueryRow($"SELECT data,shipId FROM player_accounts WHERE userId={user} FOR UPDATE");
+                    if (row == null) throw new InvalidOperationException("Conta inexistente.");
+                    if (Convert.ToInt32(row["shipId"]) == shipId)
+                        throw new InvalidOperationException("Voce ja possui esta nave.");
+                    var player = Online(user);
+                    var data = player != null ? JObject.FromObject(player.Data) : Parse(row["data"]);
+                    var uri = (long?)data["uridium"] ?? 0;
+                    var recognition = (long?)data["recognition"] ?? 0;
+                    if (uri < uriPrice || recognition < recognitionCents)
+                        throw new InvalidOperationException("Uridium ou renome insuficiente.");
+                    Eligible(db, user, item);
+                    data["uridium"] = uri - uriPrice;
+                    data["recognition"] = recognition - recognitionCents;
+                    db.ExecuteNonQuery($"UPDATE player_accounts SET data='{S(data.ToString(Formatting.None))}' WHERE userId={user}");
+                    after.Add(() => {
+                        if (player == null) return;
+                        player.Data.uridium = uri - uriPrice;
+                        player.Data.recognition = recognition - recognitionCents;
+                        player.SendPacket($"0|LM|ST|URI|-{uriPrice}|{player.Data.uridium}");
+                        player.SendPacket($"0|LM|ST|REN|-50000|{(player.Data.recognition / 100.0).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}");
+                    });
+                    Prize(db, user, item, after);
+                    var response = Json(new { ok = true, message = "Nave adquirida e entregue.", shipId, uridium = uri - uriPrice, recognition = (recognition - recognitionCents) / 100.0 });
+                    db.ExecuteNonQuery($"INSERT INTO auction_requests(user_id,request_id,response) VALUES({user},'{S(key)}','{S(response)}')");
+                    db.ExecuteNonQuery("COMMIT"); Complete(after); return response;
+                } catch (Exception e) {
+                    db.ExecuteNonQuery("ROLLBACK");
+                    if (!(e is InvalidOperationException || e is OverflowException)) Logger.Log("error_log", "[Recognition] " + e);
+                    return Fail(e is InvalidOperationException ? e.Message : "Nao foi possivel concluir a compra.");
+                }
+            }}
+        }
         public static string Request(int user,long lotId,long amount,string requestId,bool buy=false)
         {
             if(user<=0||lotId<=0||!System.Text.RegularExpressions.Regex.IsMatch(requestId??"","^[a-zA-Z0-9-]{16,64}$"))return Fail("Requisicao invalida.");
